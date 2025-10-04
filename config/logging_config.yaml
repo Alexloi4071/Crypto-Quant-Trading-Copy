@@ -1,0 +1,314 @@
+# 日誌配置文件
+# 完整的分級日誌記錄系統
+
+version: 1
+disable_existing_loggers: false
+
+# ==================== 格式化器 ====================
+formatters:
+  standard:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  detailed:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(funcName)s:%(lineno)d - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  json_format:
+    format: '{"timestamp": "%(asctime)s", "logger": "%(name)s", "level": "%(levelname)s", "module": "%(module)s", "function": "%(funcName)s", "line": %(lineno)d, "message": "%(message)s"}'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  trading_format:
+    format: '%(asctime)s [%(levelname)s] 📊 %(name)s: %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  error_format:
+    format: '%(asctime)s ❌ [ERROR] %(name)s.%(funcName)s:%(lineno)d - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+# ==================== 處理器 ====================
+handlers:
+  # 控制台輸出
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: trading_format
+    stream: ext://sys.stdout
+  
+  # 系統日誌文件
+  system_file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/system/system.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 10
+    encoding: utf8
+  
+  # 交易日誌文件
+  trading_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: json_format
+    filename: logs/trading/trading.log
+    maxBytes: 52428800  # 50MB
+    backupCount: 20
+    encoding: utf8
+  
+  # 錯誤日誌文件
+  error_file:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: error_format
+    filename: logs/system/errors.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 30
+    encoding: utf8
+  
+  # 優化日誌文件
+  optimization_file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/optimization/optimization.log
+    maxBytes: 20971520  # 20MB
+    backupCount: 15
+    encoding: utf8
+  
+  # 數據日誌文件
+  data_file:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: json_format
+    filename: logs/system/data.log
+    when: midnight
+    interval: 1
+    backupCount: 30
+    encoding: utf8
+  
+  # 性能日誌文件
+  performance_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: json_format
+    filename: logs/trading/performance.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 12
+    encoding: utf8
+  
+  # 審計日誌文件 (不輪替)
+  audit_file:
+    class: logging.FileHandler
+    level: INFO
+    formatter: json_format
+    filename: logs/system/audit.log
+    encoding: utf8
+
+# ==================== 日誌記錄器 ====================
+loggers:
+  # 根日誌記錄器
+  root:
+    level: INFO
+    handlers: [console, system_file, error_file]
+    propagate: false
+  
+  # 交易系統日誌
+  trading:
+    level: INFO
+    handlers: [console, trading_file, error_file]
+    propagate: false
+    qualname: trading
+  
+  # 數據收集日誌
+  data_collector:
+    level: DEBUG
+    handlers: [console, data_file, error_file]
+    propagate: false
+    qualname: data_collector
+  
+  # 特徵工程日誌
+  feature_engineering:
+    level: INFO
+    handlers: [console, system_file, error_file]
+    propagate: false
+    qualname: feature_engineering
+  
+  # 模型訓練日誌
+  model_training:
+    level: INFO
+    handlers: [console, optimization_file, error_file]
+    propagate: false
+    qualname: model_training
+  
+  # 回測系統日誌
+  backtesting:
+    level: INFO
+    handlers: [console, system_file, error_file]
+    propagate: false
+    qualname: backtesting
+  
+  # 優化系統日誌
+  optimization:
+    level: DEBUG
+    handlers: [optimization_file, error_file]
+    propagate: false
+    qualname: optimization
+  
+  # 風險管理日誌
+  risk_management:
+    level: INFO
+    handlers: [console, trading_file, error_file]
+    propagate: false
+    qualname: risk_management
+  
+  # API系統日誌
+  api:
+    level: INFO
+    handlers: [console, system_file, error_file]
+    propagate: false
+    qualname: api
+  
+  # 監控系統日誌
+  monitoring:
+    level: INFO
+    handlers: [console, performance_file, error_file]
+    propagate: false
+    qualname: monitoring
+  
+  # 數據庫操作日誌
+  database:
+    level: WARNING
+    handlers: [system_file, error_file]
+    propagate: false
+    qualname: database
+  
+  # 外部API日誌
+  external_apis:
+    level: WARNING
+    handlers: [data_file, error_file]
+    propagate: false
+    qualname: external_apis
+  
+  # 安全審計日誌
+  security:
+    level: INFO
+    handlers: [audit_file, error_file]
+    propagate: false
+    qualname: security
+  
+  # Telegram通知日誌
+  telegram:
+    level: INFO
+    handlers: [system_file, error_file]
+    propagate: false
+    qualname: telegram
+  
+  # WebSocket連接日誌
+  websocket:
+    level: INFO
+    handlers: [system_file, error_file]
+    propagate: false
+    qualname: websocket
+
+# ==================== 特殊配置 ====================
+special_configs:
+  # 交易信號特殊格式
+  trading_signals:
+    format: '%(asctime)s 🚨 [SIGNAL] %(symbol)s: %(action)s @ %(price)s (Confidence: %(confidence).2f)'
+    level: INFO
+    
+  # 錯誤告警格式
+  error_alerts:
+    format: '%(asctime)s ⚠️ [ALERT] %(module)s: %(message)s'
+    level: ERROR
+    
+  # 性能監控格式
+  performance_metrics:
+    format: '%(asctime)s 📈 [METRICS] %(metric_name)s: %(metric_value)s'
+    level: INFO
+
+# ==================== 過濾器配置 ====================
+filters:
+  # 敏感信息過濾
+  sensitive_filter:
+    api_keys: ["api_key", "secret", "password", "token"]
+    replacement: "***REDACTED***"
+  
+  # 頻率限制過濾
+  rate_limit_filter:
+    max_messages_per_minute: 100
+    burst_size: 20
+
+# ==================== 日誌輪替配置 ====================
+rotation_config:
+  daily_rotation:
+    when: "midnight"
+    interval: 1
+    backup_count: 30
+    
+  size_rotation:
+    max_bytes: 10485760  # 10MB
+    backup_count: 10
+    
+  weekly_rotation:
+    when: "W0"  # Monday
+    interval: 1
+    backup_count: 12
+
+# ==================== 監控告警配置 ====================
+monitoring_alerts:
+  error_threshold:
+    max_errors_per_hour: 10
+    alert_channels: ["telegram", "email"]
+    
+  performance_alerts:
+    max_latency_ms: 1000
+    min_success_rate: 0.95
+    alert_channels: ["telegram"]
+    
+  disk_space_alerts:
+    min_free_space_gb: 1
+    alert_channels: ["telegram", "email"]
+
+# ==================== 開發環境配置 ====================
+development:
+  console_level: DEBUG
+  file_level: DEBUG
+  show_sql: true
+  show_api_calls: true
+  
+# ==================== 生產環境配置 ====================
+production:
+  console_level: WARNING
+  file_level: INFO
+  show_sql: false
+  show_api_calls: false
+  enable_audit: true
+  
+# ==================== 測試環境配置 ====================
+testing:
+  console_level: ERROR
+  file_level: WARNING
+  disable_external_logging: true
+  mock_alerts: true
+
+# ==================== 日誌分析配置 ====================
+log_analysis:
+  # ELK Stack集成
+  elasticsearch:
+    enabled: false
+    host: "localhost"
+    port: 9200
+    index_pattern: "crypto-trading-logs-*"
+    
+  # 日誌聚合
+  aggregation:
+    error_summary_interval: "1h"
+    performance_summary_interval: "5m"
+    trading_summary_interval: "1d"
+    
+  # 日誌清理
+  cleanup:
+    max_age_days: 90
+    compress_after_days: 7
+    cleanup_schedule: "0 2 * * *"  # 每天凌晨2點

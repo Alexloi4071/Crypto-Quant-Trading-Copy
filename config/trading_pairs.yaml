@@ -1,0 +1,60 @@
+﻿# Trading pairs configuration for crypto trading system
+# Supported trading pairs for different exchanges
+
+pairs:
+  - BTCUSDT
+  - ETHUSDT
+  - BNBUSDT
+  - ADAUSDT
+  - SOLUSDT
+
+# Exchange-specific configurations
+exchanges:
+  binance:
+    spot_pairs:
+      - BTCUSDT
+      - ETHUSDT
+      - BNBUSDT
+    futures_pairs:
+      - BTCUSDT
+      - ETHUSDT
+    max_leverage: 10
+    
+  okx:
+    enabled: false
+  bybit:
+    enabled: false
+
+# Risk management for different pairs
+risk_config:
+  BTCUSDT:
+    max_position_size: 0.15  # 15% per position
+    risk_level: "low"
+    
+  ETHUSDT:
+    max_position_size: 0.12  # 12% per position  
+    risk_level: "low"
+    
+  default:
+    max_position_size: 0.08  # 8% per position
+    risk_level: "medium"
+
+# Trading timeframes
+timeframes:
+  scalping:
+    - 1m
+    - 5m
+  short_term:
+    - 15m
+    - 1h
+  medium_term:
+    - 4h
+    - 1d
+  long_term:
+    - 1d
+    - 1w
+
+# Default settings
+default_pairs:
+  - BTCUSDT
+  - ETHUSDT

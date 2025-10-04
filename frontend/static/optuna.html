@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optuna 9層優化系統 v2.0 | Crypto Quant Trading</title>
+    
+    <!-- 深色主題樣式 -->
+    <link rel="stylesheet" href="/static/css/optuna_dark.css">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <nav class="top-navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>Crypto Quant Trading</span>
+            </a>
+            
+            <div class="navbar-links">
+                <a href="/" class="navbar-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>儀表盤</span>
+                </a>
+                <a href="/static/optuna.html" class="navbar-link active">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Optuna 優化</span>
+                </a>
+            </div>
+            
+            <div class="navbar-right">
+                <div class="status-indicator">
+                    <span class="status-dot online"></span>
+                    <span>系統運行中</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主容器 -->
+    <div class="app-container">
+        <!-- 左側邊欄 -->
+        <aside class="sidebar">
+            <!-- 側邊欄頭部 -->
+            <div class="sidebar-header">
+                <div class="sidebar-title">Optuna 9層優化</div>
+                <div class="sidebar-subtitle">分層超參數調優系統</div>
+            </div>
+            
+            <!-- 工作流程進度 -->
+            <div class="workflow-progress">
+                <div class="workflow-step active">
+                    <div class="workflow-icon">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <div class="workflow-label">配置參數</div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="workflow-label">運行優化</div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="workflow-label">查看結果</div>
+                </div>
+            </div>
+            
+            <!-- 層級導航 -->
+            <div class="layer-navigation">
+                <div class="layer-section-title">數據層 (L0-L2)</div>
+                
+                <div class="layer-item active" data-layer="0" onclick="switchLayer(0)">
+                    <div class="layer-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L0: 數據基座</div>
+                        <div class="layer-desc">清洗、格式化、質檢</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="1" onclick="switchLayer(1)">
+                    <div class="layer-icon">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L1: 標籤生成</div>
+                        <div class="layer-desc">三分類、動態閾值</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="2" onclick="switchLayer(2)">
+                    <div class="layer-icon">
+                        <i class="fas fa-stream"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L2: 特徵工程</div>
+                        <div class="layer-desc">技術指標、MTF特徵</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-section-title">模型層 (L3-L5)</div>
+                
+                <div class="layer-item" data-layer="3" onclick="switchLayer(3)">
+                    <div class="layer-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L3: 模型訓練</div>
+                        <div class="layer-desc">XGB/LGB/CB 超參調優</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="4" onclick="switchLayer(4)">
+                    <div class="layer-icon">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L4: 模型集成</div>
+                        <div class="layer-desc">Stacking、Voting</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="5" onclick="switchLayer(5)">
+                    <div class="layer-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L5: 風控模塊</div>
+                        <div class="layer-desc">倉位、止損、風險管理</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-section-title">應用層 (L6-L9)</div>
+                
+                <div class="layer-item" data-layer="6" onclick="switchLayer(6)">
+                    <div class="layer-icon">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L6: 信號生成</div>
+                        <div class="layer-desc">買賣點、過濾條件</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="7" onclick="switchLayer(7)">
+                    <div class="layer-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L7: 回測引擎</div>
+                        <div class="layer-desc">歷史回測、績效評估</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="8" onclick="switchLayer(8)">
+                    <div class="layer-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L8: 報告生成</div>
+                        <div class="layer-desc">可視化、分析報告</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+                
+                <div class="layer-item" data-layer="9" onclick="switchLayer(9)">
+                    <div class="layer-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">L9: 實盤部署</div>
+                        <div class="layer-desc">參數輸出、策略部署</div>
+                    </div>
+                    <div class="layer-status"></div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主工作區 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- 動態內容區域 -->
+                <div id="layer-content">
+                    <!-- 由 JavaScript 動態載入各層內容 -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="/static/js/optuna_v2_core.js"></script>
+    <script src="/static/js/layers/layer0.js"></script>
+    <script src="/static/js/layers/layer1.js"></script>
+    <script src="/static/js/layers/layer2.js"></script>
+    <script src="/static/js/layers/layer3.js"></script>
+    <script src="/static/js/layers/layer4.js"></script>
+    <script src="/static/js/layers/layer5.js"></script>
+    <script src="/static/js/layers/layer6.js"></script>
+    <script src="/static/js/layers/layer7.js"></script>
+    <script src="/static/js/layers/layer8.js"></script>
+    <script src="/static/js/layers/layer9.js"></script>
+</body>
+</html>
+

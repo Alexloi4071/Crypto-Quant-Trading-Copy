@@ -1,0 +1,117 @@
+{
+  "best_params": {
+    "poly_degree": 3,
+    "interaction_only": false,
+    "include_bias": false,
+    "poly_selection_method": "f_regression",
+    "n_poly_features": 38,
+    "poly_feature_ratio": 0.16487026707854346,
+    "max_input_features": 67,
+    "max_total_features": 54,
+    "max_overfitting": 0.19295435569760866
+  },
+  "best_score": 0.9698362307256941,
+  "n_trials": 15,
+  "detailed_results": {
+    "val_r2": 0.9978362307256942,
+    "train_r2": 0.9980319620916807,
+    "val_mse": 0.010963214247935917,
+    "train_mse": 0.00984376640941374,
+    "overfitting": 0.00019573136598649565,
+    "n_original_features": 20,
+    "n_polynomial_features": 38,
+    "n_total_features": 28,
+    "feature_names": [
+      "feature_0",
+      "feature_1",
+      "feature_2",
+      "feature_3",
+      "feature_4",
+      "feature_5",
+      "feature_6",
+      "feature_7",
+      "feature_8",
+      "feature_9",
+      "feature_10",
+      "feature_11",
+      "feature_12",
+      "feature_13",
+      "feature_14",
+      "feature_15",
+      "feature_16",
+      "feature_17",
+      "feature_18",
+      "feature_19",
+      "poly_f0",
+      "poly_f1",
+      "poly_f2",
+      "poly_f3",
+      "poly_f4",
+      "poly_f0^3",
+      "poly_f0^2 f2",
+      "poly_f0^2 f4"
+    ]
+  },
+  "optimization_history": [
+    {
+      "trial": 0,
+      "score": 0.8624821378889994
+    },
+    {
+      "trial": 1,
+      "score": 0.8806059979811308
+    },
+    {
+      "trial": 2,
+      "score": 0.9678730246259925
+    },
+    {
+      "trial": 3,
+      "score": 0.9106498589165611
+    },
+    {
+      "trial": 4,
+      "score": 0.9658713946397354
+    },
+    {
+      "trial": 5,
+      "score": 0.9327696088383781
+    },
+    {
+      "trial": 6,
+      "score": 0.9678341093420981
+    },
+    {
+      "trial": 7,
+      "score": 0.9698362307256941
+    },
+    {
+      "trial": 8,
+      "score": 0.9315584925651952
+    },
+    {
+      "trial": 9,
+      "score": 0.956859814639163
+    },
+    {
+      "trial": 10,
+      "score": 0.9558152801774016
+    },
+    {
+      "trial": 11,
+      "score": 0.9608707663301443
+    },
+    {
+      "trial": 12,
+      "score": 0.9617913771269311
+    },
+    {
+      "trial": 13,
+      "score": 0.9428268223610834
+    },
+    {
+      "trial": 14,
+      "score": 0.9437476590238291
+    }
+  ]
+}

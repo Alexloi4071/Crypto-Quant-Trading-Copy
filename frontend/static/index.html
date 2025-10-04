@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading System Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 自定义样式 */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .status-healthy { color: #10b981; }
+        .status-warning { color: #f59e0b; }
+        .status-critical { color: #ef4444; }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .mobile-hidden { display: none; }
+        }
+        
+        /* 图表容器样式 */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-white text-xl font-bold">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Trading System
+                        </h1>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="/" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-tachometer-alt mr-1"></i>
+                            仪表盘
+                        </a>
+                        <a href="/static/optuna.html" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-sliders-h mr-1"></i>
+                            Optuna優化
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium" onclick="showSection('portfolio')">
+                            <i class="fas fa-wallet mr-1"></i>
+                            组合管理
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium" onclick="showSection('trading')">
+                            <i class="fas fa-exchange-alt mr-1"></i>
+                            交易控制
+                        </a>
+                        <a href="#" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium" onclick="showSection('monitoring')">
+                            <i class="fas fa-heartbeat mr-1"></i>
+                            系统监控
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- 系统状态指示器 -->
+                    <div class="flex items-center">
+                        <div id="system-status-indicator" class="w-3 h-3 bg-gray-400 rounded-full pulse-dot"></div>
+                        <span id="system-status-text" class="text-white text-sm ml-2">连接中...</span>
+                    </div>
+                    <!-- 用户菜单 -->
+                    <div class="text-white text-sm">
+                        <i class="fas fa-user mr-1"></i>
+                        <span id="current-user">用户</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- 仪表盘部分 -->
+        <div id="dashboard-section" class="section active">
+            <!-- 快速统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- 组合价值卡片 -->
+                <div class="bg-white rounded-lg shadow card-hover p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">组合价值</p>
+                            <p id="portfolio-value" class="text-2xl font-bold text-gray-900">$0</p>
+                            <p id="portfolio-change" class="text-sm text-gray-600 mt-1">今日: $0 (0%)</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-wallet text-3xl text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 持仓数量卡片 -->
+                <div class="bg-white rounded-lg shadow card-hover p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">持仓数量</p>
+                            <p id="positions-count" class="text-2xl font-bold text-gray-900">0</p>
+                            <p class="text-sm text-gray-600 mt-1">开仓头寸</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-pie text-3xl text-green-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 日盈亏卡片 -->
+                <div class="bg-white rounded-lg shadow card-hover p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">日盈亏</p>
+                            <p id="daily-pnl" class="text-2xl font-bold text-gray-900">$0</p>
+                            <p id="daily-pnl-pct" class="text-sm text-gray-600 mt-1">0%</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-line text-3xl text-purple-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 交易状态卡片 -->
+                <div class="bg-white rounded-lg shadow card-hover p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">交易状态</p>
+                            <p id="trading-status" class="text-lg font-bold text-gray-900">未启动</p>
+                            <p id="trading-mode" class="text-sm text-gray-600 mt-1">模拟模式</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i id="trading-status-icon" class="fas fa-pause text-3xl text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- 组合价值趋势图 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">组合价值趋势</h3>
+                        <div class="flex space-x-2">
+                            <button class="text-sm text-gray-500 hover:text-gray-700" onclick="updateChart('1d')">1天</button>
+                            <button class="text-sm text-gray-500 hover:text-gray-700" onclick="updateChart('7d')">7天</button>
+                            <button class="text-sm text-blue-500 font-medium" onclick="updateChart('30d')">30天</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="portfolio-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 系统监控图 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">系统资源监控</h3>
+                    <div class="chart-container">
+                        <canvas id="system-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最新活动 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 最新信号 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">最新交易信号</h3>
+                    <div id="latest-signals" class="space-y-3">
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>暂无数据</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 最新告警 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">系统告警</h3>
+                    <div id="latest-alerts" class="space-y-3">
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>系统运行正常</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 组合管理部分 -->
+        <div id="portfolio-section" class="section hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">持仓管理</h3>
+                </div>
+                <div class="p-6">
+                    <div id="positions-table">
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p>加载持仓数据中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 交易控制部分 -->
+        <div id="trading-section" class="section hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 交易控制面板 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">交易控制</h3>
+                    <div class="space-y-4">
+                        <div class="flex space-x-3">
+                            <button id="start-trading-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium" onclick="controlTrading('start')">
+                                <i class="fas fa-play mr-2"></i>启动交易
+                            </button>
+                            <button id="stop-trading-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium" onclick="controlTrading('stop')">
+                                <i class="fas fa-stop mr-2"></i>停止交易
+                            </button>
+                            <button id="pause-trading-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium" onclick="controlTrading('pause')">
+                                <i class="fas fa-pause mr-2"></i>暂停交易
+                            </button>
+                        </div>
+                        
+                        <!-- 手动交易表单 -->
+                        <div class="border-t pt-4 mt-4">
+                            <h4 class="font-medium text-gray-900 mb-3">手动交易</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">交易对</label>
+                                    <input type="text" id="manual-symbol" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="BTCUSDT" value="BTCUSDT">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">方向</label>
+                                    <select id="manual-side" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                        <option value="buy">买入</option>
+                                        <option value="sell">卖出</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">数量</label>
+                                    <input type="number" id="manual-size" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="自动计算" step="0.001">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">止损%</label>
+                                    <input type="number" id="manual-stop-loss" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="2" value="2" step="0.1">
+                                </div>
+                            </div>
+                            <button class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium" onclick="executeManualTrade()">
+                                <i class="fas fa-exchange-alt mr-2"></i>执行交易
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 实时信号监控 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">实时信号</h3>
+                    <div id="realtime-signals" class="space-y-3">
+                        <div class="text-center py-4 text-gray-500">
+                            <div class="loading-spinner mx-auto mb-2"></div>
+                            <p class="text-sm">加载信号数据中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 监控部分 -->
+        <div id="monitoring-section" class="section hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- 系统状态卡片 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">系统状态</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">CPU使用率</span>
+                            <span id="cpu-usage" class="text-sm font-medium">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="cpu-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">内存使用率</span>
+                            <span id="memory-usage" class="text-sm font-medium">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="memory-bar" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">磁盘使用率</span>
+                            <span id="disk-usage" class="text-sm font-medium">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="disk-bar" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 服务状态 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">服务状态</h3>
+                    <div id="services-status" class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">数据管理器</span>
+                            <span class="text-sm status-healthy">正常</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">交易系统</span>
+                            <span class="text-sm status-warning">未启动</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">信号生成器</span>
+                            <span class="text-sm status-healthy">正常</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 告警统计 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">告警统计</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">严重告警</span>
+                            <span id="critical-alerts" class="text-sm font-medium text-red-600">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">警告</span>
+                            <span id="warning-alerts" class="text-sm font-medium text-yellow-600">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">信息</span>
+                            <span id="info-alerts" class="text-sm font-medium text-blue-600">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知区域 -->
+    <div id="notification-area" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+
+    <!-- 内联JavaScript（如果独立文件不可用） -->
+    <script>
+        // 全局变量
+        let apiClient = null;
+        let websocket = null;
+        let charts = {};
+        
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('页面初始化...');
+            
+            // 初始化API客户端
+            if (typeof APIClient !== 'undefined') {
+                apiClient = new APIClient();
+                await initializeDashboard();
+            } else {
+                console.warn('API客户端未加载，使用内联实现');
+                await initializeFallback();
+            }
+            
+            // 建立WebSocket连接
+            connectWebSocket();
+            
+            // 设置定时更新
+            setInterval(updateDashboard, 30000); // 每30秒更新
+        });
+        
+        // 初始化仪表盘（后备实现）
+        async function initializeFallback() {
+            try {
+                // 检查系统健康状态
+                const healthResponse = await fetch('/api/v1/health');
+                if (healthResponse.ok) {
+                    const health = await healthResponse.json();
+                    updateSystemStatus(health.data || health);
+                }
+                
+                // 获取组合概览
+                try {
+                    const portfolioResponse = await fetch('/api/v1/portfolio/summary');
+                    if (portfolioResponse.ok) {
+                        const portfolio = await portfolioResponse.json();
+                        updatePortfolioSummary(portfolio.data || portfolio);
+                    }
+                } catch (e) {
+                    console.log('组合数据暂不可用');
+                }
+                
+                // 获取交易状态
+                try {
+                    const tradingResponse = await fetch('/api/v1/trading/status');
+                    if (tradingResponse.ok) {
+                        const trading = await tradingResponse.json();
+                        updateTradingStatus(trading.data || trading);
+                    }
+                } catch (e) {
+                    console.log('交易状态暂不可用');
+                }
+                
+                console.log('仪表盘初始化完成');
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showNotification('系统连接失败，请检查后端服务', 'error');
+            }
+        }
+        
+        // 更新系统状态
+        function updateSystemStatus(health) {
+            const indicator = document.getElementById('system-status-indicator');
+            const text = document.getElementById('system-status-text');
+            
+            if (health.status === 'healthy') {
+                indicator.className = 'w-3 h-3 bg-green-400 rounded-full pulse-dot';
+                text.textContent = '系统正常';
+            } else if (health.status === 'degraded') {
+                indicator.className = 'w-3 h-3 bg-yellow-400 rounded-full pulse-dot';
+                text.textContent = '系统降级';
+            } else {
+                indicator.className = 'w-3 h-3 bg-red-400 rounded-full pulse-dot';
+                text.textContent = '系统异常';
+            }
+        }
+        
+        // 更新组合概览
+        function updatePortfolioSummary(portfolio) {
+            document.getElementById('portfolio-value').textContent = 
+                `$${(portfolio.portfolio_value || 0).toLocaleString()}`;
+            
+            const dailyPnl = portfolio.daily_pnl || 0;
+            const dailyPnlPct = portfolio.daily_return_pct || 0;
+            
+            document.getElementById('portfolio-change').textContent = 
+                `今日: $${dailyPnl.toFixed(2)} (${dailyPnlPct.toFixed(2)}%)`;
+            
+            document.getElementById('positions-count').textContent = 
+                (portfolio.positions || []).length;
+            
+            const dailyPnlElement = document.getElementById('daily-pnl');
+            dailyPnlElement.textContent = `$${dailyPnl.toFixed(2)}`;
+            dailyPnlElement.className = `text-2xl font-bold ${dailyPnl >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            
+            document.getElementById('daily-pnl-pct').textContent = `${dailyPnlPct.toFixed(2)}%`;
+        }
+        
+        // 更新交易状态
+        function updateTradingStatus(trading) {
+            const statusElement = document.getElementById('trading-status');
+            const modeElement = document.getElementById('trading-mode');
+            const iconElement = document.getElementById('trading-status-icon');
+            
+            const systemStatus = trading.system_status || 'not_started';
+            const tradingMode = trading.trading_mode || 'none';
+            
+            statusElement.textContent = {
+                'running': '运行中',
+                'paused': '已暂停',
+                'stopped': '已停止',
+                'not_started': '未启动'
+            }[systemStatus] || '未知';
+            
+            modeElement.textContent = {
+                'live': '实盘交易',
+                'paper': '纸交易',
+                'simulation': '模拟模式'
+            }[tradingMode] || '未设置';
+            
+            // 更新图标和颜色
+            if (systemStatus === 'running') {
+                iconElement.className = 'fas fa-play text-3xl text-green-500';
+            } else if (systemStatus === 'paused') {
+                iconElement.className = 'fas fa-pause text-3xl text-yellow-500';
+            } else if (systemStatus === 'stopped') {
+                iconElement.className = 'fas fa-stop text-3xl text-red-500';
+            } else {
+                iconElement.className = 'fas fa-pause text-3xl text-gray-400';
+            }
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notificationArea = document.getElementById('notification-area');
+            const notification = document.createElement('div');
+            
+            const bgColor = {
+                'success': 'bg-green-500',
+                'error': 'bg-red-500',
+                'warning': 'bg-yellow-500',
+                'info': 'bg-blue-500'
+            }[type] || 'bg-blue-500';
+            
+            notification.className = `${bgColor} text-white px-4 py-2 rounded-md shadow-lg max-w-sm`;
+            notification.textContent = message;
+            
+            notificationArea.appendChild(notification);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // 切换页面部分
+        function showSection(sectionName) {
+            // 隐藏所有部分
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // 显示目标部分
+            const targetSection = document.getElementById(`${sectionName}-section`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            // 更新导航状态
+            document.querySelectorAll('nav a').forEach(link => {
+                link.classList.remove('text-blue-200', 'font-medium');
+                link.classList.add('text-white');
+            });
+            
+            // 高亮当前导航
+            event.target.classList.add('text-blue-200', 'font-medium');
+        }
+        
+        // WebSocket连接
+        function connectWebSocket() {
+            try {
+                const wsUrl = `ws://${window.location.host}/ws`;
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = function(event) {
+                    console.log('WebSocket连接已建立');
+                    showNotification('实时连接已建立', 'success');
+                };
+                
+                websocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                };
+                
+                websocket.onclose = function(event) {
+                    console.log('WebSocket连接已关闭');
+                    setTimeout(connectWebSocket, 5000); // 5秒后重连
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('WebSocket错误:', error);
+                };
+            } catch (error) {
+                console.error('WebSocket连接失败:', error);
+            }
+        }
+        
+        // 处理WebSocket消息
+        function handleWebSocketMessage(data) {
+            if (data.type === 'portfolio_update') {
+                updatePortfolioSummary(data.data);
+            } else if (data.type === 'system_metrics') {
+                updateSystemMetrics(data.data);
+            } else if (data.type === 'new_signal') {
+                showNotification(`新信号: ${data.data.symbol} ${data.data.signal_type}`, 'info');
+            }
+        }
+        
+        // 更新仪表盘
+        async function updateDashboard() {
+            if (document.getElementById('dashboard-section').classList.contains('hidden')) {
+                return; // 如果不在仪表盘页面，跳过更新
+            }
+            
+            try {
+                // 静默更新，避免频繁显示加载状态
+                const portfolioResponse = await fetch('/api/v1/portfolio/summary');
+                if (portfolioResponse.ok) {
+                    const portfolio = await portfolioResponse.json();
+                    updatePortfolioSummary(portfolio.data || portfolio);
+                }
+            } catch (error) {
+                console.log('更新失败:', error);
+            }
+        }
+        
+        // 交易控制函数
+        async function controlTrading(action) {
+            try {
+                const response = await fetch('/api/v1/trading/control', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        reason: `Manual ${action} from dashboard`
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`交易${action}成功`, 'success');
+                    // 更新交易状态显示
+                    setTimeout(async () => {
+                        const statusResponse = await fetch('/api/v1/trading/status');
+                        if (statusResponse.ok) {
+                            const status = await statusResponse.json();
+                            updateTradingStatus(status.data || status);
+                        }
+                    }, 1000);
+                } else {
+                    showNotification(`操作失败: ${result.error?.message || result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('交易控制失败:', error);
+                showNotification('操作失败，请检查网络连接', 'error');
+            }
+        }
+        
+        // 执行手动交易
+        async function executeManualTrade() {
+            const symbol = document.getElementById('manual-symbol').value;
+            const side = document.getElementById('manual-side').value;
+            const size = parseFloat(document.getElementById('manual-size').value) || null;
+            const stopLoss = parseFloat(document.getElementById('manual-stop-loss').value) || 2;
+            
+            if (!symbol) {
+                showNotification('请输入交易对', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/trading/manual-trade', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        side: side,
+                        size: size,
+                        stop_loss_pct: stopLoss / 100,
+                        order_type: 'market'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`手动交易执行成功: ${symbol} ${side}`, 'success');
+                    // 清空表单
+                    document.getElementById('manual-size').value = '';
+                } else {
+                    showNotification(`交易失败: ${result.error?.message || result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('手动交易失败:', error);
+                showNotification('交易执行失败，请检查网络连接', 'error');
+            }
+        }
+        
+        // 页面可见性变化时的处理
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // 页面隐藏时暂停更新
+                console.log('页面隐藏，暂停更新');
+            } else {
+                // 页面重新显示时立即更新
+                console.log('页面显示，恢复更新');
+                updateDashboard();
+            }
+        });
+        
+        console.log('Trading System Dashboard 初始化完成');
+    </script>
+</body>
+</html>

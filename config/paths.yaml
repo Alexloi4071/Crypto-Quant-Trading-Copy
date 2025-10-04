@@ -1,0 +1,79 @@
+# 路径配置文件
+# 统一管理所有路径，避免硬编码
+
+project_root: "."
+
+# 数据路径
+data:
+  root: "${project_root}/data"
+  raw: "${data.root}/raw"
+  processed: "${data.root}/processed"
+  cleaned: "${data.processed}/cleaned"
+  labels: "${data.processed}/labels"
+  features: "${data.processed}/features"
+  cache: "${data.root}/cache"
+  backups: "${data.root}/backups"
+  derived: "${data.root}/derived"
+
+# Optuna系统路径
+optuna:
+  root: "${project_root}/optuna_system"
+  configs: "${optuna.root}/configs"
+  results: "${optuna.root}/results"
+  materialized: "${data.processed}"
+  optimizers: "${optuna.root}/optimizers"
+
+# 回测路径
+backtest:
+  root: "${project_root}/backtest"
+  results: "${backtest.root}/results"
+  reports: "${backtest.root}/reports"
+  strategies: "${backtest.root}/strategies"
+
+# 日志路径
+logs:
+  root: "${project_root}/logs"
+  system: "${logs.root}/system"
+  trading: "${logs.root}/trading"
+  optimization: "${logs.root}/optimization"
+
+# 模型路径
+models:
+  root: "${project_root}/models"
+  checkpoints: "${models.root}/checkpoints"
+  production: "${models.root}/production"
+
+# API路径
+api:
+  root: "${project_root}/api"
+  routes: "${api.root}/routes"
+  middleware: "${api.root}/middleware"
+
+# 前端路径
+frontend:
+  root: "${project_root}/frontend"
+  static: "${frontend.root}/static"
+  js: "${frontend.root}/js"
+
+# 路径模板（支持格式化变量）
+templates:
+  # 原始数据
+  raw_ohlcv: "${data.raw}/{symbol}/{symbol}_{timeframe}_ohlcv.parquet"
+  raw_orderbook: "${data.raw}/{symbol}/{symbol}_{timeframe}_orderbook.parquet"
+  
+  # 处理后数据
+  cleaned_data: "${data.cleaned}/{symbol}_{timeframe}/cleaned_ohlcv.parquet"
+  labels_data: "${data.labels}/{symbol}_{timeframe}/labels_{symbol}_{timeframe}_{hash}.parquet"
+  features_data: "${data.features}/{symbol}_{timeframe}/features_{symbol}_{timeframe}_{hash}.parquet"
+  
+  # 配置文件
+  label_config: "${optuna.configs}/label_params_{timeframe}.json"
+  feature_config: "${optuna.configs}/feature_params_{timeframe}.json"
+  model_config: "${optuna.configs}/model_params_{timeframe}.json"
+  
+  # 模型检查点
+  model_checkpoint: "${models.checkpoints}/{symbol}_{timeframe}_{version}.pkl"
+  production_model: "${models.production}/{symbol}_{timeframe}_latest.pkl"
+  
+  # 回测结果
+  backtest_result: "${backtest.results}/{symbol}_{timeframe}_{date}.json"

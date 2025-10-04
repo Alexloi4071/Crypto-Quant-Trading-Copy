@@ -1,0 +1,46 @@
+[flake8]
+exclude = 
+    __pycache__,
+    venv,
+    ta-lib,
+    logs,
+    results,
+    data,
+    .git,
+    build,
+    dist,
+    *.egg-info
+
+ignore = 
+    E501,
+    W503,
+    E203,
+    E126,
+    E741
+
+# 行長度限制
+max-line-length = 120
+
+# 複雜度限制
+max-complexity = 15
+
+# 每個檔案最大函數數量
+max-cognitive-complexity = 20
+
+# 顯示錯誤代碼
+show-source = True
+
+# 統計信息
+count = True
+statistics = True
+
+# 針對特定檔案類型的規則
+per-file-ignores =
+    # 測試檔案可以有較長的行和更多import
+    tests/*.py: E501, F401, F811
+    # 配置檔案可以有長行
+    config/*.py: E501
+    # __init__.py檔案允許未使用的import
+    __init__.py: F401
+    # 腳本檔案允許在檔案頂部設置路徑
+    scripts/*.py: E402

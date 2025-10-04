@@ -1,0 +1,198 @@
+{
+  "layer_configs": {
+    "layer1_labels": {
+      "description": "標籤生成參數優化",
+      "default_trials": 200,
+      "priority": 1,
+      "dependencies": [],
+      "params": {
+        "lag": [1, 20],
+        "threshold_method": ["quantile", "fixed", "adaptive"],
+        "pos_quantile": [0.6, 0.9],
+        "profit_threshold": [0.005, 0.03],
+        "loss_threshold": [-0.03, -0.005],
+        "vol_multiplier": [1.0, 3.0]
+      }
+    },
+    "layer2_features": {
+      "description": "特徵工程參數優化",
+      "default_trials": 100,
+      "priority": 2,
+      "dependencies": ["layer1_labels"],
+      "params": {
+        "enable_polynomial": [true, false],
+        "poly_degree": [2, 3],
+        "coarse_selection_method": ["f_regression", "mutual_info", "rfe"],
+        "coarse_k": [30, 100],
+        "fine_k": [10, 50],
+        "correlation_threshold": [0.7, 0.95]
+      }
+    },
+    "layer3_model": {
+      "description": "模型超參數優化",
+      "default_trials": 100,
+      "priority": 3,
+      "dependencies": ["layer1_labels", "layer2_features"],
+      "params": {
+        "max_depth": [3, 10],
+        "num_leaves": [10, 300],
+        "learning_rate": [0.01, 0.3],
+        "n_estimators": [50, 500],
+        "reg_alpha": [0.0, 10.0],
+        "reg_lambda": [0.0, 10.0],
+        "feature_fraction": [0.4, 1.0],
+        "bagging_fraction": [0.4, 1.0]
+      }
+    },
+    "layer4_cv_risk": {
+      "description": "交叉驗證與風控參數優化",
+      "default_trials": 100,
+      "priority": 4,
+      "dependencies": ["layer1_labels", "layer2_features", "layer3_model"],
+      "params": {
+        "n_splits": [3, 8],
+        "test_size": [0.15, 0.3],
+        "purge_pct": [0.01, 0.1],
+        "stop_loss_pct": [0.01, 0.1],
+        "take_profit_pct": [0.015, 0.15],
+        "max_drawdown_limit": [0.1, 0.3],
+        "position_size_pct": [0.1, 0.8]
+      }
+    },
+    "layer5_kelly": {
+      "description": "Kelly公式資金管理優化",
+      "default_trials": 50,
+      "priority": 5,
+      "dependencies": ["layer4_cv_risk"],
+      "params": {
+        "kelly_fraction": [0.1, 0.8],
+        "kelly_lookback": [50, 300],
+        "max_kelly_position": [0.1, 0.5],
+        "target_volatility": [0.10, 0.25]
+      }
+    },
+    "layer6_ensemble": {
+      "description": "多模型融合權重優化",
+      "default_trials": 50,
+      "priority": 6,
+      "dependencies": ["layer3_model"],
+      "params": {
+        "lgb_weight": [0.0, 1.0],
+        "xgb_weight": [0.0, 1.0],
+        "catboost_weight": [0.0, 1.0],
+        "dynamic_weighting": [true, false],
+        "min_diversity": [0.1, 0.5]
+      }
+    },
+    "layer7_polynomial": {
+      "description": "多項式特徵生成優化",
+      "default_trials": 30,
+      "priority": 7,
+      "dependencies": ["layer2_features"],
+      "params": {
+        "poly_degree": [2, 4],
+        "n_poly_features": [10, 100],
+        "poly_feature_ratio": [0.1, 0.5]
+      }
+    },
+    "layer8_confidence": {
+      "description": "動態置信度閾值優化",
+      "default_trials": 40,
+      "priority": 8,
+      "dependencies": ["layer3_model", "layer4_cv_risk"],
+      "params": {
+        "base_confidence_threshold": [0.5, 0.9],
+        "volatility_threshold": [0.15, 0.35],
+        "trend_window": [20, 100]
+      }
+    },
+    "aux_cleaning": {
+      "description": "數據清洗參數優化",
+      "default_trials": 50,
+      "priority": 0,
+      "dependencies": [],
+      "params": {
+        "impute_method": ["forward_fill", "mean", "median", "knn", "rolling_mean"],
+        "outlier_method": ["iqr", "zscore", "percentile", "none"],
+        "smooth_method": ["rolling_mean", "ewm", "savgol", "none"]
+      }
+    }
+  },
+  "execution_strategies": {
+    "quick": {
+      "description": "快速優化策略",
+      "total_trials": 335,
+      "trial_allocation": {
+        "layer1_labels": 100,
+        "layer2_features": 50,
+        "layer3_model": 50,
+        "layer4_cv_risk": 50,
+        "layer5_kelly": 25,
+        "layer6_ensemble": 25,
+        "layer7_polynomial": 15,
+        "layer8_confidence": 20,
+        "aux_cleaning": 0
+      }
+    },
+    "standard": {
+      "description": "標準優化策略",
+      "total_trials": 670,
+      "trial_allocation": {
+        "layer1_labels": 200,
+        "layer2_features": 100,
+        "layer3_model": 100,
+        "layer4_cv_risk": 100,
+        "layer5_kelly": 50,
+        "layer6_ensemble": 50,
+        "layer7_polynomial": 30,
+        "layer8_confidence": 40,
+        "aux_cleaning": 0
+      }
+    },
+    "comprehensive": {
+      "description": "全面優化策略",
+      "total_trials": 1020,
+      "trial_allocation": {
+        "layer1_labels": 300,
+        "layer2_features": 150,
+        "layer3_model": 150,
+        "layer4_cv_risk": 150,
+        "layer5_kelly": 80,
+        "layer6_ensemble": 80,
+        "layer7_polynomial": 50,
+        "layer8_confidence": 60,
+        "aux_cleaning": 50
+      }
+    },
+    "core_only": {
+      "description": "僅核心層優化 (1-4層)",
+      "total_trials": 400,
+      "trial_allocation": {
+        "layer1_labels": 150,
+        "layer2_features": 100,
+        "layer3_model": 100,
+        "layer4_cv_risk": 100,
+        "layer5_kelly": 0,
+        "layer6_ensemble": 0,
+        "layer7_polynomial": 0,
+        "layer8_confidence": 0,
+        "aux_cleaning": 0
+      }
+    },
+    "specialized_only": {
+      "description": "僅專項層優化 (5-8層)",
+      "total_trials": 170,
+      "trial_allocation": {
+        "layer1_labels": 0,
+        "layer2_features": 0,
+        "layer3_model": 0,
+        "layer4_cv_risk": 0,
+        "layer5_kelly": 50,
+        "layer6_ensemble": 50,
+        "layer7_polynomial": 30,
+        "layer8_confidence": 40,
+        "aux_cleaning": 0
+      }
+    }
+  }
+}

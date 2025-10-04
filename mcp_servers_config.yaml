@@ -1,0 +1,232 @@
+# MCP Python Debug 多 AI 配置文件
+# 加密貨幣量化交易系統專用
+
+ai_backends:
+  claude:
+    endpoint: "https://api.anthropic.com/v1/messages"
+    model: "claude-3-5-sonnet-20241022"
+    speciality: "deep_logic_analysis"
+    weight: 0.4
+    max_tokens: 1500
+    temperature: 0.1
+    
+  gpt4:
+    endpoint: "https://api.openai.com/v1/chat/completions"
+    model: "gpt-4-turbo-preview"
+    speciality: "syntax_repair"
+    weight: 0.35
+    max_tokens: 1500
+    temperature: 0.1
+    
+  gemini:
+    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    model: "gemini-pro"
+    speciality: "quick_response"
+    weight: 0.25
+    max_tokens: 1000
+    temperature: 0.2
+
+# 聚合策略配置
+aggregation_strategy:
+  consensus_threshold: 0.6
+  min_valid_responses: 2
+  
+  # 根據錯誤類型調整 AI 權重 [Claude, GPT-4, Gemini]
+  error_type_weighting:
+    "ImportError": [0.3, 0.4, 0.3]      # GPT-4 在依賴問題上較強
+    "AttributeError": [0.5, 0.3, 0.2]   # Claude 在邏輯分析上較強
+    "ValueError": [0.4, 0.4, 0.2]       # Claude 和 GPT-4 均衡
+    "KeyError": [0.3, 0.5, 0.2]         # GPT-4 在數據處理上較強
+    "TypeError": [0.4, 0.35, 0.25]      # 均衡分配
+    "SyntaxError": [0.2, 0.6, 0.2]      # GPT-4 在語法修復上最強
+    "ModuleNotFoundError": [0.25, 0.5, 0.25]
+    "FileNotFoundError": [0.3, 0.4, 0.3]
+    "ConnectionError": [0.3, 0.3, 0.4]  # Gemini 在網絡問題上較快
+
+# 量化交易系統特定配置
+quant_trading_rules:
+  # 常見錯誤自動處理
+  common_errors:
+    "TA-Lib import error":
+      priority: "CRITICAL"
+      keywords: ["talib", "TA_Lib", "No module named 'talib'"]
+      auto_fix_suggestion: |
+        TA-Lib 安裝問題：
+        Windows: pip install TA_Lib-0.4.25-cp310-cp310-win_amd64.whl
+        macOS: brew install ta-lib && pip install TA-Lib
+        Linux: 需要先安裝系統依賴，請參考安裝指南
+      
+    "CCXT connection error":
+      priority: "HIGH"
+      keywords: ["ccxt", "binance", "connection", "api"]
+      auto_fix_suggestion: |
+        交易所連接問題：
+        1. 檢查 .env 文件中的 API keys 配置
+        2. 確認網絡連接正常
+        3. 檢查 API keys 權限設置
+        4. 確認是否使用正確的測試網/實網環境
+      
+    "Pandas DataFrame KeyError":
+      priority: "HIGH"
+      keywords: ["KeyError", "dataframe", "column", "pandas"]
+      auto_fix_suggestion: |
+        數據列缺失問題：
+        1. 檢查數據源是否包含所需列
+        2. 驗證數據下載完整性
+        3. 檢查列名拼寫是否正確
+        4. 確認數據時間範圍是否正確
+      
+    "LightGBM training error":
+      priority: "MEDIUM"
+      keywords: ["lightgbm", "lgb", "training", "fit"]
+      auto_fix_suggestion: |
+        模型訓練問題：
+        1. 檢查特徵數據類型 (數值型)
+        2. 驗證標籤數據格式
+        3. 檢查是否有 NaN 或無限值
+        4. 確認訓練數據不為空
+      
+    "Optuna optimization error":
+      priority: "MEDIUM"
+      keywords: ["optuna", "optimize", "trial"]
+      auto_fix_suggestion: |
+        超參數優化問題：
+        1. 檢查目標函數返回值
+        2. 驗證參數空間定義
+        3. 確認數據集不為空
+        4. 檢查資源限制 (內存/時間)
+
+  # 模塊特定提示詞
+  module_specific_prompts:
+    data_processing: |
+      **量化交易數據處理模塊分析**
+      
+      請特別注意以下量化交易系統特點：
+      - 數據來源：Binance API 限制和錯誤處理
+      - 時間序列：確保數據連續性和時區處理
+      - 缺失數據：加密貨幣市場的特殊處理策略
+      - 版本管理：raw/processed/features 數據的版本控制
+      
+      常見問題模式：
+      - API 頻率限制 (429 錯誤)
+      - 數據格式不一致 (OHLCV 結構)
+      - 時間戳轉換問題
+      - 內存使用優化 (大數據集處理)
+      
+    machine_learning: |
+      **量化交易機器學習模塊分析**
+      
+      請特別注意以下機器學習特點：
+      - 特徵工程：200+ 技術指標的計算和選擇
+      - 標籤設計：多時框預測標籤的生成
+      - 數據洩露：時間序列的前視偏差問題
+      - 模型評估：金融時間序列的交叉驗證策略
+      
+      常見問題模式：
+      - 特徵維度過高導致的內存問題
+      - 標籤不平衡問題
+      - 模型過擬合 (Sharpe 比率虛高)
+      - Optuna 優化收斂問題
+      
+    trading_logic: |
+      **量化交易邏輯模塊分析**
+      
+      請特別注意以下交易邏輯特點：
+      - 風險控制：止損止盈和倉位管理
+      - 實時執行：模擬盤和實盤環境切換
+      - 信號生成：多模型集成和投票機制  
+      - 異步處理：WebSocket 數據流處理
+      
+      常見問題模式：
+      - 下單失敗和重試機制
+      - 實時數據延遲問題
+      - 風險參數配置錯誤
+      - 回測與實盤結果差異
+      
+    api_web: |
+      **量化交易 API 模塊分析**
+      
+      請特別注意以下 Web API 特點：
+      - 認證授權：JWT 和 API key 管理
+      - 實時通訊：WebSocket 和 SSE 事件流
+      - 數據安全：交易信號和策略保護
+      - 監控告警：系統狀態和性能監控
+      
+      常見問題模式：
+      - 跨域 CORS 配置問題
+      - WebSocket 連接穩定性
+      - 大量併發請求處理
+      - 敏感數據洩露風險
+
+# Debug 流程配置
+debug_workflows:
+  quick_scan:
+    description: "快速環境和語法掃描"
+    steps:
+      - "scan_environment"
+      - "syntax_check"
+      - "import_verification"
+    
+  deep_analysis:
+    description: "深度錯誤分析"
+    steps:
+      - "multi_ai_analysis"
+      - "context_gathering"
+      - "solution_ranking"
+      - "risk_assessment"
+    
+  batch_repair:
+    description: "批量問題修復"
+    steps:
+      - "issue_prioritization"
+      - "auto_fix_attempt"
+      - "manual_fix_guidance"
+      - "verification"
+
+# 響應格式模板
+response_templates:
+  error_analysis:
+    format: |
+      ## 🔍 錯誤分析結果
+      
+      **根本原因：** {root_cause}
+      
+      **修復方案：**
+      ```python
+      {fix_code}
+      ```
+      
+      **風險評估：** {risk_assessment}
+      
+      **測試建議：** {test_suggestions}
+      
+      **AI 共識度：** {consensus_confidence:.1%}
+      
+  batch_scan:
+    format: |
+      ## 📊 代碼掃描報告
+      
+      **掃描範圍：** {scan_paths}
+      **總問題數：** {total_issues}
+      
+      **問題分佈：**
+      {issues_breakdown}
+      
+      **優先修復清單：**
+      {priority_fixes}
+
+# 性能配置
+performance:
+  max_concurrent_requests: 3
+  request_timeout: 30
+  retry_attempts: 2
+  cache_responses: true
+  cache_duration: 300  # 5 分鐘
+
+# 日誌配置
+logging:
+  level: "INFO"
+  format: "[{time}] {level} | {ai_backend} | {message}"
+  file: "mcp_debug.log"
+  max_size: "10MB"
+  backup_count: 5

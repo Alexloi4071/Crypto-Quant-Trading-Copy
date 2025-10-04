@@ -1,0 +1,135 @@
+# Pre-commit hooks configuration
+# 提交前自動執行代碼檢查，防止問題代碼進入倉庫
+
+repos:
+  # Flake8 代碼規範檢查
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        args: [
+          "--exclude=venv,__pycache__,logs,results,data,ta-lib",
+          "--ignore=E501,W503,E203",
+          "--max-line-length=120"
+        ]
+        
+  # 基礎代碼檢查
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.(md|txt)$
+      - id: end-of-file-fixer
+        exclude: \.(md|txt)$
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-docstring-first
+        
+  # Python語法檢查
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-no-log-warn
+      - id: python-check-blanket-noqa
+      - id: python-check-mock-methods
+      - id: python-use-type-annotations
+        
+  # 自定義檢查：防止舊代碼引用
+  - repo: local
+    hooks:
+      - id: check-old-imports
+        name: Check for old/deprecated imports
+        entry: python
+        language: system
+        args: [
+          "-c",
+          "
+import sys
+import os
+import re
+
+old_patterns = [
+    r'from.*old_time_features.*import',
+    r'from.*old_label_generator.*import', 
+    r'from.*old_label_balancer.*import',
+    r'from.*old_technical_indicators.*import',
+    r'import.*old_time_features',
+    r'import.*old_label_generator',
+    r'import.*old_label_balancer',
+    r'src\.labels\.label_generator',
+    r'src\.features\.time_features'
+]
+
+errors = []
+for root, dirs, files in os.walk('src'):
+    if '__pycache__' in root:
+        continue
+    for file in files:
+        if file.endswith('.py'):
+            filepath = os.path.join(root, file)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    for pattern in old_patterns:
+                        if re.search(pattern, content):
+                            errors.append(f'{filepath}: {pattern}')
+            except:
+                pass
+
+if errors:
+    print('❌ 發現舊代碼引用:')
+    for error in errors:
+        print(f'  {error}')
+    print('\\n請使用新的optimization系統API')
+    sys.exit(1)
+else:
+    print('✅ 沒有發現舊代碼引用')
+          "
+        ]
+        files: \.py$
+        
+      - id: check-import-structure
+        name: Check import structure
+        entry: python
+        language: system
+        args: [
+          "-c",
+          "
+import ast
+import sys
+import os
+
+def check_imports(filepath):
+    with open(filepath, 'r', encoding='utf-8') as f:
+        try:
+            tree = ast.parse(f.read())
+            
+            # 檢查是否能正常解析（語法檢查）
+            return True
+        except SyntaxError as e:
+            print(f'❌ 語法錯誤 {filepath}: {e}')
+            return False
+        except Exception:
+            return True
+
+errors = 0
+for root, dirs, files in os.walk('src'):
+    if '__pycache__' in root:
+        continue
+    for file in files:
+        if file.endswith('.py'):
+            filepath = os.path.join(root, file)
+            if not check_imports(filepath):
+                errors += 1
+
+if errors > 0:
+    print(f'❌ 發現 {errors} 個語法錯誤')
+    sys.exit(1)
+else:
+    print('✅ 所有Python檔案語法正確')
+          "
+        ]
+        files: \.py$

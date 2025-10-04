@@ -1,0 +1,694 @@
+{
+  "timeframe": "15m",
+  "best_params": {
+    "lag": 7,
+    "threshold_method": "quantile",
+    "lookback_window": 647,
+    "buy_quantile": 0.7660142091232571,
+    "sell_quantile": 0.2671390818112543,
+    "profit_threshold": 0.012999092794086228,
+    "loss_threshold": -0.01923073002822383,
+    "vol_multiplier": 1.95282956474348,
+    "vol_window": 35,
+    "profit_multiplier": 1.6880301206350845,
+    "stop_multiplier": 1.3974094663526115,
+    "max_holding": 18,
+    "atr_period": 12,
+    "min_samples": 1377,
+    "balance_weight": 0.5294252274252885,
+    "stability_weight": 0.20162291657842477,
+    "fixed_lookback": 1661,
+    "min_threshold_gap": 0.004558437999696568,
+    "max_noise_ratio": 0.36179173083746724,
+    "target_hold_ratio": 0.5038318765605072,
+    "distribution_penalty": 1.0037141803514094,
+    "n_trials": 150
+  },
+  "best_score": 0.9397286736887925,
+  "n_trials": 150,
+  "final_quality": {
+    "balance_score": 0.9988736059710882,
+    "stability_score": 0.7289564051100098,
+    "f1_score": 0.9878512366192709,
+    "precision_macro": 1.0,
+    "recall_macro": 0.9759941150544896,
+    "distribution": [
+      0.2650793801782606,
+      0.5029250335308721,
+      0.23199558629086725
+    ],
+    "total_samples": 105127
+  },
+  "meta_vol": 0.010367718346314022,
+  "optimization_history": [
+    {
+      "trial": 0,
+      "score": -999.0
+    },
+    {
+      "trial": 1,
+      "score": -999.0
+    },
+    {
+      "trial": 2,
+      "score": -999.0
+    },
+    {
+      "trial": 3,
+      "score": 0.4488979185908342
+    },
+    {
+      "trial": 4,
+      "score": 0.4513057393748843
+    },
+    {
+      "trial": 5,
+      "score": 0.7688438308066599
+    },
+    {
+      "trial": 6,
+      "score": -999.0
+    },
+    {
+      "trial": 7,
+      "score": -999.0
+    },
+    {
+      "trial": 8,
+      "score": -999.0
+    },
+    {
+      "trial": 9,
+      "score": 0.4539639012017398
+    },
+    {
+      "trial": 10,
+      "score": 0.6934562621829442
+    },
+    {
+      "trial": 11,
+      "score": 0.6995685466885357
+    },
+    {
+      "trial": 12,
+      "score": 0.7046113454592351
+    },
+    {
+      "trial": 13,
+      "score": 0.754307394492251
+    },
+    {
+      "trial": 14,
+      "score": 0.7718012713608415
+    },
+    {
+      "trial": 15,
+      "score": 0.7698007292532836
+    },
+    {
+      "trial": 16,
+      "score": -999.0
+    },
+    {
+      "trial": 17,
+      "score": 0.8207024102572389
+    },
+    {
+      "trial": 18,
+      "score": 0.8384674284186157
+    },
+    {
+      "trial": 19,
+      "score": 0.9115756870620666
+    },
+    {
+      "trial": 20,
+      "score": -999.0
+    },
+    {
+      "trial": 21,
+      "score": 0.8421978567581239
+    },
+    {
+      "trial": 22,
+      "score": 0.8815609151560039
+    },
+    {
+      "trial": 23,
+      "score": 0.9276935245497686
+    },
+    {
+      "trial": 24,
+      "score": 0.9212120084431735
+    },
+    {
+      "trial": 25,
+      "score": -999.0
+    },
+    {
+      "trial": 26,
+      "score": 0.9272831467355993
+    },
+    {
+      "trial": 27,
+      "score": 0.9301413314312528
+    },
+    {
+      "trial": 28,
+      "score": 0.9103943820408302
+    },
+    {
+      "trial": 29,
+      "score": -999.0
+    },
+    {
+      "trial": 30,
+      "score": 0.27075738953486567
+    },
+    {
+      "trial": 31,
+      "score": 0.9370967365098184
+    },
+    {
+      "trial": 32,
+      "score": 0.9279878650645096
+    },
+    {
+      "trial": 33,
+      "score": -999.0
+    },
+    {
+      "trial": 34,
+      "score": -999.0
+    },
+    {
+      "trial": 35,
+      "score": 0.8786652561487448
+    },
+    {
+      "trial": 36,
+      "score": 0.8722120806327571
+    },
+    {
+      "trial": 37,
+      "score": -999.0
+    },
+    {
+      "trial": 38,
+      "score": 0.36780083902151
+    },
+    {
+      "trial": 39,
+      "score": -999.0
+    },
+    {
+      "trial": 40,
+      "score": 0.8454888446422486
+    },
+    {
+      "trial": 41,
+      "score": 0.9228995929576503
+    },
+    {
+      "trial": 42,
+      "score": 0.8749133640886898
+    },
+    {
+      "trial": 43,
+      "score": 0.8910034500377554
+    },
+    {
+      "trial": 44,
+      "score": 0.8982763347328647
+    },
+    {
+      "trial": 45,
+      "score": 0.8995616772998913
+    },
+    {
+      "trial": 46,
+      "score": -999.0
+    },
+    {
+      "trial": 47,
+      "score": 0.27262862144275335
+    },
+    {
+      "trial": 48,
+      "score": 0.7587435025470348
+    },
+    {
+      "trial": 49,
+      "score": -999.0
+    },
+    {
+      "trial": 50,
+      "score": 0.8961432127671134
+    },
+    {
+      "trial": 51,
+      "score": 0.9195268825066617
+    },
+    {
+      "trial": 52,
+      "score": 0.8706538498814342
+    },
+    {
+      "trial": 53,
+      "score": 0.8820849471321255
+    },
+    {
+      "trial": 54,
+      "score": 0.8715968022215952
+    },
+    {
+      "trial": 55,
+      "score": 0.8673484778522224
+    },
+    {
+      "trial": 56,
+      "score": 0.8120917646597807
+    },
+    {
+      "trial": 57,
+      "score": 0.7565904031617344
+    },
+    {
+      "trial": 58,
+      "score": -999.0
+    },
+    {
+      "trial": 59,
+      "score": 0.8655245581665689
+    },
+    {
+      "trial": 60,
+      "score": -999.0
+    },
+    {
+      "trial": 61,
+      "score": 0.9251318356565696
+    },
+    {
+      "trial": 62,
+      "score": 0.9072498596886106
+    },
+    {
+      "trial": 63,
+      "score": 0.9012457806549672
+    },
+    {
+      "trial": 64,
+      "score": 0.9360323769964971
+    },
+    {
+      "trial": 65,
+      "score": 0.9385059380734416
+    },
+    {
+      "trial": 66,
+      "score": -999.0
+    },
+    {
+      "trial": 67,
+      "score": 0.9321003693520934
+    },
+    {
+      "trial": 68,
+      "score": 0.7082046906761081
+    },
+    {
+      "trial": 69,
+      "score": 0.9274958113358239
+    },
+    {
+      "trial": 70,
+      "score": 0.9066835750033342
+    },
+    {
+      "trial": 71,
+      "score": 0.9234780093406815
+    },
+    {
+      "trial": 72,
+      "score": 0.9135101317660995
+    },
+    {
+      "trial": 73,
+      "score": 0.9278583423378806
+    },
+    {
+      "trial": 74,
+      "score": 0.9100391695566113
+    },
+    {
+      "trial": 75,
+      "score": 0.9237146244065724
+    },
+    {
+      "trial": 76,
+      "score": 0.8515489855066368
+    },
+    {
+      "trial": 77,
+      "score": -999.0
+    },
+    {
+      "trial": 78,
+      "score": 0.9130636330180568
+    },
+    {
+      "trial": 79,
+      "score": 0.9325429312473509
+    },
+    {
+      "trial": 80,
+      "score": -999.0
+    },
+    {
+      "trial": 81,
+      "score": 0.9239111387913146
+    },
+    {
+      "trial": 82,
+      "score": 0.9096734550673726
+    },
+    {
+      "trial": 83,
+      "score": 0.9377375580417291
+    },
+    {
+      "trial": 84,
+      "score": 0.929349017240064
+    },
+    {
+      "trial": 85,
+      "score": 0.6327976648984791
+    },
+    {
+      "trial": 86,
+      "score": 0.9092878507926051
+    },
+    {
+      "trial": 87,
+      "score": 0.56571274086356
+    },
+    {
+      "trial": 88,
+      "score": 0.9288305321734238
+    },
+    {
+      "trial": 89,
+      "score": 0.7182377267476896
+    },
+    {
+      "trial": 90,
+      "score": 0.9255553649304531
+    },
+    {
+      "trial": 91,
+      "score": 0.9171443135166951
+    },
+    {
+      "trial": 92,
+      "score": 0.9117911186470279
+    },
+    {
+      "trial": 93,
+      "score": 0.9236045718018122
+    },
+    {
+      "trial": 94,
+      "score": 0.9332237158431643
+    },
+    {
+      "trial": 95,
+      "score": 0.9250694765391498
+    },
+    {
+      "trial": 96,
+      "score": 0.9270865100387611
+    },
+    {
+      "trial": 97,
+      "score": 0.9235191711353024
+    },
+    {
+      "trial": 98,
+      "score": -999.0
+    },
+    {
+      "trial": 99,
+      "score": 0.808572915994872
+    },
+    {
+      "trial": 100,
+      "score": 0.9317038152726619
+    },
+    {
+      "trial": 101,
+      "score": 0.9310380262428354
+    },
+    {
+      "trial": 102,
+      "score": 0.8915566529004058
+    },
+    {
+      "trial": 103,
+      "score": 0.9296632335937086
+    },
+    {
+      "trial": 104,
+      "score": 0.9232785988528985
+    },
+    {
+      "trial": 105,
+      "score": 0.9288306651497894
+    },
+    {
+      "trial": 106,
+      "score": -999.0
+    },
+    {
+      "trial": 107,
+      "score": 0.8968324999119694
+    },
+    {
+      "trial": 108,
+      "score": -999.0
+    },
+    {
+      "trial": 109,
+      "score": 0.9117899311202552
+    },
+    {
+      "trial": 110,
+      "score": 0.5306484919709478
+    },
+    {
+      "trial": 111,
+      "score": 0.9163057907729862
+    },
+    {
+      "trial": 112,
+      "score": 0.9274972246807804
+    },
+    {
+      "trial": 113,
+      "score": 0.9175230388785118
+    },
+    {
+      "trial": 114,
+      "score": 0.914172571853436
+    },
+    {
+      "trial": 115,
+      "score": 0.9155165662302861
+    },
+    {
+      "trial": 116,
+      "score": 0.866889214518258
+    },
+    {
+      "trial": 117,
+      "score": 0.9149838926747376
+    },
+    {
+      "trial": 118,
+      "score": 0.9104894011883713
+    },
+    {
+      "trial": 119,
+      "score": 0.9333854370741267
+    },
+    {
+      "trial": 120,
+      "score": 0.9309383510461647
+    },
+    {
+      "trial": 121,
+      "score": 0.9349953781517212
+    },
+    {
+      "trial": 122,
+      "score": 0.9392511267015649
+    },
+    {
+      "trial": 123,
+      "score": 0.9379982345655596
+    },
+    {
+      "trial": 124,
+      "score": 0.9383405091526206
+    },
+    {
+      "trial": 125,
+      "score": 0.9394386607601449
+    },
+    {
+      "trial": 126,
+      "score": -999.0
+    },
+    {
+      "trial": 127,
+      "score": 0.9261546745233074
+    },
+    {
+      "trial": 128,
+      "score": 0.9224133268724654
+    },
+    {
+      "trial": 129,
+      "score": 0.9396710553167698
+    },
+    {
+      "trial": 130,
+      "score": -999.0
+    },
+    {
+      "trial": 131,
+      "score": 0.932828922516397
+    },
+    {
+      "trial": 132,
+      "score": 0.936321878552057
+    },
+    {
+      "trial": 133,
+      "score": 0.9397286736887925
+    },
+    {
+      "trial": 134,
+      "score": 0.936683957253315
+    },
+    {
+      "trial": 135,
+      "score": 0.9340839642273563
+    },
+    {
+      "trial": 136,
+      "score": 0.9355021873455256
+    },
+    {
+      "trial": 137,
+      "score": -999.0
+    },
+    {
+      "trial": 138,
+      "score": 0.9395154576909659
+    },
+    {
+      "trial": 139,
+      "score": 0.8740190138239814
+    },
+    {
+      "trial": 140,
+      "score": 0.6526514633205709
+    },
+    {
+      "trial": 141,
+      "score": 0.935061582972954
+    },
+    {
+      "trial": 142,
+      "score": 0.9376028473420778
+    },
+    {
+      "trial": 143,
+      "score": 0.9291830927151303
+    },
+    {
+      "trial": 144,
+      "score": 0.9373640314236671
+    },
+    {
+      "trial": 145,
+      "score": 0.9259056117418503
+    },
+    {
+      "trial": 146,
+      "score": 0.9390271576725046
+    },
+    {
+      "trial": 147,
+      "score": 0.9373495831094163
+    },
+    {
+      "trial": 148,
+      "score": 0.932476678635628
+    },
+    {
+      "trial": 149,
+      "score": 0.9331510998953598
+    }
+  ],
+  "materialized_path": "D:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\data\\processed\\labels\\BTCUSDT_15m\\v1\\labels_BTCUSDT_15m_c97e3b785f8d56f9bde54744ac50ba96.parquet",
+  "metadata": {
+    "created_at": "2025-10-04T09:23:39.188726+00:00",
+    "params_hash": "c97e3b785f8d56f9bde54744ac50ba96",
+    "data_shape": [
+      105127,
+      6
+    ],
+    "data_columns": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "label"
+    ],
+    "cached": false,
+    "storage_format": "parquet",
+    "json_path": "d:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\optuna_system\\configs\\label_params_15m.json",
+    "best_params": {
+      "lag": 7,
+      "threshold_method": "quantile",
+      "lookback_window": 647,
+      "buy_quantile": 0.7660142091232571,
+      "sell_quantile": 0.2671390818112543,
+      "profit_threshold": 0.012999092794086228,
+      "loss_threshold": -0.01923073002822383,
+      "vol_multiplier": 1.95282956474348,
+      "vol_window": 35,
+      "profit_multiplier": 1.6880301206350845,
+      "stop_multiplier": 1.3974094663526115,
+      "max_holding": 18,
+      "atr_period": 12,
+      "min_samples": 1377,
+      "balance_weight": 0.5294252274252885,
+      "stability_weight": 0.20162291657842477,
+      "fixed_lookback": 1661,
+      "min_threshold_gap": 0.004558437999696568,
+      "max_noise_ratio": 0.36179173083746724,
+      "target_hold_ratio": 0.5038318765605072,
+      "distribution_penalty": 1.0037141803514094,
+      "n_trials": 150
+    },
+    "file_path": "D:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\data\\processed\\labels\\BTCUSDT_15m\\v1\\labels_BTCUSDT_15m_c97e3b785f8d56f9bde54744ac50ba96.parquet",
+    "file_md5": "fe7b10626d801d840a6be4dc0bfe1fd3",
+    "best_score": 0.9397286736887925,
+    "n_trials": 150
+  },
+  "data_version": "layer1_labels_c97e3b785f_105127x6_20251004172339"
+}

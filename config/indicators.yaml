@@ -1,0 +1,388 @@
+# 技術指標配置文件
+# 包含200+量化交易技術指標的參數設置
+
+# ==================== 趋势指标 ====================
+trend_indicators:
+  moving_averages:
+    sma:  # 簡單移動平均線
+      periods: [5, 10, 20, 50, 100, 200]
+      enabled: true
+      weight: 1.0
+    ema:  # 指數移動平均線
+      periods: [9, 12, 21, 26, 50, 100, 200]
+      enabled: true
+      weight: 1.2
+    wma:  # 加權移動平均線
+      periods: [10, 20, 50]
+      enabled: true
+      weight: 0.8
+    hull_ma:  # 赫爾移動平均線
+      periods: [9, 16, 25]
+      enabled: true
+      weight: 1.1
+    tema:  # 三重指數移動平均線
+      periods: [14, 21, 30]
+      enabled: true
+      weight: 1.0
+    dema:  # 雙重指數移動平均線
+      periods: [14, 21, 30]
+      enabled: true
+      weight: 1.0
+    
+  trend_following:
+    macd:  # MACD指標
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+      enabled: true
+      weight: 1.5
+    adx:  # 平均趨向指標
+      periods: [14, 21, 28]
+      threshold: 25
+      enabled: true
+      weight: 1.3
+    psar:  # 拋物線SAR
+      acceleration: 0.02
+      maximum: 0.2
+      enabled: true
+      weight: 1.0
+    aroon:  # 阿隆指標
+      periods: [14, 25]
+      enabled: true
+      weight: 1.0
+    supertrend:  # 超級趨勢
+      periods: [10, 14, 20]
+      multipliers: [2, 3, 4]
+      enabled: true
+      weight: 1.2
+    ichimoku:  # 一目均衡表
+      conversion_period: 9
+      base_period: 26
+      leading_span_b_period: 52
+      displacement: 26
+      enabled: true
+      weight: 1.1
+
+# ==================== 動量指標 ====================
+momentum_indicators:
+  oscillators:
+    rsi:  # 相對強弱指標
+      periods: [14, 21, 28]
+      overbought: 70
+      oversold: 30
+      enabled: true
+      weight: 1.4
+    stoch:  # 隨機指標
+      k_period: 14
+      d_period: 3
+      smooth_k: 3
+      overbought: 80
+      oversold: 20
+      enabled: true
+      weight: 1.2
+    stoch_rsi:  # 隨機RSI
+      periods: [14, 21]
+      k_period: 3
+      d_period: 3
+      enabled: true
+      weight: 1.1
+    williams_r:  # 威廉指標
+      periods: [14, 21]
+      overbought: -20
+      oversold: -80
+      enabled: true
+      weight: 1.0
+    cci:  # 商品通道指標
+      periods: [14, 20, 28]
+      overbought: 100
+      oversold: -100
+      enabled: true
+      weight: 1.0
+    roc:  # 變動率指標
+      periods: [12, 25, 50]
+      enabled: true
+      weight: 0.9
+    momentum:  # 動量指標
+      periods: [10, 14, 20]
+      enabled: true
+      weight: 0.8
+    tsi:  # 真實強度指數
+      long_period: 25
+      short_period: 13
+      signal_period: 7
+      enabled: true
+      weight: 1.0
+      
+  price_oscillators:
+    ppo:  # 價格震盪指標
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+      enabled: true
+      weight: 1.0
+    detrended_price:  # 去趨勢價格震盪器
+      period: 14
+      enabled: true
+      weight: 0.9
+
+# ==================== 波動率指標 ====================
+volatility_indicators:
+  bands:
+    bollinger:  # 布林帶
+      periods: [20, 50]
+      std_dev: [2, 2.5]
+      enabled: true
+      weight: 1.3
+    keltner:  # 肯特納通道
+      periods: [20, 50]
+      atr_period: 10
+      multiplier: 2
+      enabled: true
+      weight: 1.1
+    donchian:  # 唐奇安通道
+      periods: [20, 55]
+      enabled: true
+      weight: 1.0
+      
+  volatility_measures:
+    atr:  # 真實波動幅度均值
+      periods: [14, 21, 28]
+      enabled: true
+      weight: 1.2
+    natr:  # 標準化ATR
+      periods: [14, 21]
+      enabled: true
+      weight: 1.0
+    std_dev:  # 標準差
+      periods: [20, 50]
+      enabled: true
+      weight: 0.9
+    variance:  # 方差
+      periods: [20, 50]
+      enabled: true
+      weight: 0.8
+    historical_volatility:  # 歷史波動率
+      periods: [20, 30, 60]
+      enabled: true
+      weight: 1.0
+    garman_klass:  # Garman-Klass波動率
+      periods: [20, 30]
+      enabled: true
+      weight: 0.9
+
+# ==================== 成交量指標 ====================
+volume_indicators:
+  volume_price:
+    obv:  # 能量潮
+      enabled: true
+      weight: 1.2
+    ad_line:  # 累積/派發線
+      enabled: true
+      weight: 1.1
+    cmf:  # 蔡金資金流量
+      periods: [20, 21]
+      enabled: true
+      weight: 1.0
+    mfi:  # 資金流量指標
+      periods: [14, 21]
+      enabled: true
+      weight: 1.1
+    ad_osc:  # 累積/派發震盪器
+      fast_period: 3
+      slow_period: 10
+      enabled: true
+      weight: 0.9
+    
+  volume_analysis:
+    vwap:  # 成交量加權平均價
+      periods: [20, 50]
+      enabled: true
+      weight: 1.3
+    volume_sma:  # 成交量移動平均
+      periods: [10, 20, 50]
+      enabled: true
+      weight: 1.0
+    volume_ratio:  # 成交量比率
+      periods: [5, 10, 20]
+      enabled: true
+      weight: 0.9
+    ease_of_movement:  # 簡易波動指標
+      periods: [14, 20]
+      enabled: true
+      weight: 0.8
+    negative_volume_index:  # 負成交量指標
+      enabled: true
+      weight: 0.7
+    positive_volume_index:  # 正成交量指標
+      enabled: true
+      weight: 0.7
+    volume_oscillator:  # 成交量震盪器
+      short_period: 5
+      long_period: 10
+      enabled: true
+      weight: 0.8
+
+# ==================== 市場結構指標 ====================
+market_structure:
+  support_resistance:
+    pivot_points:  # 樞軸點
+      enabled: true
+      weight: 1.2
+      method: "standard"  # standard, fibonacci, camarilla
+    fibonacci_retracement:  # 斐波那契回調
+      levels: [0.236, 0.382, 0.5, 0.618, 0.786]
+      enabled: true
+      weight: 1.0
+    
+  pattern_recognition:
+    fractal:  # 分形
+      enabled: true
+      weight: 0.9
+    swing_points:  # 擺動點
+      lookback: 5
+      enabled: true
+      weight: 0.8
+    higher_highs_lows:  # 更高高點/低點
+      periods: [10, 20]
+      enabled: true
+      weight: 0.7
+
+# ==================== 高級指標 ====================
+advanced_indicators:
+  composite:
+    stochastic_momentum:  # 隨機動量指標
+      k_period: 10
+      k_smooth: 3
+      d_period: 3
+      enabled: true
+      weight: 1.0
+    elder_ray:  # 艾達雷指標
+      period: 13
+      enabled: true
+      weight: 0.9
+    chande_momentum:  # 錢德動量震盪器
+      periods: [9, 14, 20]
+      enabled: true
+      weight: 0.8
+    
+  statistical:
+    z_score:  # Z分數
+      periods: [20, 50]
+      enabled: true
+      weight: 0.9
+    percentile_rank:  # 百分位排名
+      periods: [20, 50, 100]
+      enabled: true
+      weight: 0.8
+    correlation:  # 相關係數
+      periods: [20, 50]
+      benchmark: "BTCUSDT"
+      enabled: true
+      weight: 0.7
+      
+  market_regime:
+    market_regime_filter:  # 市場狀態過濾器
+      fast_ma: 50
+      slow_ma: 200
+      enabled: true
+      weight: 1.1
+    trend_strength:  # 趨勢強度
+      period: 14
+      enabled: true
+      weight: 0.9
+
+# ==================== 威科夫指標 ====================
+wyckoff_indicators:
+  volume_analysis:
+    volume_spread_analysis:  # 成交量價差分析
+      enabled: true
+      weight: 1.2
+    effort_vs_result:  # 力度與結果
+      enabled: true
+      weight: 1.1
+    background_volume:  # 背景成交量
+      periods: [50, 100]
+      enabled: true
+      weight: 1.0
+    
+  price_action:
+    spring_test:  # 彈簧測試
+      enabled: true
+      weight: 1.0
+    upthrust:  # 假突破
+      enabled: true
+      weight: 1.0
+    stopping_volume:  # 停止成交量
+      enabled: true
+      weight: 0.9
+
+# ==================== 自定義指標 ====================
+custom_indicators:
+  multi_timeframe:
+    higher_tf_trend:  # 更高時框趨勢
+      base_timeframe: "1h"
+      higher_timeframes: ["4h", "1d"]
+      enabled: true
+      weight: 1.3
+    
+  machine_learning:
+    feature_importance:  # 特徵重要性
+      enabled: false  # 需要訓練後才能啟用
+      weight: 1.5
+    prediction_confidence:  # 預測信心度
+      enabled: false
+      weight: 1.4
+
+# ==================== 組合設置 ====================
+indicator_combinations:
+  trend_following_combo:
+    indicators: ["ema_21", "macd", "adx"]
+    min_agreement: 2  # 至少2個指標同意
+    weight: 1.5
+    
+  mean_reversion_combo:
+    indicators: ["rsi_14", "bollinger_bands", "stoch_rsi"]
+    min_agreement: 2
+    weight: 1.3
+    
+  momentum_combo:
+    indicators: ["rsi_14", "momentum", "roc_12"]
+    min_agreement: 2
+    weight: 1.2
+    
+  volume_combo:
+    indicators: ["obv", "mfi", "cmf"]
+    min_agreement: 2
+    weight: 1.4
+
+# ==================== 時框設置 ====================
+timeframe_settings:
+  1m:
+    fast_indicators: ["ema_9", "rsi_14", "macd"]
+    update_frequency: "realtime"
+  5m:
+    indicators: ["ema_21", "bollinger_bands", "volume_sma"]
+    update_frequency: "5min"
+  15m:
+    indicators: ["sma_50", "atr_14", "adx"]
+    update_frequency: "15min"
+  1h:
+    indicators: ["sma_200", "ichimoku", "elder_ray"]
+    update_frequency: "1h"
+  4h:
+    indicators: ["ema_100", "pivot_points", "fibonacci"]
+    update_frequency: "4h"
+  1d:
+    indicators: ["sma_200", "market_regime_filter"]
+    update_frequency: "1d"
+
+# ==================== 優化設置 ====================
+optimization:
+  parameter_ranges:
+    rsi_period: [10, 30]
+    ma_period: [10, 200]
+    bollinger_std: [1.5, 3.0]
+    atr_period: [10, 30]
+  
+  optimization_metric: "sharpe_ratio"  # sharpe_ratio, max_drawdown, total_return
+  lookback_period: 252  # 優化用的歷史數據天數
