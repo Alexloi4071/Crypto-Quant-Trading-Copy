@@ -16,6 +16,8 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, log_loss
 from sklearn.model_selection import TimeSeriesSplit
 
+from optuna_system.utils.io_utils import read_dataframe
+
 try:
     import xgboost as xgb
 except ImportError:  # pragma: no cover - 可選依賴
@@ -55,44 +57,66 @@ class ModelOptimizer:
         # 定義要訓練的模型（完整5模型方案）
         self.models_to_train = ['lightgbm', 'xgboost', 'catboost', 'randomforest', 'extratrees']
 
+    def get_available_models(self) -> List[str]:
+        available_models: List[str] = []
+        if 'lightgbm' in self.models_to_train:
+            available_models.append('lightgbm')
+        if 'xgboost' in self.models_to_train and xgb is not None:
+            available_models.append('xgboost')
+        if 'catboost' in self.models_to_train and CatBoostClassifier is not None:
+            available_models.append('catboost')
+        if 'randomforest' in self.models_to_train:
+            available_models.append('randomforest')
+        if 'extratrees' in self.models_to_train:
+            available_models.append('extratrees')
+        return available_models
+
     def load_data(self) -> Tuple[pd.DataFrame, pd.Series, Optional[pd.Series]]:
         """使用與Layer2相同的數據加載方式"""
         try:
-            # 讀取Layer2生成的特徵
-            feature_file = self.config_path / f"selected_features_{self.timeframe}.parquet"
-            if not feature_file.exists():
-                feature_file = self.config_path / "selected_features.parquet"
-            
-            if not feature_file.exists():
-                self.logger.error(f"特徵文件不存在: {feature_file}")
+            feature_candidates = [
+                self.config_path / f"selected_features_{self.timeframe}.parquet",
+                self.config_path / f"selected_features_{self.timeframe}.pkl",
+                self.config_path / "selected_features.parquet",
+                self.config_path / "selected_features.pkl"
+            ]
+            feature_file = next((p for p in feature_candidates if p.exists()), None)
+            if feature_file is None:
+                self.logger.error("特徵文件不存在於 configs 目錄，請先執行 Layer2")
                 return pd.DataFrame(), pd.Series(), None
 
-            features_df = pd.read_parquet(feature_file)
+            features_df = read_dataframe(feature_file)
+            # 防洩漏：物化特徵集可能含 label，Layer3 載入後先移除
+            if 'label' in features_df.columns:
+                features_df = features_df.drop(columns=['label'])
+                self.logger.warning("Dropped target column 'label' from features_df to prevent leakage")
             self.logger.info(f"成功加載特徵文件: {feature_file}")
 
-            # 讀取Layer1生成的標籤
-            label_file = self.config_path / f"labels_{self.timeframe}.parquet"
-            if not label_file.exists():
-                label_file = self.config_path / "labels.parquet"
-            
-            if not label_file.exists():
-                self.logger.error(f"標籤文件不存在: {label_file}")
+            label_candidates = [
+                self.config_path / f"labels_{self.timeframe}.parquet",
+                self.config_path / f"labels_{self.timeframe}.pkl",
+                self.config_path / "labels.parquet",
+                self.config_path / "labels.pkl"
+            ]
+            label_file = next((p for p in label_candidates if p.exists()), None)
+            if label_file is None:
+                self.logger.error("標籤文件不存在於 configs 目錄，請先執行 Layer1")
                 return pd.DataFrame(), pd.Series(), None
 
-            labels_df = pd.read_parquet(label_file)
+            labels_df = read_dataframe(label_file)
             labels = labels_df['label'] if 'label' in labels_df.columns else labels_df.iloc[:, 0]
             self.logger.info(f"成功加載標籤文件: {label_file}")
 
-            # 讀取Layer0生成的清洗數據（用於計算收益）
-            cleaned_file = self.config_path / f"cleaned_ohlcv_{self.timeframe}.parquet"
-            if not cleaned_file.exists():
-                # 嘗試從processed目錄讀取
-                processed_dir = Path("data/processed/cleaned") / f"{self.symbol}_{self.timeframe}"
-                cleaned_file = processed_dir / "cleaned_ohlcv.parquet"
-            
+            cleaned_candidates = [
+                self.config_path / f"cleaned_ohlcv_{self.timeframe}.parquet",
+                self.config_path / f"cleaned_ohlcv_{self.timeframe}.pkl",
+                Path("data/processed/cleaned") / f"{self.symbol}_{self.timeframe}" / "cleaned_ohlcv.pkl",
+                Path("data/processed/cleaned") / f"{self.symbol}_{self.timeframe}" / "cleaned_ohlcv.parquet"
+            ]
+            cleaned_file = next((p for p in cleaned_candidates if p.exists()), None)
             returns_series = None
-            if cleaned_file.exists():
-                ohlcv_df = pd.read_parquet(cleaned_file)
+            if cleaned_file is not None and cleaned_file.exists():
+                ohlcv_df = read_dataframe(cleaned_file)
                 if 'close' in ohlcv_df.columns:
                     returns_series = ohlcv_df['close'].pct_change()
                     self.logger.info(f"成功計算收益率")
@@ -122,7 +146,10 @@ class ModelOptimizer:
 
         if model_type == 'lightgbm':
             max_depth = trial.suggest_int('max_depth', 3, 10)
-            num_leaves = trial.suggest_int('num_leaves', 16, min(2 ** max_depth - 1, 256))
+            # 動態計算 num_leaves 的上下界，避免 low > high 的無效區間
+            upper_num_leaves = min((2 ** max_depth) - 1, 256)
+            lower_num_leaves = 16 if upper_num_leaves >= 16 else max(2, upper_num_leaves)
+            num_leaves = trial.suggest_int('num_leaves', lower_num_leaves, upper_num_leaves)
             return {
                 'type': 'lightgbm',
                 'params': {
@@ -134,12 +161,12 @@ class ModelOptimizer:
                     'seed': 42,
                     'num_leaves': num_leaves,
                     'max_depth': max_depth,
-                    'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.2),
-                    'n_estimators': trial.suggest_int('n_estimators', 200, 1200),
+                    'learning_rate': trial.suggest_float('learning_rate', 0.03, 0.1),
+                    'n_estimators': trial.suggest_int('n_estimators', 400, 1000),
                     'reg_alpha': trial.suggest_float('reg_alpha', 0.0, 5.0),
                     'reg_lambda': trial.suggest_float('reg_lambda', 0.0, 5.0),
                     'feature_fraction': trial.suggest_float('feature_fraction', 0.4, 1.0),
-                    'bagging_fraction': trial.suggest_float('bagging_fraction', 0.4, 1.0),
+                    'bagging_fraction': trial.suggest_float('bagging_fraction', 0.6, 0.9),
                     'bagging_freq': trial.suggest_int('bagging_freq', 1, 7),
                     'min_child_samples': trial.suggest_int('min_child_samples', 10, 120),
                     'min_child_weight': trial.suggest_float('min_child_weight', 0.001, 5.0),
@@ -159,8 +186,8 @@ class ModelOptimizer:
                     'eval_metric': 'mlogloss',
                     'tree_method': trial.suggest_categorical('tree_method', ['hist', 'approx']),
                     'max_depth': max_depth,
-                    'eta': trial.suggest_float('eta', 0.01, 0.2),
-                    'n_estimators': trial.suggest_int('n_estimators', 200, 1200),
+                    'eta': trial.suggest_float('eta', 0.03, 0.1),
+                    'n_estimators': trial.suggest_int('n_estimators', 400, 1000),
                     'subsample': trial.suggest_float('subsample', 0.5, 1.0),
                     'colsample_bytree': trial.suggest_float('colsample_bytree', 0.5, 1.0),
                     'lambda': trial.suggest_float('lambda', 0.0, 5.0),
@@ -197,7 +224,7 @@ class ModelOptimizer:
                     'n_estimators': trial.suggest_int('n_estimators', 100, 500),
                     'max_depth': trial.suggest_int('max_depth', 5, 20),
                     'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
-                    'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
+                    'min_samples_leaf': trial.suggest_int('min_samples_leaf', 2, 10),
                     'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2']),
                     'class_weight': 'balanced',
                     'random_state': 42,
@@ -213,7 +240,7 @@ class ModelOptimizer:
                     'n_estimators': trial.suggest_int('n_estimators', 100, 500),
                     'max_depth': trial.suggest_int('max_depth', 5, 20),
                     'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
-                    'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
+                    'min_samples_leaf': trial.suggest_int('min_samples_leaf', 2, 10),
                     'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2']),
                     'class_weight': 'balanced',
                     'random_state': 42,
@@ -507,17 +534,7 @@ class ModelOptimizer:
         all_results = {}
         
         # 檢查可用的模型
-        available_models = []
-        if 'lightgbm' in self.models_to_train:
-            available_models.append('lightgbm')
-        if 'xgboost' in self.models_to_train and xgb is not None:
-            available_models.append('xgboost')
-        if 'catboost' in self.models_to_train and CatBoostClassifier is not None:
-            available_models.append('catboost')
-        if 'randomforest' in self.models_to_train:
-            available_models.append('randomforest')
-        if 'extratrees' in self.models_to_train:
-            available_models.append('extratrees')
+        available_models = self.get_available_models()
         
         if not available_models:
             self.logger.error("沒有可用的模型！請檢查依賴安裝。")
@@ -537,6 +554,15 @@ class ModelOptimizer:
             
             # 步驟2: 訓練並保存預測
             self.train_and_save_predictions(model_type, result['best_params'])
+
+            # 步驟3: 即時寫出累積的 model_params.json，避免中途停止無總結
+            try:
+                incremental_path = self.config_path / "model_params.json"
+                with open(incremental_path, 'w', encoding='utf-8') as f:
+                    json.dump(all_results, f, indent=2, ensure_ascii=False)
+                self.logger.info(f"📝 已更新: {incremental_path}（累積 {len(all_results)} 個模型結果）")
+            except Exception as e:
+                self.logger.warning(f"⚠️ 寫出 model_params.json 失敗: {e}")
 
         # 保存整合結果
         output_file = self.config_path / "model_params.json"

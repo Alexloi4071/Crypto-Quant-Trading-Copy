@@ -99,5 +99,5 @@ cookiecutter>=2.1.1  # Fix CVE-2022-24065: Command injection vulnerability
 # scrapy: Consider alternatives due to persistent DoS vulnerability CVE-2017-14158
 
 #因子圖視化
-shap=>0.44.0
+shap>=0.44.0
 networkx>=3.2.0

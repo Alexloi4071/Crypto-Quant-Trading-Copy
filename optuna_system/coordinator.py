@@ -140,7 +140,7 @@ class OptunaCoordinator:
                     base_15m = self.data_path / "raw" / self.symbol / f"{self.symbol}_15m_ohlcv.parquet"
                     if base_15m.exists() and tf in {"1h", "4h", "1d"}:
                         try:
-                            df15 = pd.read_parquet(base_15m, engine='pyarrow')
+                            df15 = read_dataframe(base_15m)
                             rule_map = {"1h": "1H", "4h": "4H", "1d": "1D"}
                             rule = rule_map[tf]
                             df = df15.resample(rule).agg({
@@ -160,7 +160,7 @@ class OptunaCoordinator:
                         global_vol[tf] = 0.02
                         continue
                 else:
-                    df = pd.read_parquet(ohlcv_file, engine='pyarrow')
+                    df = read_dataframe(ohlcv_file)
 
                 returns = df['close'].pct_change().dropna()
                 rolling_std = returns.rolling(window=100, min_periods=50).std()
@@ -172,7 +172,7 @@ class OptunaCoordinator:
                 try:
                     base_15m = self.data_path / "raw" / self.symbol / f"{self.symbol}_15m_ohlcv.parquet"
                     if base_15m.exists() and tf in {"1h", "4h", "1d"}:
-                        df15 = pd.read_parquet(base_15m, engine='pyarrow')
+                        df15 = read_dataframe(base_15m)
                         rule_map = {"1h": "1H", "4h": "4H", "1d": "1D"}
                         rule = rule_map[tf]
                         df = df15.resample(rule).agg({
@@ -368,9 +368,13 @@ class OptunaCoordinator:
                 if base.exists():
                     for pattern in ["**/cleaned_ohlcv.parquet", "**/cleaned_ohlcv_*.parquet", "**/cleaned_ohlcv.pkl", "**/cleaned_ohlcv_*.pkl"]:
                         candidates.extend(sorted(base.rglob(pattern), key=lambda x: x.stat().st_mtime, reverse=True))
+                # Return first readable candidate to avoid corrupted files
                 for c in candidates:
-                    if c.exists():
+                    try:
+                        _ = read_dataframe(c)
                         return c
+                    except Exception:
+                        continue
 
                 # 最後回退到舊位置
                 legacy = self.configs_path / f"cleaned_ohlcv_{self.timeframe}.parquet"
@@ -384,9 +388,43 @@ class OptunaCoordinator:
                 if base.exists():
                     for pattern in ["**/labels_*.parquet", "**/labels_*.pkl"]:
                         candidates.extend(sorted(base.rglob(pattern), key=lambda x: x.stat().st_mtime, reverse=True))
+                # Return first readable candidate to avoid corrupted files
                 for c in candidates:
-                    if c.exists():
+                    try:
+                        _ = read_dataframe(c)
                         return c
+                    except Exception:
+                        continue
+
+                # 回退：若無可讀取之上一層標籤，嘗試從清洗資料與Layer1配置重建
+                try:
+                    label_cfg_path = self.get_label_config_path(self.timeframe)
+                    if label_cfg_path.exists():
+                        with open(label_cfg_path, 'r', encoding='utf-8') as f:
+                            label_cfg = json.load(f)
+                        label_params = dict(label_cfg.get('best_params', {}))
+                        if label_params:
+                            cleaned_path = self.get_cleaned_file_path(self.timeframe)
+                            df_cleaned = read_dataframe(cleaned_path)
+                            labels = LabelOptimizer(
+                                data_path=str(self.data_path),
+                                config_path=str(self.configs_path),
+                                symbol=self.symbol,
+                                timeframe=self.timeframe,
+                                scaled_config=self.scaled_config,
+                            ).generate_labels(df_cleaned['close'], label_params)
+                            aligned = df_cleaned.loc[labels.index].copy()
+                            aligned['label'] = labels
+                            base_cols = [c for c in df_cleaned.columns if c != 'label']
+                            processed = aligned[base_cols + ['label']]
+                            params_hash = self._generate_params_hash(label_params)
+                            target = self._materialize_cache_path('layer1_labels', params_hash)
+                            actual_file, _fmt = write_dataframe(processed, target)
+                            self.logger.info(f"🧩 已回退重建Layer1標籤並物化: {actual_file}")
+                            return actual_file
+                except Exception as _e:
+                    # 靜默失敗，交由上層處理
+                    self.logger.warning(f"⚠️ 標籤回退重建失敗: {_e}")
 
         except Exception:
             pass
@@ -560,6 +598,16 @@ class OptunaCoordinator:
         optimization_result = optimizer.optimize(n_trials=n_trials)
         best_params = dict(optimization_result.get("best_params", {}))
         best_params["n_trials"] = n_trials
+
+        # 🔗 層間約束：Layer2 的 lag 需對齊 Layer1 的最佳 lag
+        if layer_name == "layer2_features":
+            try:
+                l1_params = self.layer_results.get("layer1_labels", {}).get("best_params", {})
+                if isinstance(l1_params, dict) and "lag" in l1_params:
+                    best_params["lag"] = int(l1_params.get("lag"))
+                    self.logger.info(f"🔗 對齊設定: Layer2 lag = Layer1 lag = {best_params['lag']}")
+            except Exception as _e:
+                self.logger.warning(f"⚠️ 無法對齊 Layer2 lag 與 Layer1: {_e}")
 
         if layer_name == "layer0_cleaning":
             cleaned_file = optimization_result.get("cleaned_file")
@@ -813,6 +861,15 @@ class OptunaCoordinator:
                     if trials_completed >= 500 or (trials_completed >= n_trials and best_score >= 0.70):
                         break
 
+                # 🔗 層間約束：Layer2 的 lag 需對齊 Layer1 的最佳 lag（Enhanced 路徑）
+                try:
+                    l1_params = self.layer_results.get("layer1_labels", {}).get("best_params", {})
+                    if isinstance(l1_params, dict) and "lag" in l1_params:
+                        best_params["lag"] = int(l1_params.get("lag"))
+                        self.logger.info(f"🔗 對齊設定(Enhanced): Layer2 lag = Layer1 lag = {best_params['lag']}")
+                except Exception as _e:
+                    self.logger.warning(f"⚠️ 無法對齊 Layer2 lag 與 Layer1(Enhanced): {_e}")
+
                 optimization_result = {
                     'best_params': best_params,
                     'best_score': best_score,
@@ -952,7 +1009,8 @@ class OptunaCoordinator:
                 data_path=str(self.data_path),
                 config_path=str(self.configs_path),
                 symbol=self.symbol,
-                timeframe=self.timeframe
+                timeframe=self.timeframe,
+                results_path=str(self.results_path / f"{self.symbol}_{self.timeframe}" / str(self.current_version))
             )
             
             result = optimizer.optimize(n_trials=n_trials)
@@ -1218,6 +1276,13 @@ class OptunaCoordinator:
         for layer_name, result in self.layer_results.items():
             if 'best_score' in result:
                 best_scores[layer_name] = result['best_score']
+
+        # 保存結果並更新最新版本標記
+        try:
+            self.version_manager.save_results(self.current_version, self.layer_results)
+            self.version_manager.set_latest(self.current_version)
+        except Exception as _e:
+            self.logger.warning(f"⚠️ quick 流程保存版本或設置 latest 失敗: {getattr(_e, 'message', _e)}")
 
         return {
             'version': self.current_version,

@@ -90,7 +90,7 @@ if 'best_score' in layer1_result:
 
 print('\n' + '='*60)
 print('--- Layer2 ---')
-layer2_result = coordinator.run_layer2_feature_optimization(n_trials=300)
+layer2_result = coordinator.run_layer2_feature_optimization(n_trials=150)
 print(layer2_result)
 
 # ✅ Layer2結果驗證

@@ -2,33 +2,33 @@
   "layer": 0,
   "description": "Layer0: 加密貨幣數據清洗參數優化",
   "best_params": {
-    "impute_method": "knn",
-    "impute_window": 23,
-    "missing_threshold": 0.0716442266938499,
-    "knn_neighbors": 8,
-    "winsorize_window": 182,
-    "winsorize_lower": 0.007139064538779397,
-    "winsorize_upper": 0.9970403394637806,
-    "jump_threshold": 0.10678568008292541,
-    "outlier_method": "zscore",
-    "iqr_multiplier": 3.620970435795217,
-    "zscore_threshold": 4.828773744566538,
-    "rolling_outlier_window": 965,
-    "lower_percentile": 1.0241054421008138,
-    "upper_percentile": 97.92016264707837,
-    "vol_window": 67,
-    "void_threshold": 0.2463790720361077,
-    "vol_vol_multiplier": 6.878721001240558,
+    "impute_method": "forward_fill",
+    "impute_window": 30,
+    "missing_threshold": 0.21811494029286643,
+    "knn_neighbors": 7,
+    "winsorize_window": 204,
+    "winsorize_lower": 0.001891038971912052,
+    "winsorize_upper": 0.9955483955185641,
+    "jump_threshold": 0.10251847223347688,
+    "outlier_method": "none",
+    "iqr_multiplier": 3.0305934127207133,
+    "zscore_threshold": 4.957852983463724,
+    "rolling_outlier_window": 907,
+    "lower_percentile": 8.390581298319264,
+    "upper_percentile": 93.1362870148927,
+    "vol_window": 81,
+    "void_threshold": 0.0925073477656935,
+    "vol_vol_multiplier": 4.696400996455378,
     "smooth_method": "savgol",
-    "smooth_window": 12,
-    "exp_alpha": 0.10619614663364887,
-    "completeness_weight": 0.696949512501333,
-    "fidelity_weight": 0.5983840212407259,
-    "stability_weight": 0.27298181288948475,
-    "n_trials": 50
+    "smooth_window": 10,
+    "exp_alpha": 0.14405506657937994,
+    "completeness_weight": 0.6369076910234943,
+    "fidelity_weight": 0.5344138136630129,
+    "stability_weight": 0.1007951965383454,
+    "n_trials": 15
   },
-  "best_score": 1.2953335337420588,
-  "n_trials": 50,
+  "best_score": 1.171321504686507,
+  "n_trials": 15,
   "detailed_results": {
     "cleaning_effectiveness": {
       "data_retention_rate": 1.0,
@@ -54,213 +54,73 @@
     "zero_volume_removed": 0,
     "missing_data_handled": 0
   },
-  "cleaned_file": "d:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\optuna_system\\configs\\cleaned_ohlcv_15m.parquet",
+  "cleaned_file": "D:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\optuna_system\\configs\\cleaned_ohlcv_15m.parquet",
   "optimization_history": [
     {
       "trial": 0,
-      "score": 0.9245205227390161
+      "score": 1.1622921621961617
     },
     {
       "trial": 1,
-      "score": 1.1854074651065123
+      "score": 1.0257504369711665
     },
     {
       "trial": 2,
-      "score": 1.0429944176966424
+      "score": 1.0098399368359707
     },
     {
       "trial": 3,
-      "score": 0.777471364046761
+      "score": 0.936710508288685
     },
     {
       "trial": 4,
-      "score": 0.9388033849402818
+      "score": 0.6051606453996365
     },
     {
       "trial": 5,
-      "score": 0.6675745054307162
+      "score": 0.8940544435528326
     },
     {
       "trial": 6,
-      "score": 1.1064564763956175
+      "score": 0.7039565067894541
     },
     {
       "trial": 7,
-      "score": 0.8473368157479606
+      "score": 1.0430042990767947
     },
     {
       "trial": 8,
-      "score": 0.7068757681011605
+      "score": 0.8147748922811318
     },
     {
       "trial": 9,
-      "score": 1.0244645352924204
+      "score": 1.0294719320181334
     },
     {
       "trial": 10,
-      "score": 1.2603664459187625
+      "score": 0.9868596242490435
     },
     {
       "trial": 11,
-      "score": 1.2741753703862473
+      "score": 1.1173260806590344
     },
     {
       "trial": 12,
-      "score": 1.2926115282552368
+      "score": 1.1522736263008206
     },
     {
       "trial": 13,
-      "score": 1.228122418416636
+      "score": 1.0953211624804227
     },
     {
       "trial": 14,
-      "score": 0.8933278880554015
-    },
-    {
-      "trial": 15,
-      "score": 1.0605835408715987
-    },
-    {
-      "trial": 16,
-      "score": 1.2064388965744755
-    },
-    {
-      "trial": 17,
-      "score": 0.9801506445703803
-    },
-    {
-      "trial": 18,
-      "score": 1.0397486252594452
-    },
-    {
-      "trial": 19,
-      "score": 1.1896337473572123
-    },
-    {
-      "trial": 20,
-      "score": 1.141581878132774
-    },
-    {
-      "trial": 21,
-      "score": 1.2190814068673128
-    },
-    {
-      "trial": 22,
-      "score": 1.2611643412269515
-    },
-    {
-      "trial": 23,
-      "score": 1.1586435119987608
-    },
-    {
-      "trial": 24,
-      "score": 1.228932066240358
-    },
-    {
-      "trial": 25,
-      "score": 0.8422844031363446
-    },
-    {
-      "trial": 26,
-      "score": 1.148294337342275
-    },
-    {
-      "trial": 27,
-      "score": 1.1106694076991404
-    },
-    {
-      "trial": 28,
-      "score": 1.0195173208489814
-    },
-    {
-      "trial": 29,
-      "score": 1.0261215663815806
-    },
-    {
-      "trial": 30,
-      "score": 1.0288430809315277
-    },
-    {
-      "trial": 31,
-      "score": 1.249554407151407
-    },
-    {
-      "trial": 32,
-      "score": 1.2896968990974713
-    },
-    {
-      "trial": 33,
-      "score": 1.2137921169217298
-    },
-    {
-      "trial": 34,
-      "score": 1.1467811885257402
-    },
-    {
-      "trial": 35,
-      "score": 1.2953335337420588
-    },
-    {
-      "trial": 36,
-      "score": 1.1722348455016316
-    },
-    {
-      "trial": 37,
-      "score": 1.1884679487333742
-    },
-    {
-      "trial": 38,
-      "score": 1.182832534595616
-    },
-    {
-      "trial": 39,
-      "score": 1.178377784227608
-    },
-    {
-      "trial": 40,
-      "score": 1.1405374652664437
-    },
-    {
-      "trial": 41,
-      "score": 1.2420746071994517
-    },
-    {
-      "trial": 42,
-      "score": 1.2353690372270636
-    },
-    {
-      "trial": 43,
-      "score": 1.2103537497494705
-    },
-    {
-      "trial": 44,
-      "score": 1.2758499784893889
-    },
-    {
-      "trial": 45,
-      "score": 1.251772001023029
-    },
-    {
-      "trial": 46,
-      "score": 0.9919379447554681
-    },
-    {
-      "trial": 47,
-      "score": 0.8657501522001705
-    },
-    {
-      "trial": 48,
-      "score": 1.0257161578133067
-    },
-    {
-      "trial": 49,
-      "score": 1.134781213056518
+      "score": 1.171321504686507
     }
   ],
-  "materialized_path": "D:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\data\\processed\\cleaned\\BTCUSDT_15m\\v1\\cleaned_ohlcv_BTCUSDT_15m_db69cc881c51f9c76de29a39aed0ddbd.parquet",
+  "materialized_path": "data\\processed\\cleaned\\BTCUSDT_15m\\v19\\cleaned_ohlcv_BTCUSDT_15m_2bcf1920a2e9b0ecbe369e8e7ba68e84.parquet",
   "metadata": {
-    "created_at": "2025-10-04T09:18:31.146536+00:00",
-    "params_hash": "db69cc881c51f9c76de29a39aed0ddbd",
+    "created_at": "2025-10-08T10:19:48.290129+00:00",
+    "params_hash": "2bcf1920a2e9b0ecbe369e8e7ba68e84",
     "data_shape": [
       105134,
       5
@@ -274,37 +134,37 @@
     ],
     "cached": false,
     "storage_format": "parquet",
-    "json_path": "d:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\optuna_system\\configs\\cleaning_params.json",
+    "json_path": "D:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\optuna_system\\configs\\cleaning_params_15m.json",
     "best_params": {
-      "impute_method": "knn",
-      "impute_window": 23,
-      "missing_threshold": 0.0716442266938499,
-      "knn_neighbors": 8,
-      "winsorize_window": 182,
-      "winsorize_lower": 0.007139064538779397,
-      "winsorize_upper": 0.9970403394637806,
-      "jump_threshold": 0.10678568008292541,
-      "outlier_method": "zscore",
-      "iqr_multiplier": 3.620970435795217,
-      "zscore_threshold": 4.828773744566538,
-      "rolling_outlier_window": 965,
-      "lower_percentile": 1.0241054421008138,
-      "upper_percentile": 97.92016264707837,
-      "vol_window": 67,
-      "void_threshold": 0.2463790720361077,
-      "vol_vol_multiplier": 6.878721001240558,
+      "impute_method": "forward_fill",
+      "impute_window": 30,
+      "missing_threshold": 0.21811494029286643,
+      "knn_neighbors": 7,
+      "winsorize_window": 204,
+      "winsorize_lower": 0.001891038971912052,
+      "winsorize_upper": 0.9955483955185641,
+      "jump_threshold": 0.10251847223347688,
+      "outlier_method": "none",
+      "iqr_multiplier": 3.0305934127207133,
+      "zscore_threshold": 4.957852983463724,
+      "rolling_outlier_window": 907,
+      "lower_percentile": 8.390581298319264,
+      "upper_percentile": 93.1362870148927,
+      "vol_window": 81,
+      "void_threshold": 0.0925073477656935,
+      "vol_vol_multiplier": 4.696400996455378,
       "smooth_method": "savgol",
-      "smooth_window": 12,
-      "exp_alpha": 0.10619614663364887,
-      "completeness_weight": 0.696949512501333,
-      "fidelity_weight": 0.5983840212407259,
-      "stability_weight": 0.27298181288948475,
-      "n_trials": 50
+      "smooth_window": 10,
+      "exp_alpha": 0.14405506657937994,
+      "completeness_weight": 0.6369076910234943,
+      "fidelity_weight": 0.5344138136630129,
+      "stability_weight": 0.1007951965383454,
+      "n_trials": 15
     },
-    "file_path": "D:\\crypto-quant-trading-copy\\crypto-quant-trading-copy\\data\\processed\\cleaned\\BTCUSDT_15m\\v1\\cleaned_ohlcv_BTCUSDT_15m_db69cc881c51f9c76de29a39aed0ddbd.parquet",
-    "file_md5": "625676c53424e4b5af5556784f0d0b0d",
-    "best_score": 1.2953335337420588,
-    "n_trials": 50
+    "file_path": "data\\processed\\cleaned\\BTCUSDT_15m\\v19\\cleaned_ohlcv_BTCUSDT_15m_2bcf1920a2e9b0ecbe369e8e7ba68e84.parquet",
+    "file_md5": "2b85db64de61aa1b3f84591b510c305e",
+    "best_score": 1.171321504686507,
+    "n_trials": 15
   },
-  "data_version": "layer0_cleaning_db69cc881c_105134x5_20251004171831"
+  "data_version": "layer0_cleaning_2bcf1920a2_105134x5_20251008181948"
 }

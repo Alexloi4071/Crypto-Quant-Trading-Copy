@@ -51,6 +51,9 @@ class FeatureOptimizer:
 
         self.scaled_config = scaled_config or {}
         self.scaler = TimeFrameScaler(self.logger)
+        self.results_path = Path(self.config_path) / ".." / "results" / f"{self.symbol}_{self.timeframe}"
+        self.results_path = self.results_path.resolve()
+        self.results_path.mkdir(parents=True, exist_ok=True)
 
         # 特徵開關與策略配置
         self.flags = self._validate_flags(self._load_feature_flags())
@@ -157,10 +160,19 @@ class FeatureOptimizer:
             "enable_micro": True,
             "enable_derivatives": False,
             "latency_lag": 0,
-            "cv_gap": 24,
+            "cv_gap": 12,
+            "cv_purge": 12,
+            "cv_splits": 5,
             "cv_strategy": "embargo",
             "tech": {},
             "enable_dynamic_label_balance": False,
+            "enable_trade_freq_penalty": False,
+            "enable_threshold_search": True,
+            "threshold_tau_min": 0.30,
+            "threshold_tau_max": 0.65,
+            "threshold_tau_step": 0.05,
+            "target_corr_keep_ratio": 0.6,
+            "target_corr_min_score": 0.0,
             "layer1_range_mode": "narrow",
             "stability_selection_threshold": 0.6
         }
@@ -192,11 +204,36 @@ class FeatureOptimizer:
                 except Exception:
                     pass
             merged["latency_lag"] = max(0, int(merged.get("latency_lag", 0)))
-            merged["cv_gap"] = max(0, int(merged.get("cv_gap", 24)))
+            merged["cv_gap"] = max(0, int(merged.get("cv_gap", 12)))
+            merged["cv_purge"] = max(0, int(merged.get("cv_purge", merged["cv_gap"])))
+            merged["cv_splits"] = max(2, int(merged.get("cv_splits", 5)))
 
             if merged.get("cv_strategy") not in ("embargo", "purged"):
                 self.logger.warning("⚠️ cv_strategy 非法，回退 embargo")
                 merged["cv_strategy"] = "embargo"
+
+            merged["enable_trade_freq_penalty"] = bool(merged.get("enable_trade_freq_penalty", False))
+            merged["enable_threshold_search"] = bool(merged.get("enable_threshold_search", True))
+
+            try:
+                merged["threshold_tau_min"] = float(merged.get("threshold_tau_min", 0.30))
+                merged["threshold_tau_max"] = float(merged.get("threshold_tau_max", 0.65))
+                merged["threshold_tau_step"] = float(merged.get("threshold_tau_step", 0.05))
+                if merged["threshold_tau_min"] >= merged["threshold_tau_max"]:
+                    merged["threshold_tau_min"], merged["threshold_tau_max"] = 0.30, 0.65
+                if merged["threshold_tau_step"] <= 0:
+                    merged["threshold_tau_step"] = 0.05
+            except Exception:
+                merged["threshold_tau_min"], merged["threshold_tau_max"], merged["threshold_tau_step"] = 0.30, 0.65, 0.05
+
+            try:
+                merged["target_corr_keep_ratio"] = float(merged.get("target_corr_keep_ratio", 0.6))
+            except Exception:
+                merged["target_corr_keep_ratio"] = 0.6
+            try:
+                merged["target_corr_min_score"] = float(merged.get("target_corr_min_score", 0.0))
+            except Exception:
+                merged["target_corr_min_score"] = 0.0
 
             if not isinstance(merged.get("tech"), dict):
                 self.logger.warning("⚠️ tech 配置非法，略過")
@@ -431,7 +468,7 @@ class FeatureOptimizer:
                 return XGBClassifier(
                     n_estimators=trial.suggest_int('xgb_n_estimators', 300, 800),
                     learning_rate=trial.suggest_float('xgb_learning_rate', 0.01, 0.07),
-                    max_depth=trial.suggest_int('xgb_max_depth', 3, 6),
+                    max_depth=trial.suggest_int('xgb_max_depth', 3, 8),
                     subsample=trial.suggest_float('xgb_subsample', 0.7, 1.0),
                     colsample_bytree=trial.suggest_float('xgb_colsample', 0.6, 0.9),
                     min_child_weight=trial.suggest_float('xgb_min_child_weight', 1.0, 5.0),
@@ -580,11 +617,11 @@ class FeatureOptimizer:
 
         coarse_k = trial.suggest_int('coarse_k', coarse_k_min, max(coarse_k_min + 5, coarse_k_max))
 
-        fine_ratio = trial.suggest_float('fine_ratio', 0.40, 0.65)
+        fine_ratio = trial.suggest_float('fine_ratio', 0.40, 0.70)
         fine_k = max(20, min(int(coarse_k * fine_ratio), coarse_k - 1))
 
         stability_threshold = trial.suggest_float('stability_threshold', 0.35, stability_threshold_cap)
-        correlation_threshold = trial.suggest_float('correlation_threshold', 0.88, 0.92)
+        correlation_threshold = trial.suggest_float('correlation_threshold', 0.93, 0.97)
 
         return {
             'coarse_k': coarse_k,
@@ -740,21 +777,22 @@ class FeatureOptimizer:
             return pd.DataFrame(index=index)
         return pd.concat(frames, axis=1).fillna(0)
 
-    def _make_cv_splits(self, X: pd.DataFrame, n_splits: int = 2) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def _make_cv_splits(self, X: pd.DataFrame, n_splits: int = 5) -> List[Tuple[np.ndarray, np.ndarray]]:
         tscv = TimeSeriesSplit(n_splits=n_splits)
-        gap = int(self.flags.get('cv_gap', 10))
+        gap = int(self.flags.get('cv_gap', 12))
+        purge = int(self.flags.get('cv_purge', gap))
         strategy = self.flags.get('cv_strategy', 'embargo')
         splits = []
         for train_idx, test_idx in tscv.split(X):
             train_idx = list(train_idx)
             test_idx = list(test_idx)
             if strategy == 'embargo':
-                if len(train_idx) > gap:
-                    train_idx = train_idx[:-gap]
+                if len(train_idx) > purge:
+                    train_idx = train_idx[:-purge]
                 if len(test_idx) > gap:
                     test_idx = test_idx[gap:]
             elif strategy == 'purged':
-                purge_left = purge_right = gap
+                purge_left = purge_right = purge
                 if test_idx:
                     start, end = test_idx[0], test_idx[-1]
                     train_idx = [i for i in train_idx if (i < start - purge_left or i > end + purge_right)]
@@ -985,6 +1023,24 @@ class FeatureOptimizer:
         except Exception as e:
             self.logger.warning(f"高級指標生成失敗: {e}")
 
+        # 新增：量價/動量/趨勢強度（前視安全）
+        try:
+            cmf = self._calc_cmf(ohlcv_data['high'], ohlcv_data['low'], ohlcv_data['close'], ohlcv_data['volume'])
+            adl = self._calc_adl(ohlcv_data['high'], ohlcv_data['low'], ohlcv_data['close'], ohlcv_data['volume'])
+            stoch_rsi = self._calc_stoch_rsi(ohlcv_data['close'])
+            adx = self._calc_adx(ohlcv_data['high'], ohlcv_data['low'], ohlcv_data['close'])
+
+            add_df = pd.DataFrame({
+                'tech_cmf': cmf,
+                'tech_adl': adl,
+                'tech_stoch_rsi': stoch_rsi,
+                'tech_adx': adx,
+            }, index=ohlcv_data.index)
+
+            features = self._safe_merge(features, add_df, prefix='')
+        except Exception as e:
+            self.logger.warning(f"增補量價/動量/趨勢強度指標失敗: {e}")
+
         # Phase 1.4: Regime-aware 特徵
         try:
             if bool(self.flags.get('enable_regime_features', True)):
@@ -1083,6 +1139,62 @@ class FeatureOptimizer:
             'wyk_ad_line': wyckoff_ad,
             'td_setup': td_setup
         }, index=close.index)
+
+    # ---- 新增：量價/動量/趨勢強度指標（前視安全） ----
+    def _calc_cmf(self, high: pd.Series, low: pd.Series, close: pd.Series,
+                  volume: pd.Series, window: int = 20) -> pd.Series:
+        rng = (high - low).replace(0, np.nan)
+        mf_multiplier = ((close - low) - (high - close)) / (rng + 1e-9)
+        mf_volume = mf_multiplier * volume
+        cmf = (mf_volume.rolling(window, min_periods=max(3, window // 3)).sum() /
+               (volume.rolling(window, min_periods=max(3, window // 3)).sum() + 1e-9))
+        return cmf.fillna(0)
+
+    def _calc_adl(self, high: pd.Series, low: pd.Series, close: pd.Series,
+                  volume: pd.Series) -> pd.Series:
+        rng = (high - low).replace(0, np.nan)
+        mf_multiplier = ((close - low) - (high - close)) / (rng + 1e-9)
+        mf_volume = mf_multiplier * volume
+        adl = mf_volume.cumsum()
+        return adl.fillna(method='ffill').fillna(0)
+
+    def _calc_rsi(self, close: pd.Series, window: int = 14) -> pd.Series:
+        delta = close.diff()
+        gain = delta.where(delta > 0, 0).rolling(window).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window).mean()
+        rs = gain / (loss.replace(0, np.nan))
+        rsi = 100 - (100 / (1 + rs))
+        return rsi
+
+    def _calc_stoch_rsi(self, close: pd.Series, window: int = 14) -> pd.Series:
+        rsi = self._calc_rsi(close, window)
+        min_rsi = rsi.rolling(window).min()
+        max_rsi = rsi.rolling(window).max()
+        stoch_rsi = (rsi - min_rsi) / ((max_rsi - min_rsi) + 1e-9)
+        return stoch_rsi.clip(0, 1).fillna(0)
+
+    def _calc_adx(self, high: pd.Series, low: pd.Series, close: pd.Series,
+                  period: int = 14) -> pd.Series:
+        # True Range components
+        tr1 = (high - low).abs()
+        tr2 = (high - close.shift(1)).abs()
+        tr3 = (low - close.shift(1)).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+
+        # Directional Movement
+        plus_dm = (high.diff()).clip(lower=0)
+        minus_dm = (-low.diff()).clip(lower=0)
+        plus_dm[plus_dm < minus_dm] = 0
+        minus_dm[minus_dm <= plus_dm] = 0
+
+        # Wilder smoothing
+        atr = tr.ewm(alpha=1/period, adjust=False).mean()
+        plus_di = 100 * (plus_dm.ewm(alpha=1/period, adjust=False).mean() / (atr + 1e-9))
+        minus_di = 100 * (minus_dm.ewm(alpha=1/period, adjust=False).mean() / (atr + 1e-9))
+
+        dx = (100 * (plus_di - minus_di).abs() / ((plus_di + minus_di) + 1e-9)).fillna(0)
+        adx = dx.ewm(alpha=1/period, adjust=False).mean()
+        return adx.fillna(0)
 
     def _calc_base_indicators(self, ohlcv: pd.DataFrame, tf_key: str, flags_tech: Dict,
                                base_index: Optional[pd.DatetimeIndex] = None,
@@ -1631,15 +1743,12 @@ class FeatureOptimizer:
                 l1_lag = layer1_params.get('lag', 12)
                 feature_lag_min_default = lag_meta_min
                 feature_lag_max_default = lag_meta_max
-                if layer1_range_mode == 'wide':
-                    min_lag = max(feature_lag_min_default, l1_lag - 5)
-                    max_lag = min(feature_lag_max_default, l1_lag + 5)
-                else:
-                    min_lag = max(feature_lag_min_default, l1_lag - 3)
-                    max_lag = min(feature_lag_max_default, l1_lag + 3)
+                # 與 Layer1 完全對齊滯後期
+                min_lag = max(feature_lag_min_default, int(l1_lag))
+                max_lag = min(feature_lag_max_default, int(l1_lag))
                 if min_lag > max_lag:
                     max_lag = min_lag
-                self.logger.info(f"🔗 Layer1聯動lag: {l1_lag} → 搜索範圍[{min_lag}, {max_lag}]")
+                self.logger.info(f"🔗 Layer1聯動lag固定: {l1_lag} → 搜索範圍[{min_lag}, {max_lag}]")
                 
                 l1_buy_q = layer1_params.get('buy_quantile', 0.75)
                 l1_sell_q = layer1_params.get('sell_quantile', 0.25)
@@ -1717,7 +1826,7 @@ class FeatureOptimizer:
             self.logger.info(f"🔧 Layer1聯動特徵選擇: coarse_k={coarse_k} ({coarse_k/n_features:.1%}), fine_k={fine_k}{boost_msg}{lookback_msg}")
 
             # 統一順序：先去相關(對冗餘) → 再應用穩定性遮罩 → 再粗/精選
-            # 注意：此處不再於全資料集層級直接裁切為 stable_cols，避免“先穩定再去相關”的反向效果
+            # 注意：此處不再於全資料集層級直接裁切為 stable_cols，避免"先穩定再去相關"的反向效果
 
             # 🚀 準備選擇器緩存（避免重複計算）
             if not hasattr(self, '_selector_cache'):
@@ -1730,7 +1839,7 @@ class FeatureOptimizer:
             coarse_cache = self._selector_cache['coarse']
             fine_cache = self._selector_cache['fine']
 
-            current_splits = getattr(self, '_current_stage_splits', 3)
+            current_splits = self.flags.get('cv_splits', 5)
 
             # 🚀 使用自定義 CV 切分策略（多階段可調整 n_splits）
             outer_cv = self._make_cv_splits(X, n_splits=current_splits)
@@ -1769,7 +1878,7 @@ class FeatureOptimizer:
 
                     # 先做一次目標相關性過濾（mutual information）
                     try:
-                        tc_keep_ratio = float(self.flags.get('target_corr_keep_ratio', 0.8))
+                        tc_keep_ratio = float(self.flags.get('target_corr_keep_ratio', 0.6))
                         tc_min_score = float(self.flags.get('target_corr_min_score', 0.0))
                         tc_cols = self._filter_by_target_correlation(X_train_var, y_train, keep_ratio=tc_keep_ratio, min_score=tc_min_score)
                         if len(tc_cols) >= 3:
@@ -1862,7 +1971,7 @@ class FeatureOptimizer:
                     X_train_fine_df = X_train_coarse[cols_fine]
                     X_test_fine_df = X_test_coarse[cols_fine]
 
-                    # 最終不再重複去相關，避免“重複砍”造成不一致
+                    # 最終不再重複去相關，避免"重複砍"造成不一致
                     selected_cols = list(X_train_fine_df.columns)
                     df_train_final = X_train_fine_df[selected_cols]
                     X_test_fine_df = X_test_fine_df[selected_cols]
@@ -1874,9 +1983,11 @@ class FeatureOptimizer:
                     # 可選交互特徵（限制在較小維度）
                     X_train_final = df_train_final.values
                     X_test_final = X_test_fine_df.values
-                    if feature_interaction and df_train_final.shape[1] <= 30:
+                    interaction_max_dim = int(self.flags.get('interaction_max_dim', 40))
+                    interaction_degree = int(self.flags.get('interaction_degree', 2))
+                    if feature_interaction and df_train_final.shape[1] <= interaction_max_dim:
                         try:
-                            poly = PolynomialFeatures(degree=2, include_bias=False)
+                            poly = PolynomialFeatures(degree=interaction_degree, include_bias=False)
                             X_train_final = poly.fit_transform(X_train_final)
                             X_test_final = poly.transform(X_test_final)
                         except Exception as e:
@@ -1888,13 +1999,14 @@ class FeatureOptimizer:
                         X_train_final = scaler.fit_transform(X_train_final)
                         X_test_final = scaler.transform(X_test_final)
                         # PCA 成分回灌：如啟用則將前K主成分加入而非完全取代
-                        if noise_reduction and df_train_final.shape[1] > 50:
-                            pca = PCA(n_components=0.95, random_state=42)
+                        pca_threshold = int(self.flags.get('pca_dim_threshold', 60))
+                        pca_variance = float(self.flags.get('pca_variance', 0.95))
+                        max_pcs = int(self.flags.get('pca_max_components', 30))
+                        if noise_reduction and df_train_final.shape[1] > pca_threshold:
+                            pca = PCA(n_components=pca_variance, random_state=42)
                             pca.fit(X_train_final)
                             X_train_pca = pca.transform(X_train_final)
                             X_test_pca = pca.transform(X_test_final)
-                            # 限制最多回灌的主成分數，避免維度爆炸
-                            max_pcs = int(self.flags.get('pca_max_components', 20))
                             if isinstance(pca.n_components_, int):
                                 n_pcs = min(max_pcs, int(pca.n_components_))
                             else:
@@ -1942,7 +2054,7 @@ class FeatureOptimizer:
                     # 複合評分：提高 macro F1 權重以降低持有類主導
                     f1_w = f1_score(y_test, y_pred, average='weighted', zero_division=0)
                     f1_m = f1_score(y_test, y_pred, average='macro', zero_division=0)
-                    fold_score = 0.6 * f1_m + 0.4 * f1_w
+                    fold_score = 0.5 * f1_m + 0.5 * f1_w
 
                     # 擴充度量
                     try:
@@ -2017,13 +2129,13 @@ class FeatureOptimizer:
                 metrics_summary['cv_scores_mean'] = float(base_score)
                 metrics_summary['cv_scores_std'] = float(np.std(cv_scores)) if cv_scores else 0.0
 
-            if base_score > 0.6:  # 对较高分数进行多重验证
+            if base_score > 0.7:  # 对较高分数进行多重验证
                 validation_model = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
                 is_valid, validation_msg = self._validate_score_legitimacy(base_score, X, y, validation_model)
 
                 if not is_valid:
                     self.logger.error(f"❌ 多重验证失败: {validation_msg}")
-                    return 0.0  # 验证失败返回0分
+                    return max(0.0, base_score * 0.85)  # 验证失败給予輕微懲罰
                 else:
                     self.logger.info(f"✅ 多重验证通过: {validation_msg}")
 
@@ -2130,6 +2242,25 @@ class FeatureOptimizer:
             trial.set_user_attr('cv_metrics', metrics_summary)
             if 'conf_mat_sum' in locals():
                 trial.set_user_attr('confusion_matrix', conf_mat_sum.tolist())
+
+            try:
+                report = {
+                    'trial': trial.number,
+                    'score': float(final_score),
+                    'base_score': float(base_score),
+                    'cv_std': float(np.std(cv_scores)) if cv_scores else None,
+                    'selected_features': selected_features,
+                    'metrics': metrics_summary,
+                    'stability': stability_report,
+                }
+                reports_dir = self.results_path / 'reports'
+                reports_dir.mkdir(parents=True, exist_ok=True)
+                report_path = reports_dir / f'l2_trial_{trial.number:04d}.json'
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    json.dump(report, f, indent=2, ensure_ascii=False)
+                self.logger.info(f"📝 保存Layer2試驗報告: {report_path}")
+            except Exception as e:
+                self.logger.warning(f"⚠️ 保存Layer2試驗報告失敗: {e}")
 
             self.latest_selected_features = selected_features
             self.latest_feature_phase = phase

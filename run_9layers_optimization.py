@@ -28,6 +28,8 @@ def main():
                        help='多时框模式下的时框列表 (默认: 15m 1h 4h)')
     parser.add_argument('--trials', type=int, default=50,
                        help='每个时框的优化试验次数 (默认: 50)')
+    parser.add_argument('--stage3-trials', type=int, default=None,
+                       help='Layer3 每个模型的 trials 数（默认沿用 run_layer3_optimization.py 默认值）')
     
     args = parser.parse_args()
     
@@ -133,6 +135,7 @@ def main():
             # 🔄 單一時框完整優化模式
             print("Step 3: 執行單一時框完整優化...")
             result = coordinator.quick_complete_optimization()
+            stage3_trials = args.stage3_trials
 
         # 根據優化模式顯示不同的結果
         if args.mode == 'multi':

@@ -66,7 +66,14 @@ def read_dataframe(path: os.PathLike | str) -> pd.DataFrame:
         raise FileNotFoundError(str(target))
     ext = target.suffix.lower()
     if ext == ".parquet":
-        return pd.read_parquet(target)
+        try:
+            return pd.read_parquet(target)
+        except Exception:
+            # Fallback to sibling pickle if available
+            alt = target.with_suffix(".pkl")
+            if alt.exists():
+                return pd.read_pickle(alt)
+            raise
     if ext in (".pkl", ".pickle"):
         return pd.read_pickle(target)
     if ext == ".csv":

@@ -853,6 +853,48 @@ class LabelOptimizer:
         """統一的物化接口"""
         return self.apply_labels(data, params)
 
+    def _rebalance_labels(self, labels: pd.Series, valid_slice: slice,
+                           target_ratio: List[float], tolerance: float) -> pd.Series:
+        if len(target_ratio) != 3:
+            return labels
+        try:
+            target_ratio = np.array(target_ratio, dtype=float)
+            target_ratio = target_ratio / target_ratio.sum()
+        except Exception:
+            return labels
+
+        portion = labels.iloc[valid_slice]
+        counts = portion.value_counts(normalize=True)
+        current_ratio = np.array([counts.get(0, 0.0), counts.get(1, 0.0), counts.get(2, 0.0)])
+
+        if np.all(np.abs(current_ratio - target_ratio) <= tolerance):
+            return labels
+
+        over_hold = current_ratio[1] > target_ratio[1] + tolerance
+        need_buy = current_ratio[2] < max(target_ratio[2] - tolerance, 0)
+        need_sell = current_ratio[0] < max(target_ratio[0] - tolerance, 0)
+
+        rng = np.random.default_rng(42)
+        idx = portion.index
+        if over_hold:
+            hold_idx = idx[portion == 1]
+            swap_candidates = hold_idx.tolist()
+            rng.shuffle(swap_candidates)
+            for idx_val in swap_candidates:
+                if need_buy and current_ratio[2] < target_ratio[2]:
+                    labels.at[idx_val] = 2
+                    current_ratio[1] -= 1 / len(portion)
+                    current_ratio[2] += 1 / len(portion)
+                    need_buy = current_ratio[2] < target_ratio[2] - tolerance
+                elif need_sell and current_ratio[0] < target_ratio[0]:
+                    labels.at[idx_val] = 0
+                    current_ratio[1] -= 1 / len(portion)
+                    current_ratio[0] += 1 / len(portion)
+                    need_sell = current_ratio[0] < target_ratio[0] - tolerance
+                if (not need_buy) and (not need_sell):
+                    break
+        return labels
+
 
 def main():
     """主函數"""
