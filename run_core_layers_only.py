@@ -89,29 +89,3 @@ if 'best_score' in layer1_result:
         print(f"  特徵信息: {metadata.get('data_shape', 'N/A')}")
 
 print('\n' + '='*60)
-print('--- Layer2 ---')
-layer2_result = coordinator.run_layer2_feature_optimization(n_trials=150)
-print(layer2_result)
-
-# ✅ Layer2結果驗證
-if 'best_score' in layer2_result:
-    print(f"\n📊 Layer2分析:")
-    print(f"  F1分數: {layer2_result['best_score']:.4f}")
-    if layer2_result['best_score'] < 0.50:
-        print(f"  ⚠️ 警告: 分數低於閾值0.50")
-    
-    # 檢查選擇的特徵
-    if 'best_params' in layer2_result and 'selected_features' in layer2_result['best_params']:
-        selected = layer2_result['best_params']['selected_features']
-        print(f"  選擇特徵數: {len(selected)}")
-        
-        # 檢查策略特徵保留情況
-        strategy_features = [f for f in selected if any(p in f for p in ['wyk_', 'td_', 'micro_'])]
-        print(f"  策略特徵保留: {len(strategy_features)}個")
-        if len(strategy_features) > 0:
-            print(f"    ✅ Wyckoff/TD/Micro策略特徵已保留")
-        else:
-            print(f"    ⚠️ 警告: 未選中策略特徵")
-
-print('\n' + '='*60)
-print('✅ 優化完成！')

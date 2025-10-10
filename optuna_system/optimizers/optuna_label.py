@@ -13,7 +13,7 @@ import numpy as np
 import optuna
 import pandas as pd
 
-from optuna_system.utils.io_utils import write_dataframe, read_dataframe
+from optuna_system.utils.io_utils import write_dataframe, read_dataframe, atomic_write_json
 
 warnings.filterwarnings('ignore')
 
@@ -34,6 +34,11 @@ class LabelOptimizer:
 
         # 使用集中日誌 (由上層/入口初始化)，避免重複 basicConfig
         self.logger = logging.getLogger(__name__)
+
+        # Layer1 內部狀態：供再平衡/報告使用
+        self._last_rebalance_applied: bool = False
+        self._last_distribution: Optional[List[float]] = None
+        self._last_rebalance_changes: int = 0
 
     def generate_labels(self, price_data: pd.Series, params: Dict) -> pd.Series:
         """✅ 完全修復版標籤生成 - 滾動窗口分位數，嚴格避免未來數據洩露"""
@@ -147,6 +152,17 @@ class LabelOptimizer:
 
             # 移除未來數據洩露
             labels = labels[:-lag] if lag > 0 else labels
+
+            # 標籤再平衡（縮小偏差）
+            target_ratio = params.get('target_distribution', [0.25, 0.5, 0.25])
+            tolerance = params.get('distribution_tolerance', 0.05)
+            rebalance_method = params.get('rebalance_method', 'cost_sensitive')
+            if len(labels) > 0:
+                rebalance_returns = future_returns.shift(1)
+                labels = self._rebalance_labels(labels, target_ratio, tolerance,
+                                                method=rebalance_method,
+                                                rolling_returns=rebalance_returns,
+                                                params=params)
 
             # 計算並打印標籤統計
             self._print_label_statistics(labels, params)
@@ -263,6 +279,217 @@ class LabelOptimizer:
             self.logger.warning(f"信號真實性驗證失敗: {e}")
             return {'buy_accuracy': 0, 'sell_accuracy': 0, 'noise_ratio': 1.0, 'signal_quality': 'unknown'}
     
+    def _timeframe_to_minutes(self, timeframe: Optional[str] = None) -> float:
+        tf = (timeframe or self.timeframe or '').lower()
+        try:
+            if tf.endswith('m'):
+                return max(1.0, float(tf[:-1]))
+            if tf.endswith('h'):
+                return max(1.0, float(tf[:-1]) * 60.0)
+            if tf.endswith('d'):
+                return max(1.0, float(tf[:-1]) * 1440.0)
+            if tf.endswith('s'):
+                return max(1.0, float(tf[:-1]) / 60.0)
+        except Exception:
+            pass
+        # 默認15分鐘
+        return 15.0
+
+    def _normalize_sharpe(self, sharpe: float) -> float:
+        capped = min(max(sharpe, -1.0), 3.0)
+        return float((capped + 1.0) / 4.0)
+
+    def _normalize_trade_frequency(self, trades_per_day: float, params: Dict) -> float:
+        target = params.get('target_trades_per_day', self.scaled_config.get('target_trades_per_day', 2.0))
+        if target <= 0:
+            target = 2.0
+        score = trades_per_day / target
+        return float(max(0.0, min(score, 1.2)))  # 允許最高1.2給予些許獎勵
+
+    def _compute_strategy_metrics(self, labels: pd.Series, actual_returns: pd.Series, params: Dict) -> Dict[str, float]:
+        default_metrics = {
+            'sharpe': 0.0,
+            'win_rate': 0.0,
+            'trades_per_day': 0.0,
+            'avg_return': 0.0,
+            'exposure': 0.0,
+            'trades': 0,
+            'avg_holding_minutes': 0.0,
+            'cost_per_trade_bps': float(params.get('transaction_cost_bps', self.scaled_config.get('transaction_cost_bps', 7)))
+        }
+
+        if labels is None or labels.empty:
+            return default_metrics
+
+        returns_series = actual_returns.reindex(labels.index).fillna(0.0)
+        position = labels.astype(float).map({2: 1.0, 1: 0.0, 0: -1.0}).fillna(0.0)
+
+        cost_bps = params.get('transaction_cost_bps', self.scaled_config.get('transaction_cost_bps', 7))
+        cost_per_trade = (cost_bps or 0.0) / 10000.0
+
+        pos_change = position.diff().abs()
+        if not pos_change.empty:
+            pos_change.iloc[0] = abs(position.iloc[0])
+        trade_cost = pos_change * cost_per_trade
+
+        strategy_returns = position * returns_series - trade_cost
+
+        trades = int((pos_change > 0).sum())
+        exposure = float((position != 0).mean()) if len(position) > 0 else 0.0
+
+        if isinstance(labels.index, pd.DatetimeIndex) and len(labels) > 1:
+            total_seconds = (labels.index[-1] - labels.index[0]).total_seconds()
+            total_days = total_seconds / 86400.0 if total_seconds > 0 else len(labels) * self._timeframe_to_minutes() / (60.0 * 24.0)
+        else:
+            minutes = self._timeframe_to_minutes()
+            total_days = (len(labels) * minutes) / (60.0 * 24.0)
+
+        total_days = max(total_days, 1 / 24)  # 至少一小時避免除以0
+        trades_per_day = trades / total_days
+
+        in_position_mask = position != 0
+        if in_position_mask.any():
+            position_returns = strategy_returns[in_position_mask]
+        else:
+            position_returns = strategy_returns
+
+        win_rate = float((position_returns > 0).mean()) if len(position_returns) > 0 else 0.0
+        avg_return = float(position_returns.mean()) if len(position_returns) > 0 else 0.0
+
+        mean_ret = float(strategy_returns.mean()) if len(strategy_returns) > 0 else 0.0
+        std_ret = float(strategy_returns.std(ddof=0)) if len(strategy_returns) > 1 else 0.0
+
+        periods_per_day = len(strategy_returns) / total_days if total_days > 0 else len(strategy_returns)
+        periods_per_year = periods_per_day * 252.0
+        if std_ret > 1e-9 and periods_per_year > 0:
+            sharpe = float(mean_ret / std_ret * np.sqrt(periods_per_year))
+        else:
+            sharpe = 0.0
+
+        minutes_per_bar = self._timeframe_to_minutes()
+        avg_holding_minutes = 0.0
+        if trades > 0 and minutes_per_bar > 0:
+            avg_holding_minutes = float(((position != 0).sum() / trades) * minutes_per_bar)
+
+        return {
+            'sharpe': sharpe,
+            'win_rate': win_rate,
+            'trades_per_day': float(trades_per_day),
+            'avg_return': avg_return,
+            'exposure': exposure,
+            'trades': trades,
+            'avg_holding_minutes': avg_holding_minutes,
+            'cost_per_trade_bps': float(cost_bps)
+        }
+
+    def _rebalance_labels(self,
+                          labels: pd.Series,
+                          target_ratio: List[float],
+                          tolerance: float,
+                          method: str = 'cost_sensitive',
+                          rolling_returns: Optional[pd.Series] = None,
+                          params: Optional[Dict] = None) -> pd.Series:
+        params = params or {}
+
+        if labels is None or labels.empty:
+            self._last_rebalance_applied = False
+            self._last_distribution = None
+            self._last_rebalance_changes = 0
+            return labels
+
+        adjusted = labels.copy()
+        total = len(adjusted)
+        if total == 0:
+            self._last_rebalance_applied = False
+            self._last_distribution = None
+            self._last_rebalance_changes = 0
+            return adjusted
+
+        try:
+            target = np.array(target_ratio, dtype=float)
+            if target.sum() <= 0:
+                raise ValueError
+            target = target / target.sum()
+        except Exception:
+            target = np.array([0.25, 0.5, 0.25])
+
+        counts = adjusted.value_counts()
+        actual = np.array([
+            counts.get(0, 0) / total,
+            counts.get(1, 0) / total,
+            counts.get(2, 0) / total
+        ])
+        self._last_distribution = actual.tolist()
+
+        if method == 'none' or np.all(np.abs(actual - target) <= tolerance):
+            self._last_rebalance_applied = False
+            self._last_rebalance_changes = 0
+            return adjusted
+
+        if rolling_returns is not None:
+            try:
+                returns = rolling_returns.reindex(adjusted.index).fillna(0.0)
+            except Exception:
+                returns = pd.Series(0.0, index=adjusted.index)
+        else:
+            returns = pd.Series(0.0, index=adjusted.index)
+
+        desired_counts = np.floor(target * total).astype(int)
+        remainder = total - desired_counts.sum()
+        if remainder > 0:
+            order = np.argsort(-(target - desired_counts / total))
+            for idx in order[:remainder]:
+                desired_counts[idx] += 1
+
+        def promote(from_label: int, to_label: int, need: int) -> int:
+            if need <= 0:
+                return 0
+            candidates = adjusted[adjusted == from_label]
+            if candidates.empty:
+                return 0
+
+            ascending = to_label == 0
+            ordered = returns.loc[candidates.index].sort_values(ascending=ascending)
+
+            if method == 'threshold_shift':
+                k = max(0, int(np.ceil(need * params.get('threshold_adjust_pct', 0.35))))
+                chosen = ordered.head(max(k, need)).index
+            else:  # cost_sensitive or others
+                chosen = ordered.head(need).index
+
+            for idx in chosen[:need]:
+                adjusted.at[idx] = to_label
+            return min(len(chosen), need)
+
+        changes = 0
+
+        current_buy = counts.get(2, 0)
+        desired_buy = desired_counts[2]
+        if current_buy < desired_buy:
+            changes += promote(1, 2, desired_buy - current_buy)
+        elif current_buy > desired_buy:
+            changes += promote(2, 1, current_buy - desired_buy)
+
+        counts = adjusted.value_counts()
+        current_sell = counts.get(0, 0)
+        desired_sell = desired_counts[0]
+        if current_sell < desired_sell:
+            changes += promote(1, 0, desired_sell - current_sell)
+        elif current_sell > desired_sell:
+            changes += promote(0, 1, current_sell - desired_sell)
+
+        counts_post = adjusted.value_counts()
+        actual_post = np.array([
+            counts_post.get(0, 0) / total,
+            counts_post.get(1, 0) / total,
+            counts_post.get(2, 0) / total
+        ])
+        self._last_distribution = actual_post.tolist()
+        self._last_rebalance_applied = changes > 0
+        self._last_rebalance_changes = int(changes)
+
+        return adjusted
+
     def calculate_atr(self, high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
         """計算平均真實區間（ATR）"""
         try:
@@ -286,6 +513,8 @@ class LabelOptimizer:
             stop_multiplier = params.get('stop_multiplier', 1.0)      # ATR倍數（止損）
             max_holding = params.get('max_holding', 16)               # 最大持有期
             atr_period = params.get('atr_period', 14)                 # ATR週期
+            transaction_cost_bps = params.get('transaction_cost_bps', self.scaled_config.get('transaction_cost_bps', 7))
+            round_trip_cost = (transaction_cost_bps or 0.0) / 10000.0 * 2.0  # 進出各一次
 
             if len(price_data) <= max_holding:
                 return pd.Series([], dtype=int)
@@ -330,6 +559,9 @@ class LabelOptimizer:
                 # ✅ 動態止盈止損基於ATR
                 profit_target_price = entry_price + current_atr * profit_multiplier
                 stop_loss_price = entry_price - current_atr * stop_multiplier
+
+                profit_target_price *= (1 + round_trip_cost)
+                stop_loss_price *= (1 - round_trip_cost)
                 
                 # ✅ 確保風險收益比 ≥ 2:1
                 actual_profit_distance = profit_target_price - entry_price
@@ -538,7 +770,22 @@ class LabelOptimizer:
             
             # 🚀 新增：標籤分布控制參數
             'target_hold_ratio': trial.suggest_float('target_hold_ratio', 0.48, 0.52),  # 收斂持有比例
-            'distribution_penalty': trial.suggest_float('distribution_penalty', 0.8, 1.5)  # 溫和分布懲罰
+            'distribution_penalty': trial.suggest_float('distribution_penalty', 0.8, 1.5),  # 溫和分布懲罰
+            'target_distribution': trial.suggest_categorical('target_distribution', [
+                (0.2, 0.5, 0.3),
+                (0.25, 0.5, 0.25),
+                (0.3, 0.4, 0.3)
+            ]),
+            'distribution_tolerance': trial.suggest_float('distribution_tolerance', 0.03, 0.08),
+            'rebalance_method': trial.suggest_categorical('rebalance_method', ['cost_sensitive', 'threshold_shift', 'none']),
+            'transaction_cost_bps': trial.suggest_float('transaction_cost_bps',
+                                                        self.scaled_config.get('transaction_cost_bps_min', 5.0),
+                                                        self.scaled_config.get('transaction_cost_bps_max', 15.0)),
+            'sharpe_weight': trial.suggest_float('sharpe_weight', 0.30, 0.45),
+            'win_weight': trial.suggest_float('win_weight', 0.20, 0.35),
+            'trade_weight': trial.suggest_float('trade_weight', 0.15, 0.30),
+            'label_weight': trial.suggest_float('label_weight', 0.15, 0.30),
+            'target_trades_per_day': trial.suggest_float('target_trades_per_day', 2.0, 4.0)
         }
 
         try:
@@ -619,7 +866,32 @@ class LabelOptimizer:
             # 計算標籤質量
             quality_metrics = self.calculate_label_quality(labels, params)
 
-            # 🚀 改進：多目標優化得分 + 分布約束
+            # 計算實際交易績效指標
+            actual_returns = price_data.pct_change(params['lag']).shift(-params['lag'])
+            strategy_metrics = self._compute_strategy_metrics(labels, actual_returns, params)
+            sharpe_norm = self._normalize_sharpe(strategy_metrics['sharpe'])
+            trade_freq_norm = self._normalize_trade_frequency(strategy_metrics['trades_per_day'], params)
+            win_rate = strategy_metrics['win_rate']
+
+            # KPI 權重設定
+            sharpe_weight = params.get('sharpe_weight', 0.35)
+            win_weight = params.get('win_weight', 0.25)
+            trade_weight = params.get('trade_weight', 0.20)
+            label_weight = params.get('label_weight', 0.20)
+            weight_sum = sharpe_weight + win_weight + trade_weight + label_weight
+            if weight_sum <= 0:
+                sharpe_weight = 0.35
+                win_weight = 0.25
+                trade_weight = 0.20
+                label_weight = 0.20
+                weight_sum = 1.0
+            if weight_sum != 1.0:
+                sharpe_weight /= weight_sum
+                win_weight /= weight_sum
+                trade_weight /= weight_sum
+                label_weight /= weight_sum
+
+            # 多目標優化得分 + 分布約束
             balance_score = quality_metrics['balance_score']
             stability_score = quality_metrics['stability_score']
             f1_score = quality_metrics['f1_score']
@@ -673,19 +945,36 @@ class LabelOptimizer:
             self.logger.info(f"⚖️ 最终权重: balance={balance_weight:.3f}, stability={stability_weight:.3f}, f1={f1_weight:.3f}")
             self.logger.info(f"📊 分布惩罚: 持有偏差={hold_deviation:.3f}, 买卖惩罚={buy_sell_penalty:.3f}, 总惩罚={distribution_penalty:.4f}")
             
-            # 多目標加權總分：準確性 + 分布合理性
-            accuracy_component = (balance_score * balance_weight +
-                                stability_score * stability_weight +
-                                f1_score * f1_weight)
-            
-            # 最終分數 = 準確性分數 - 分布懲罰
-            final_score = accuracy_component - distribution_penalty
+            # 多目標加權總分：標籤品質 + KPI
+            label_component = (balance_score * balance_weight +
+                               stability_score * stability_weight +
+                               f1_score * f1_weight)
+            kpi_component = (sharpe_norm * sharpe_weight +
+                             win_rate * win_weight +
+                             trade_freq_norm * trade_weight)
+            final_score = label_component * label_weight + kpi_component - distribution_penalty
             
             # 記錄分布信息
             self.logger.info(f"📊 標籤分布: 賣出={actual_sell_ratio:.1%}, 持有={actual_hold_ratio:.1%}, 買入={actual_buy_ratio:.1%}")
+            if self._last_distribution:
+                dist_after = self._last_distribution
+                self.logger.info(f"♻️ 再平衡分布 -> 賣出={dist_after[0]:.1%}, 持有={dist_after[1]:.1%}, 買入={dist_after[2]:.1%}, 調整筆數={self._last_rebalance_changes}")
             self.logger.info(f"🎯 目標持有率={target_hold:.1%}, 實際偏差={hold_deviation:.3f}")
-            self.logger.info(f"⚖️ 權重: balance={balance_weight:.3f}, stability={stability_weight:.3f}, f1={f1_weight:.3f}")
-            self.logger.info(f"⚖️ 準確性={accuracy_component:.4f}, 分布懲罰={distribution_penalty:.4f}, 最終={final_score:.4f}")
+            self.logger.info(f"⚖️ 標籤權重: balance={balance_weight:.3f}, stability={stability_weight:.3f}, f1={f1_weight:.3f}")
+            self.logger.info(f"📈 KPI: sharpe={strategy_metrics['sharpe']:.2f}, win={win_rate:.2f}, trades/day={strategy_metrics['trades_per_day']:.2f}")
+            self.logger.info(f"⚖️ Label組分={label_component:.4f}, KPI組分={kpi_component:.4f}, 分布懲罰={distribution_penalty:.4f}, 最終={final_score:.4f}")
+
+            trial.set_user_attr("sharpe", strategy_metrics['sharpe'])
+            trial.set_user_attr("win_rate", win_rate)
+            trial.set_user_attr("trades_per_day", strategy_metrics['trades_per_day'])
+            trial.set_user_attr("avg_return", strategy_metrics['avg_return'])
+            trial.set_user_attr("kpi_component", kpi_component)
+            trial.set_user_attr("label_component", label_component)
+            trial.set_user_attr("distribution_penalty", distribution_penalty)
+            trial.set_user_attr("params_sharpe_weight", sharpe_weight)
+            trial.set_user_attr("params_win_weight", win_weight)
+            trial.set_user_attr("params_trade_weight", trade_weight)
+            trial.set_user_attr("params_label_weight", label_weight)
 
             # 🔧 新增：计算持有率误差并传递给Layer2
             hold_error = abs(actual_hold_ratio - target_hold)
@@ -844,56 +1133,35 @@ class LabelOptimizer:
         """根據參數生成標籤並附加至資料"""
         if 'close' not in data.columns:
             raise ValueError("資料必須包含close欄位")
+
         labels = self.generate_labels(data['close'], params)
+        if labels.empty:
+            raise ValueError("Layer1長度不一致: aligned=0, expected={}".format(len(data)))
+
         result = data.loc[labels.index].copy()
+        if result.empty:
+            raise ValueError("Layer1長度不一致: aligned=0, expected={}".format(len(data)))
+
         result['label'] = labels
+
+        # 附加衍生欄位（實際收益、信號持倉、KPI粗算）供後續層參考
+        try:
+            lag = max(1, int(params.get('lag', 1)))
+            aligned_close = data.loc[result.index, 'close']
+            actual_returns = aligned_close.pct_change(lag).shift(-lag)
+            metrics = self._compute_strategy_metrics(labels, actual_returns, params)
+
+            result['forward_return'] = actual_returns
+            result['label_position'] = labels.map({2: 1, 1: 0, 0: -1}).astype(int)
+            result.attrs['layer1_metrics'] = metrics
+        except Exception as exc:
+            self.logger.warning(f"⚠️ 附加Layer1 KPI欄位失敗: {exc}")
+
         return result
 
     def apply_transform(self, data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
         """統一的物化接口"""
         return self.apply_labels(data, params)
-
-    def _rebalance_labels(self, labels: pd.Series, valid_slice: slice,
-                           target_ratio: List[float], tolerance: float) -> pd.Series:
-        if len(target_ratio) != 3:
-            return labels
-        try:
-            target_ratio = np.array(target_ratio, dtype=float)
-            target_ratio = target_ratio / target_ratio.sum()
-        except Exception:
-            return labels
-
-        portion = labels.iloc[valid_slice]
-        counts = portion.value_counts(normalize=True)
-        current_ratio = np.array([counts.get(0, 0.0), counts.get(1, 0.0), counts.get(2, 0.0)])
-
-        if np.all(np.abs(current_ratio - target_ratio) <= tolerance):
-            return labels
-
-        over_hold = current_ratio[1] > target_ratio[1] + tolerance
-        need_buy = current_ratio[2] < max(target_ratio[2] - tolerance, 0)
-        need_sell = current_ratio[0] < max(target_ratio[0] - tolerance, 0)
-
-        rng = np.random.default_rng(42)
-        idx = portion.index
-        if over_hold:
-            hold_idx = idx[portion == 1]
-            swap_candidates = hold_idx.tolist()
-            rng.shuffle(swap_candidates)
-            for idx_val in swap_candidates:
-                if need_buy and current_ratio[2] < target_ratio[2]:
-                    labels.at[idx_val] = 2
-                    current_ratio[1] -= 1 / len(portion)
-                    current_ratio[2] += 1 / len(portion)
-                    need_buy = current_ratio[2] < target_ratio[2] - tolerance
-                elif need_sell and current_ratio[0] < target_ratio[0]:
-                    labels.at[idx_val] = 0
-                    current_ratio[1] -= 1 / len(portion)
-                    current_ratio[0] += 1 / len(portion)
-                    need_sell = current_ratio[0] < target_ratio[0] - tolerance
-                if (not need_buy) and (not need_sell):
-                    break
-        return labels
 
 
 def main():

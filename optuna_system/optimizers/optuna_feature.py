@@ -599,6 +599,46 @@ class FeatureOptimizer:
             self.logger.warning(f"⚠️ target-corr 過濾失敗: {e}")
             return list(X.columns)
 
+    def _remove_correlated_features_smart(self, X: pd.DataFrame, threshold: float = 0.95) -> List[str]:
+        """根據特徵兩兩絕對相關係數去冗餘：
+        - 先以變異度由高到低排序
+        - 依序選入特徵，將與已選特徵絕對相關 > threshold 的其餘特徵標記為冗餘
+        - 回傳保留的特徵名稱清單
+        """
+        try:
+            if X is None or X.empty:
+                return []
+            X_num = X.replace([np.inf, -np.inf], np.nan).fillna(0).astype('float32')
+            # 變異度排序（高變異度優先保留）
+            std_series = X_num.std().fillna(0.0)
+            ordered_cols = std_series.sort_values(ascending=False).index.tolist()
+
+            # 絕對相關矩陣
+            corr = X_num.corr().abs()
+            keep: List[str] = []
+            removed: set = set()
+
+            for col in ordered_cols:
+                if col in removed:
+                    continue
+                keep.append(col)
+                # 將與當前保留特徵高度相關者標記為移除
+                try:
+                    high_corr_cols = corr.index[(corr[col] > float(threshold))].tolist()
+                except Exception:
+                    high_corr_cols = []
+                for hc in high_corr_cols:
+                    if hc != col:
+                        removed.add(hc)
+
+            # 最少保留3個避免後續崩潰
+            if len(keep) < 3:
+                keep = ordered_cols[:max(3, len(ordered_cols))]
+            return keep
+        except Exception as e:
+            self.logger.warning(f"⚠️ 去冗餘失敗，回退全部特徵: {e}")
+            return list(X.columns)
+
     def optimize_feature_selection_params(self, trial: optuna.Trial, n_features: int, layer1_params: Optional[Dict]) -> Dict[str, float]:
         """動態特徵選擇參數配置，考慮Layer1表現."""
         coarse_ratio_low, coarse_ratio_high = (0.5, 0.7)  # 從(0.3, 0.6)優化
@@ -1888,7 +1928,7 @@ class FeatureOptimizer:
                         self.logger.warning(f"target-corr 過濾跳過: {e}")
 
                     # 再做一次去冗餘（pairwise correlation）
-                    pre_corr_cols = self.remove_correlated_features_smart(X_train_var, corr_threshold)
+                    pre_corr_cols = self._remove_correlated_features_smart(X_train_var, corr_threshold)
                     if len(pre_corr_cols) >= 3:
                         X_train_var = X_train_var[pre_corr_cols]
                         X_test_var = X_test_var[pre_corr_cols]

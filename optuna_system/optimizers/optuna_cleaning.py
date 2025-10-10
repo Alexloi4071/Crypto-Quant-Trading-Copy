@@ -17,7 +17,7 @@ from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 
-from optuna_system.utils.io_utils import write_dataframe, read_dataframe
+from optuna_system.utils.io_utils import write_dataframe, read_dataframe, compute_file_md5, atomic_write_json
 
 warnings.filterwarnings('ignore')
 
@@ -42,184 +42,181 @@ class DataCleaningOptimizer:
         """組裝並執行完整清洗流程，回傳清洗後 DataFrame。"""
         if original_data is None or len(original_data) == 0:
             return pd.DataFrame()
-        step1_data = self.check_price_anomalies(original_data, params)
-        step2_data = self.check_ohlc_logic(step1_data, params)
-        step3_data = self.check_timestamp_continuity(step2_data, params)
-        step4_data = self.enhanced_price_cleaning(step3_data, params)
-        step5_data = self.check_volume_anomalies(step4_data, params)
-        cleaned_data = self.apply_missing_value_treatment(step5_data, params)
-        cleaned_data = self.volume_void_detection(cleaned_data, params)
-        return cleaned_data
+        data = original_data.copy()
+        data = self.check_price_anomalies(data, params)
+        data = self.check_ohlc_logic(data, params)
+        data = self.check_timestamp_continuity(data, params)
+        data = self.enhanced_price_cleaning(data, params)
+        data = self.check_volume_anomalies(data, params)
+        data = self.apply_missing_value_treatment(data, params)
+        data = self.volume_void_detection(data, params)
+        data, stats_vol = self.detect_volatility_anomalies(data, params)
+        data, stats_gap = self.detect_gaps_and_outliers(data, params)
+        data, stats_micro = self.flag_microstructure_anomalies(data, params)
+        combined_stats = {}
+        combined_stats.update(stats_vol)
+        combined_stats.update(stats_gap)
+        combined_stats.update(stats_micro)
+        params.setdefault('_cleaning_stats', {}).update(combined_stats)
+        return data
 
     def apply_transform(self, original_data: pd.DataFrame, **params: Any) -> pd.DataFrame:
         """物化介面別名，與其他層對齊。"""
         return self.apply_cleaning(original_data, **params)
 
-    def load_raw_ohlcv_data(self) -> pd.DataFrame:
-        """加載原始 OHLCV 數據"""
+    def load_raw_ohlcv_data(self, force_refresh: bool = False) -> pd.DataFrame:
+        """加載原始 OHLCV 數據；若未找到則嘗試重採樣，最後找不到則報錯。"""
+        candidate = self._locate_raw_file(self.symbol, self.timeframe)
+        if candidate is None:
+            if self.timeframe.lower() != '1m':
+                # 嘗試從 1m 重採樣
+                self.logger.warning(f"⚠️ 找不到 {self.timeframe} 原始檔，嘗試由1m資料重採樣...")
+                resampled = self._resample_from_lower_timeframe(base_timeframe='1m')
+                if resampled is not None:
+                    return resampled
+            msg = f"❌ 未找到原始OHLCV數據文件: {self.symbol}_{self.timeframe}，請先準備原始資料"
+            self.logger.error(msg)
+            raise FileNotFoundError(msg)
+
         try:
-            cleaned_candidate = self.config_path / f"cleaned_ohlcv_{self.timeframe}.parquet"
-            if cleaned_candidate.exists():
-                data_df = read_dataframe(cleaned_candidate)
-                self.logger.info(f"✅ 使用Layer0清洗數據: {cleaned_candidate}")
-                self.logger.info(f"原始OHLCV數據: {data_df.shape}")
-                return data_df
-
-            ohlcv_file = self.data_path / "raw" / self.symbol / f"{self.symbol}_{self.timeframe}_ohlcv.parquet"
-            self.logger.info(f"🔍 查找OHLCV文件: {ohlcv_file.absolute()}")
-
-            if ohlcv_file.exists():
-                data_df = read_dataframe(ohlcv_file)
-                self.logger.info(f"✅ 加載原始OHLCV數據: {ohlcv_file}")
-            else:
-                # 尝试其他可能的路径
-                alternative_paths = [
-                    f"data/raw/{self.symbol}/{self.symbol}_{self.timeframe}_ohlcv.parquet",
-                    f"../data/raw/{self.symbol}/{self.symbol}_{self.timeframe}_ohlcv.parquet",
-                    f"./{self.symbol}_{self.timeframe}_ohlcv.parquet"
-                ]
-                
-                data_df = None
-                for alt_path in alternative_paths:
-                    if Path(alt_path).exists():
-                        self.logger.info(f"🔍 找到替代路径: {alt_path}")
-                        data_df = read_dataframe(Path(alt_path))
-                        break
-                
-                if data_df is None:
-                    # 生成模擬 OHLCV 數據用於測試
-                    self.logger.warning(f"❌ 未找到OHLCV數據文件: {ohlcv_file.absolute()}")
-                    self.logger.warning("🔄 生成模擬數據用於測試")
-                    data_df = self._generate_mock_ohlcv_data()
-                else:
-                    self.logger.info(f"✅ 成功加載OHLCV數據: {data_df.shape}")
-
-            self.logger.info(f"原始OHLCV數據: {data_df.shape}")
+            data_df = read_dataframe(candidate)
+            self._latest_raw_file = candidate
+            self._latest_raw_mtime = candidate.stat().st_mtime
+            self._latest_raw_md5 = compute_file_md5(candidate)
+            self.logger.info(f"✅ 加載原始OHLCV數據: {candidate} -> {data_df.shape}")
             return data_df
-
         except Exception as e:
-            self.logger.error(f"OHLCV數據加載失敗: {e}")
-            return pd.DataFrame()
+            self.logger.error(f"OHLCV數據讀取失敗: {e}")
+            raise
 
-    def _generate_mock_ohlcv_data(self) -> pd.DataFrame:
-        """生成包含異常值的模擬OHLCV數據"""
-        np.random.seed(42)
-        n_samples = 2000
+    def _locate_raw_file(self, symbol: str, timeframe: str) -> Optional[Path]:
+        """在 raw 目錄下尋找對應檔案，支援多種命名與子資料夾。"""
+        base_dir = self.data_path / 'raw' / symbol
+        if not base_dir.exists():
+            return None
 
-        # 生成基礎價格序列
-        base_price = 50000  # BTC基礎價格
-        price_changes = np.random.normal(0, 0.02, n_samples)  # 2%標準差
-        prices = [base_price]
+        patterns = [
+            f"{symbol}_{timeframe}_ohlcv.parquet",
+            f"{symbol}_{timeframe}.parquet",
+            f"{timeframe}/{symbol}_{timeframe}_ohlcv.parquet",
+            f"{timeframe}/{symbol}_{timeframe}.parquet",
+        ]
 
-        for change in price_changes:
-            new_price = prices[-1] * (1 + change)
-            prices.append(max(new_price, 100))  # 確保價格不會太低
+        for pattern in patterns:
+            candidate = base_dir / pattern
+            if candidate.exists():
+                return candidate
 
-        prices = np.array(prices[1:])
+        # 遞迴搜尋其他可能路徑
+        for file in base_dir.rglob(f"*{timeframe}*parquet"):
+            if symbol in file.name.upper():
+                return file
 
-        # 生成 OHLCV 數據
-        data = []
-        for i, close in enumerate(prices):
-            # 正常情況下的 OHLC 關係
-            volatility = np.random.uniform(0.005, 0.03)  # 0.5%-3%波動
+        return None
 
-            high = close * (1 + np.random.uniform(0, volatility))
-            low = close * (1 - np.random.uniform(0, volatility))
-            open_price = low + (high - low) * np.random.uniform(0.2, 0.8)
+    def _resample_from_lower_timeframe(self, base_timeframe: str = '1m') -> Optional[pd.DataFrame]:
+        """若指定時框缺資料，嘗試從較低頻資料重採樣。"""
+        base_file = self._locate_raw_file(self.symbol, base_timeframe)
+        if base_file is None:
+            self.logger.error(f"❌ 無法從 {base_timeframe} 重採樣，因為原始檔不存在")
+            return None
 
-            # 確保 OHLC 邏輯正確
-            high = max(high, open_price, close)
-            low = min(low, open_price, close)
+        try:
+            df = read_dataframe(base_file)
+        except Exception as e:
+            self.logger.error(f"❌ 讀取 {base_timeframe} 原始檔失敗: {e}")
+            return None
 
-            # 正常成交量
-            volume = np.random.uniform(100, 10000)
+        rule_map = {
+            '1m': '1T',
+            '5m': '5T',
+            '15m': '15T',
+            '30m': '30T',
+            '1h': '1H',
+            '4h': '4H',
+            '1d': '1D'
+        }
 
-            data.append({
-                'open': open_price,
-                'high': high,
-                'low': low,
-                'close': close,
-                'volume': volume
-            })
+        if base_timeframe not in rule_map or self.timeframe not in rule_map:
+            self.logger.error(f"❌ 無法重採樣：未知的時框 {base_timeframe} 或 {self.timeframe}")
+            return None
 
-        # 添加一些異常數據來測試清洗器
-        anomaly_indices = np.random.choice(n_samples, size=int(n_samples * 0.02), replace=False)
+        base_freq = pd.Timedelta(rule_map[base_timeframe])
+        target_freq = pd.Timedelta(rule_map[self.timeframe])
+        if target_freq <= base_freq:
+            self.logger.error("❌ 目標時框不大於基底時框，無法重採樣")
+            return None
 
-        for idx in anomaly_indices:
-            if idx < len(data):
-                anomaly_type = np.random.choice(['zero_price', 'extreme_price', 'ohlc_violation', 'zero_volume'])
+        try:
+            df = df.sort_index()
+            agg = {
+                'open': 'first',
+                'high': 'max',
+                'low': 'min',
+                'close': 'last',
+                'volume': 'sum'
+            }
+            available_cols = [c for c in agg if c in df.columns]
+            resampled = df[available_cols].resample(rule_map[self.timeframe]).agg(agg).dropna()
+            self._latest_raw_file = base_file
+            self._latest_raw_mtime = base_file.stat().st_mtime
+            self._latest_raw_md5 = compute_file_md5(base_file)
+            self.logger.info(f"✅ 已由 {base_timeframe} 重採樣為 {self.timeframe}: {resampled.shape}")
+            return resampled
+        except Exception as e:
+            self.logger.error(f"❌ 重採樣過程失敗: {e}")
+            return None
 
-                if anomaly_type == 'zero_price':
-                    # 價格為0的異常
-                    data[idx]['close'] = 0
-                elif anomaly_type == 'extreme_price':
-                    # 極端價格異常
-                    data[idx]['close'] *= np.random.choice([100, 0.01])
-                elif anomaly_type == 'ohlc_violation':
-                    # OHLC關係錯誤
-                    data[idx]['high'] = data[idx]['low'] * 0.5  # high < low
-                elif anomaly_type == 'zero_volume':
-                    # 成交量為0
-                    data[idx]['volume'] = 0
-
-        # 創建 DataFrame
-        dates = pd.date_range('2022-01-01', periods=n_samples, freq='15min')
-        df = pd.DataFrame(data, index=dates)
-
-        # 添加一些缺失值
-        missing_mask = np.random.random(len(df)) < 0.005  # 0.5%缺失
-        df.loc[missing_mask, 'volume'] = np.nan
-
-        return df
+    # _generate_mock_ohlcv_data 已移除，禁止模擬資料
 
     def check_price_anomalies(self, data: pd.DataFrame, params: Dict) -> pd.DataFrame:
         """檢查和處理價格異常"""
         try:
             cleaned_data = data.copy()
 
-            # 1. 移除價格為0或負數的記錄
             price_cols = ['open', 'high', 'low', 'close']
             for col in price_cols:
-                if col in cleaned_data.columns:
-                    # 標記異常值
-                    zero_mask = (cleaned_data[col] <= 0)
-                    if zero_mask.sum() > 0:
-                        self.logger.warning(f"發現 {zero_mask.sum()} 個 {col} 價格 <= 0 的異常值")
+                if col not in cleaned_data.columns:
+                    continue
 
-                        # 處理方式根據參數決定
-                        if params.get('zero_price_action', 'drop') == 'drop':
-                            cleaned_data = cleaned_data[~zero_mask]
-                        elif params.get('zero_price_action', 'drop') == 'forward_fill':
-                            cleaned_data.loc[zero_mask, col] = np.nan
-                            cleaned_data[col] = cleaned_data[col].ffill()
+                zero_mask = cleaned_data[col] <= 0
+                if zero_mask.any():
+                    self.logger.warning(f"發現 {zero_mask.sum()} 個 {col} 價格 <= 0 的異常值")
+                    action = params.get('zero_price_action', 'drop')
+                    if action == 'drop':
+                        cleaned_data = cleaned_data.loc[~zero_mask]
+                    elif action == 'forward_fill':
+                        cleaned_data.loc[zero_mask, col] = np.nan
+                        cleaned_data[col] = cleaned_data[col].ffill()
 
-            # 2. 移除極端價格異常（基於移動中位數）
-            price_change_threshold = params.get('extreme_price_threshold', 10.0)
+            threshold = float(params.get('extreme_price_threshold', 6.0))
+            window = int(params.get('extreme_price_window', 32))
 
             for col in price_cols:
-                if col in cleaned_data.columns and len(cleaned_data) > 10:
-                    # 計算價格變化率
-                    price_change = cleaned_data[col].pct_change().abs()
+                if col not in cleaned_data.columns or len(cleaned_data) <= window:
+                    continue
 
-                    # 基於滾動中位數的異常檢測
-                    rolling_median = price_change.rolling(window=20, min_periods=5).median()
-                    extreme_mask = price_change > (rolling_median * price_change_threshold)
+                returns = cleaned_data[col].pct_change()
+                rol_median = returns.rolling(window=window, min_periods=window//2).median()
+                rol_mad = (returns - rol_median).abs().rolling(window=window, min_periods=window//2).median()
+                rol_mad = rol_mad.replace(0, rol_mad[rol_mad > 0].min() or 1e-6)
+                robust_z = 0.6745 * (returns - rol_median) / rol_mad
+                extreme_mask = robust_z.abs() > threshold
 
-                    if extreme_mask.sum() > 0:
-                        self.logger.warning(f"發現 {extreme_mask.sum()} 個 {col} 極端價格變化")
+                if extreme_mask.any():
+                    self.logger.warning(f"發現 {extreme_mask.sum()} 個 {col} 的 robust Z-score 異常")
+                    action = params.get('extreme_price_action', 'cap')
+                    prev_price = cleaned_data[col].shift(1)
+                    max_ret = rol_median + rol_mad * threshold
+                    max_ret = max_ret.fillna(max_ret.mean())
 
-                        if params.get('extreme_price_action', 'cap') == 'cap':
-                            # 限制在合理範圍內
-                            max_change = rolling_median * price_change_threshold
-                            prev_prices = cleaned_data[col].shift(1)
-
-                            # 向上調整
-                            up_mask = extreme_mask & (cleaned_data[col] > prev_prices)
-                            cleaned_data.loc[up_mask, col] = prev_prices[up_mask] * (1 + max_change[up_mask])
-
-                            # 向下調整
-                            down_mask = extreme_mask & (cleaned_data[col] < prev_prices)
-                            cleaned_data.loc[down_mask, col] = prev_prices[down_mask] * (1 - max_change[down_mask])
+                    if action == 'cap':
+                        up_mask = extreme_mask & (returns > 0)
+                        down_mask = extreme_mask & (returns < 0)
+                        cleaned_data.loc[up_mask, col] = prev_price[up_mask] * (1 + max_ret[up_mask].abs())
+                        cleaned_data.loc[down_mask, col] = prev_price[down_mask] * (1 - max_ret[down_mask].abs())
+                    elif action == 'drop':
+                        cleaned_data = cleaned_data.loc[~extreme_mask]
 
             return cleaned_data
 
