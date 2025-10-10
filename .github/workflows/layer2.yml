@@ -34,9 +34,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel
 
-      - name: Install dependencies
+      - name: Install minimal dependencies for Layer2
         run: |
-          pip install -r requirements.txt
+          pip install --upgrade pip wheel
+          pip install pandas numpy scipy scikit-learn optuna joblib pyyaml python-dotenv requests
+          # 可選: 若使用特定特徵工程需附加套件，請於此處補充
 
       - name: Show environment
         run: |
