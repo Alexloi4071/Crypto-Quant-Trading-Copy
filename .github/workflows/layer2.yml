@@ -37,18 +37,39 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel
 
-      - name: Install minimal dependencies for Layer2
+      - name: Install dependencies for Layer2
         run: |
           pip install --upgrade pip wheel
           pip install pandas numpy scipy scikit-learn optuna joblib pyyaml python-dotenv requests pyarrow fastparquet lightgbm xgboost
           git lfs pull
-      
+
       - name: Verify LFS files present
         run: |
           git lfs version
           git lfs ls-files | wc -l || true
           ls -alh data/processed/features/BTCUSDT_15m || true
-          # 可選: 若使用特定特徵工程需附加套件，請於此處補充
+
+      - name: Validate data artifacts
+        run: |
+          ls -alh data || true
+          ls -alh data/raw || true
+          ls -alh data/raw/BTCUSDT || true
+          ls -alh data/processed || true
+          ls -alh data/processed/features || true
+
+      - name: Smoke test parquet readability
+        run: |
+          python - <<'PY'
+          import pathlib
+          import pandas as pd
+
+          target = pathlib.Path('data/raw/BTCUSDT/BTCUSDT_15m_ohlcv.parquet')
+          if not target.exists():
+              raise SystemExit(f"❌ missing required parquet: {target}")
+
+          df = pd.read_parquet(target)
+          print(f"✅ parquet loaded: {target} -> shape={df.shape}")
+          PY
 
       - name: Show environment
         run: |

@@ -15,6 +15,7 @@ from functools import lru_cache
 
 import numpy as np
 import optuna
+from optuna.trial import TrialState
 import pandas as pd
 from sklearn.ensemble import ExtraTreesClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif, mutual_info_classif
@@ -48,6 +49,90 @@ class FeatureOptimizer:
         # 使用集中日誌 (由上層/入口初始化)，避免重複 basicConfig
         self.logger = logging.getLogger(__name__)
         self.logger.info(f"FeatureOptimizer PATCH_ID={PATCH_ID}")
+
+        # 多目標優化設定（可透過環境或 scaled_config 控制）
+        self.multi_objective_mode = bool(os.getenv('L2_OBJECTIVE_MODE', '').lower() in ('multi', 'multiobjective', 'pareto') or
+                                         (self.scaled_config.get('l2_objective_mode', '').lower() in ('multi', 'multiobjective', 'pareto')))
+        self.logger.info(f"🔧 Layer2 多目標模式: {self.multi_objective_mode}")
+
+        def _env_float(name: str, default: float) -> float:
+            val = os.getenv(name)
+            if val is None:
+                try:
+                    return float(self.scaled_config.get(name.lower(), default))
+                except Exception:
+                    return float(default)
+            try:
+                return float(val)
+            except Exception:
+                return float(default)
+
+        def _env_int(name: str, default: int) -> int:
+            val = os.getenv(name)
+            if val is None:
+                try:
+                    return int(self.scaled_config.get(name.lower(), default))
+                except Exception:
+                    return int(default)
+            try:
+                return int(val)
+            except Exception:
+                return int(default)
+
+        # KPI 約束門檻（可依時框差異調整）
+        self.kpi_constraints = {
+            'min_sharpe': _env_float('L2_MIN_SHARPE', 1.0 if self.timeframe.lower() in ('15m', '15') else 1.2),
+            'min_sortino': _env_float('L2_MIN_SORTINO', 1.2 if self.timeframe.lower() in ('1h', '4h') else 1.0),
+            'min_calmar': _env_float('L2_MIN_CALMAR', 0.75 if self.timeframe.lower() in ('15m', '15') else 1.2),
+            'min_win_rate': _env_float('L2_MIN_WINRATE', 0.6),
+            'min_profit_factor': _env_float('L2_MIN_PROFIT_FACTOR', 1.3 if self.timeframe.lower() in ('15m', '15') else 1.5),
+            'max_drawdown': _env_float('L2_MAX_DRAWDOWN', 0.2 if self.timeframe.lower() in ('15m', '15') else 0.15),
+            'min_total_return': _env_float('L2_MIN_TOTAL_RETURN', 0.02),
+            'min_annual_return': _env_float('L2_MIN_ANNUAL_RETURN', 0.15)
+        }
+        self.logger.info(f"🔒 Layer2 KPI Constraints: {self.kpi_constraints}")
+
+        # 多目標加權（單目標模式使用）
+        self.obj_weights = {
+            'f1_macro': _env_float('L2_WEIGHT_F1_MACRO', 0.2),
+            'f1_weighted': _env_float('L2_WEIGHT_F1_WEIGHTED', 0.2),
+            'sharpe': _env_float('L2_WEIGHT_SHARPE', 0.2),
+            'sortino': _env_float('L2_WEIGHT_SORTINO', 0.1),
+            'calmar': _env_float('L2_WEIGHT_CALMAR', 0.1),
+            'profit_factor': _env_float('L2_WEIGHT_PROFIT_FACTOR', 0.1),
+            'win_rate': _env_float('L2_WEIGHT_WIN_RATE', 0.05),
+            'total_return': _env_float('L2_WEIGHT_TOTAL_RETURN', 0.025),
+            'annual_return': _env_float('L2_WEIGHT_ANNUAL_RETURN', 0.025)
+        }
+        weight_sum = sum(self.obj_weights.values())
+        if weight_sum <= 0:
+            # fallback weights
+            self.obj_weights = {
+                'f1_macro': 0.25,
+                'f1_weighted': 0.25,
+                'sharpe': 0.2,
+                'sortino': 0.1,
+                'calmar': 0.05,
+                'profit_factor': 0.05,
+                'win_rate': 0.05,
+                'total_return': 0.03,
+                'annual_return': 0.02
+            }
+        else:
+            for k in self.obj_weights:
+                self.obj_weights[k] = float(self.obj_weights[k]) / weight_sum
+        self.logger.info(f"⚖️ Layer2 目標權重: {self.obj_weights}")
+
+        self.multiobjective_metrics = [
+            'f1_macro',
+            'sharpe',
+            'sortino',
+            'calmar',
+            'profit_factor',
+            'win_rate',
+            'annual_return'
+        ]
+
 
         self.scaled_config = scaled_config or {}
         self.scaler = TimeFrameScaler(self.logger)
@@ -248,6 +333,198 @@ class FeatureOptimizer:
     # -----------------------------
     # Phase 3: Label 質量檢查/自動重訓練
     # -----------------------------
+    def _periods_per_year(self, timeframe: Optional[str] = None) -> float:
+        tf = (timeframe or self.timeframe or '').lower()
+        mapping = {
+            '1m': 252 * 24 * 60,
+            '3m': 252 * 24 * 20,
+            '5m': 252 * 24 * 12,
+            '15m': 252 * 24 * 4,
+            '30m': 252 * 24 * 2,
+            '45m': 252 * 24 * 4 / 3,
+            '1h': 252 * 24,
+            '2h': 252 * 12,
+            '4h': 252 * 6,
+            '6h': 252 * 4,
+            '8h': 252 * 3,
+            '12h': 252 * 2,
+            '1d': 252,
+            '1w': 52,
+            '1mo': 12
+        }
+        return float(mapping.get(tf, 252.0))
+
+    def _compute_objective_metrics(self, trial: optuna.Trial, X: pd.DataFrame, y: pd.Series, lag: int) -> Dict[str, float]:
+        if X.empty or y.empty:
+            return {}
+
+        classifier = self.create_enhanced_classifier(trial, X.shape[1])
+        try:
+            sample_weight = self._compute_sample_weights(y)
+            classifier.fit(X.values, y.values, sample_weight=sample_weight)
+        except TypeError:
+            classifier.fit(X.values, y.values)
+        except Exception as exc:
+            self.logger.warning(f"⚠️ 全量訓練失敗，改為無權重: {exc}")
+            classifier.fit(X.values, y.values)
+
+        metrics: Dict[str, float] = {}
+
+        try:
+            preds = classifier.predict(X.values)
+        except Exception as exc:
+            self.logger.warning(f"⚠️ 全量預測失敗: {exc}")
+            preds = np.full_like(y.values, fill_value=int(np.median(y.values)))
+
+        try:
+            proba = classifier.predict_proba(X.values)
+        except Exception:
+            proba = None
+
+        idx = X.index
+        price_series = self.close_prices.reindex(idx).ffill()
+        returns = price_series.pct_change().shift(-1)
+        returns = returns.reindex(idx).fillna(0.0)
+
+        positions = pd.Series(preds - 1, index=idx)
+        strategy_returns = (positions * returns).astype(float)
+        strategy_returns = strategy_returns.replace([np.inf, -np.inf], 0.0).fillna(0.0)
+
+        periods_per_year = self._periods_per_year()
+        mean_ret = float(strategy_returns.mean()) if len(strategy_returns) > 0 else 0.0
+        std_ret = float(strategy_returns.std(ddof=0)) if len(strategy_returns) > 0 else 0.0
+
+        sharpe = 0.0
+        if std_ret > 1e-9:
+            sharpe = mean_ret / std_ret * np.sqrt(periods_per_year)
+
+        downside = strategy_returns[strategy_returns < 0]
+        downside_std = float(np.sqrt((downside ** 2).mean())) if len(downside) > 0 else 0.0
+        sortino = 0.0
+        if downside_std > 1e-9:
+            sortino = mean_ret * np.sqrt(periods_per_year) / downside_std
+
+        equity_curve = (strategy_returns + 1.0).cumprod()
+        if len(equity_curve) == 0:
+            max_dd = 0.0
+            total_return = 0.0
+        else:
+            running_max = equity_curve.cummax()
+            drawdowns = 1.0 - equity_curve / (running_max + 1e-9)
+            max_dd = float(drawdowns.max()) if len(drawdowns) > 0 else 0.0
+            total_return = float(equity_curve.iloc[-1] - 1.0)
+
+        annual_return = 0.0
+        if len(equity_curve) > 1:
+            total_periods = len(strategy_returns)
+            if total_periods > 0:
+                total_return = float(equity_curve.iloc[-1] - 1.0)
+                annual_return = (1.0 + total_return) ** (periods_per_year / total_periods) - 1.0
+
+        calmar = 0.0
+        if max_dd > 1e-9:
+            calmar = annual_return / max_dd
+
+        positive = strategy_returns[strategy_returns > 0]
+        negative = strategy_returns[strategy_returns < 0]
+        gross_profit = float(positive.sum())
+        gross_loss = float(-negative.sum())
+        profit_factor = float(gross_profit / gross_loss) if gross_loss > 1e-9 else float('inf')
+
+        win_rate = float((strategy_returns > 0).mean()) if len(strategy_returns) > 0 else 0.0
+
+        metrics['f1_macro'] = float(f1_score(y, preds, average='macro', zero_division=0))
+        metrics['f1_weighted'] = float(f1_score(y, preds, average='weighted', zero_division=0))
+        metrics['precision_macro'] = float(precision_score(y, preds, average='macro', zero_division=0))
+        metrics['recall_macro'] = float(recall_score(y, preds, average='macro', zero_division=0))
+        metrics['balanced_accuracy'] = float(balanced_accuracy_score(y, preds))
+
+        if proba is not None:
+            try:
+                metrics['auc_macro'] = float(roc_auc_score(y, proba, multi_class='ovr', average='macro'))
+            except Exception:
+                metrics['auc_macro'] = 0.5
+        else:
+            metrics['auc_macro'] = 0.5
+
+        metrics['sharpe'] = float(sharpe)
+        metrics['sortino'] = float(sortino)
+        metrics['calmar'] = float(calmar)
+        metrics['profit_factor'] = float(min(max(profit_factor, 0.0), 10.0)) if np.isfinite(profit_factor) else 10.0
+        metrics['win_rate'] = float(win_rate)
+        metrics['total_return'] = float(total_return)
+        metrics['annual_return'] = float(annual_return)
+        metrics['max_drawdown'] = float(max_dd)
+        metrics['max_drawdown_pct'] = float(max_dd)
+        metrics['mean_return'] = float(mean_ret)
+        metrics['std_return'] = float(std_ret)
+        metrics['strategy_trades'] = float((positions.diff().abs() > 0).sum())
+        metrics['avg_position'] = float(positions.abs().mean())
+
+        metrics['lag'] = float(lag)
+        metrics['n_samples'] = float(len(X))
+
+        return metrics
+
+    def _check_kpi_constraints(self, metrics: Dict[str, float]) -> Tuple[bool, str]:
+        if not metrics:
+            return False, 'metrics_unavailable'
+
+        rules = (
+            ('sharpe', self.kpi_constraints.get('min_sharpe', 0.0), 'min'),
+            ('sortino', self.kpi_constraints.get('min_sortino', 0.0), 'min'),
+            ('calmar', self.kpi_constraints.get('min_calmar', 0.0), 'min'),
+            ('win_rate', self.kpi_constraints.get('min_win_rate', 0.0), 'min'),
+            ('profit_factor', self.kpi_constraints.get('min_profit_factor', 0.0), 'min'),
+            ('total_return', self.kpi_constraints.get('min_total_return', 0.0), 'min'),
+            ('annual_return', self.kpi_constraints.get('min_annual_return', 0.0), 'min'),
+            ('max_drawdown', self.kpi_constraints.get('max_drawdown', 1.0), 'max')
+        )
+
+        for key, threshold, mode in rules:
+            if key not in metrics:
+                return False, f'missing_{key}'
+            value = float(metrics[key])
+            if not np.isfinite(value):
+                return False, f'invalid_{key}'
+            if mode == 'min' and value < threshold:
+                return False, f'{key}={value:.4f} < {threshold:.4f}'
+            if mode == 'max' and value > threshold:
+                return False, f'{key}={value:.4f} > {threshold:.4f}'
+
+        return True, 'ok'
+
+    def _weighted_objective_score(self, metrics: Dict[str, float]) -> float:
+        score = 0.0
+        for name, weight in self.obj_weights.items():
+            if weight == 0:
+                continue
+            value = metrics.get(name)
+            if value is None or not np.isfinite(value):
+                continue
+            capped = value
+            if name in ('profit_factor', 'calmar', 'sharpe', 'sortino'):
+                capped = max(min(value, 5.0), -1.0)
+            if name in ('total_return', 'annual_return'):
+                capped = max(min(value, 2.0), -1.0)
+            score += float(weight) * float(capped)
+        return float(score)
+
+    def _current_best_value(self, study: optuna.study.Study) -> float:
+        try:
+            if not study.trials:
+                return 0.0
+            if self.multi_objective_mode:
+                best_trials = getattr(study, 'best_trials', [])
+                if not best_trials:
+                    return 0.0
+                trial = best_trials[0]
+                metrics = trial.user_attrs.get('objective_metrics', {})
+                return self._weighted_objective_score(metrics)
+            return float(study.best_value)
+        except Exception:
+            return 0.0
+
     def _labels_dir(self) -> Path:
         return self.data_path / 'processed' / 'labels' / f"{self.symbol}_{self.timeframe}"
 
@@ -1882,7 +2159,7 @@ class FeatureOptimizer:
             current_splits = self.flags.get('cv_splits', 5)
 
             # 🚀 使用自定義 CV 切分策略（多階段可調整 n_splits）
-            outer_cv = self._make_cv_splits(X, n_splits=current_splits)
+            outer_cv = list(self._make_cv_splits(X, n_splits=current_splits))
             cv_scores = []
             # initialize feature aggregation to avoid NameError
             phase = 'full'
@@ -2181,7 +2458,38 @@ class FeatureOptimizer:
 
             self.logger.info(f"🎯 嵌套CV平均F1: {base_score:.4f} (±{np.std(cv_scores):.4f})")
 
-            final_score = base_score
+            metrics = self._compute_objective_metrics(trial, X, y, lag)
+            metrics['cv_base_score'] = float(base_score)
+            trial.set_user_attr('objective_metrics', metrics)
+            metrics_summary.setdefault('combined_metrics_full', metrics)
+
+            constraints_ok, constraint_reason = self._check_kpi_constraints(metrics)
+            if not constraints_ok:
+                self.logger.info(f"⛔ KPI 未達標 ({constraint_reason})，懲罰試驗")
+                if self.multi_objective_mode:
+                    trial.set_user_attr('kpi_constraint_reason', constraint_reason)
+                    return [-1.0 for _ in self.multiobjective_metrics]
+                return max(0.0, base_score * 0.1)
+
+            if self.multi_objective_mode:
+                values: List[float] = []
+                for name in self.multiobjective_metrics:
+                    val = metrics.get(name)
+                    if val is None or not np.isfinite(val):
+                        values.append(0.0)
+                    else:
+                        if name in ('profit_factor', 'calmar', 'sharpe', 'sortino'):
+                            val = max(min(val, 5.0), -1.0)
+                        if name in ('annual_return', 'total_return'):
+                            val = max(min(val, 2.0), -1.0)
+                        values.append(float(val))
+                trial.set_user_attr('objective_values', dict(zip(self.multiobjective_metrics, values)))
+                self.logger.info(f"🎯 多目標評估: {dict(zip(self.multiobjective_metrics, values))}")
+                return values
+
+            weighted_score = self._weighted_objective_score(metrics)
+            final_score = base_score * 0.4 + weighted_score * 0.6
+            trial.set_user_attr('objective_score', float(final_score))
 
             # 記錄 LGBM 的「no positive gain」跡象，供 callback 參考
             try:
@@ -2740,13 +3048,22 @@ class FeatureOptimizer:
                 except Exception:
                     pass
 
-            study = optuna.create_study(
-                direction='maximize',
-                study_name=f'feature_optimization_layer2_{tf}',
-                pruner=optuna.pruners.MedianPruner(n_warmup_steps=7),
-                storage=storage_url,
-                load_if_exists=bool(storage_url)
-            )
+            study_kwargs = {
+                'study_name': f'feature_optimization_layer2_{tf}',
+                'pruner': optuna.pruners.MedianPruner(n_warmup_steps=7),
+                'storage': storage_url,
+                'load_if_exists': bool(storage_url)
+            }
+            if self.multi_objective_mode:
+                study = optuna.create_study(
+                    directions=['maximize'] * len(self.multiobjective_metrics),
+                    **study_kwargs
+                )
+            else:
+                study = optuna.create_study(
+                    direction='maximize',
+                    **study_kwargs
+                )
             study.set_user_attr('meta_vol', meta_vol)
 
             self.logger.info(f"🚀 开始Layer2特征优化: {n_trials} trials")
@@ -2759,7 +3076,7 @@ class FeatureOptimizer:
             for trial_idx in range(n_trials):
                 try:
                     start_trial = time.perf_counter()
-                    study.optimize(self.objective, n_trials=1, timeout=450, callbacks=[_relax_search_space_cb])
+                study.optimize(self.objective, n_trials=1, timeout=450, callbacks=[_relax_search_space_cb])
                     duration = time.perf_counter() - start_trial
                     trial_durations.append(duration)
                     successful_trials += 1
