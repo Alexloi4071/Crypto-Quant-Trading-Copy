@@ -63,7 +63,8 @@ def main():
     try:
         n_trials = int(os.getenv("L2_TRIALS", "20"))
     except Exception:
-        n_trials = 20
+        n_trials = 250
+    
 
     coordinator = OptunaCoordinator(
         symbol="BTCUSDT",
