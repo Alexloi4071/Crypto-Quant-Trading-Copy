@@ -12,22 +12,12 @@ from optuna_system.coordinator import OptunaCoordinator
 
 def main():
     print("🚀 開始 BTCUSDT_15m 特徵選擇超參數優化...")
-    
-    # 檢查數據文件是否存在
-    feature_file = 'data/processed/features/BTCUSDT_15m/v55/BTCUSDT_15m_selected_features.parquet'
-    
-    if not os.path.exists(feature_file):
-        print(f"❌ 特徵文件不存在: {feature_file}")
-        return
-    
-    print(f"✅ 找到特徵文件: {feature_file}")
-    
+    # 讓協調器自動尋找/回退上一層資料（不再硬性依賴固定版本特徵檔）
     # 使用分層協調器進行特徵優化
     coordinator = OptunaCoordinator(
         symbol="BTCUSDT",
         timeframe="15m",
-        data_path="data/processed",
-        version="v55"
+        data_path="data"
     )
     
     # 僅執行第2層特徵工程優化
