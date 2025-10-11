@@ -1,0 +1,44 @@
+2025-09-19 14:19:41 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 14:21:54 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 14:30:45 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 16:57:23 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 16:59:09 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 17:02:53 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 17:06:29 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-19 18:34:28 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 5 timeframes
+2025-09-20 14:55:00 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:55:33 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:56:18 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:56:19 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:131 | Generating labels for 15m
+2025-09-20 14:56:19 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:161 | Label distribution for 15m:
+2025-09-20 14:56:19 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   SHORT: 1298 (2.9%)
+2025-09-20 14:56:19 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   NEUTRAL: 42593 (94.1%)
+2025-09-20 14:56:19 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   LONG: 1358 (3.0%)
+2025-09-20 14:56:48 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:56:49 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:131 | Generating labels for 15m
+2025-09-20 14:56:49 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:161 | Label distribution for 15m:
+2025-09-20 14:56:49 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   SHORT: 1298 (2.9%)
+2025-09-20 14:56:49 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   NEUTRAL: 42593 (94.1%)
+2025-09-20 14:56:49 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   LONG: 1358 (3.0%)
+2025-09-20 14:57:28 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:57:29 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:131 | Generating labels for 15m
+2025-09-20 14:57:29 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:161 | Label distribution for 15m:
+2025-09-20 14:57:29 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   SHORT: 1298 (2.9%)
+2025-09-20 14:57:29 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   NEUTRAL: 42593 (94.1%)
+2025-09-20 14:57:29 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   LONG: 1358 (3.0%)
+2025-09-20 14:58:00 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:58:00 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:131 | Generating labels for 15m
+2025-09-20 14:58:00 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:161 | Label distribution for 15m:
+2025-09-20 14:58:00 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   SHORT: 1298 (2.9%)
+2025-09-20 14:58:00 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   NEUTRAL: 42593 (94.1%)
+2025-09-20 14:58:00 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   LONG: 1358 (3.0%)
+2025-09-20 14:59:39 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 14:59:41 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:131 | Generating labels for 15m
+2025-09-20 14:59:41 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:161 | Label distribution for 15m:
+2025-09-20 14:59:41 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   SHORT: 3927 (3.7%)
+2025-09-20 14:59:41 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   NEUTRAL: 97195 (92.4%)
+2025-09-20 14:59:41 | [32mINFO[0m | src.labels.old_label_generator:generate_labels:166 |   LONG: 4012 (3.8%)
+2025-09-20 15:06:25 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 15:07:18 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 15:12:56 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes
+2025-09-20 15:14:39 | [32mINFO[0m | src.labels.old_label_generator:__init__:81 | Initialized label generator for 1 timeframes

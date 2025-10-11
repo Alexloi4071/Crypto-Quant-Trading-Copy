@@ -1,0 +1,39 @@
+feature_names:
+- return_std_50
+- return_std_20
+- day_sin
+- volume_std_50
+- ATR_14
+- ATR_Norm_14
+- day_of_week
+- return_std_10
+- BB_Width_20_2
+- volume_momentum_20
+- volume_std_20
+- ADX_28
+- volume_std_10
+- volume_std_5
+- return_50_abs
+- return_10_abs
+model_name: LightGBM
+model_params: &id001
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  boosting_type: gbdt
+  feature_fraction: 0.8
+  learning_rate: 0.05
+  metric: multi_logloss
+  num_class: 3
+  num_leaves: 31
+  objective: multiclass
+  random_state: 42
+  verbose: -1
+performance_metrics: {}
+symbol: BTCUSDT
+timeframe: 15m
+training_history:
+  features_count: 16
+  model_params: *id001
+  training_date: '2025-09-20T17:37:25.790011'
+  training_samples: 189246
+version: v8

@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2025-09-17T19:26:34.240741",
+    "stage": "label_optimization",
+    "status": "success",
+    "details": "標籤優化成功，最佳F1: 0.952630",
+    "duration_seconds": 1463.235697,
+    "symbol": "BTCUSDT",
+    "timeframe": "1h"
+  }
+]

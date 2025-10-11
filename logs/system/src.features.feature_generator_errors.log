@@ -1,0 +1,4 @@
+2025-09-11 14:25:16 | [31mERROR[0m | src.features.feature_generator:calculate_trend_indicators:73 | Error calculating trend indicators: 'trend'
+2025-09-11 14:25:16 | [31mERROR[0m | src.features.feature_generator:calculate_momentum_indicators:124 | Error calculating momentum indicators: 'momentum'
+2025-09-11 14:25:16 | [31mERROR[0m | src.features.feature_generator:calculate_volatility_indicators:164 | Error calculating volatility indicators: 'volatility'
+2025-09-11 14:25:16 | [31mERROR[0m | src.features.feature_generator:calculate_volume_indicators:198 | Error calculating volume indicators: 'volume'

@@ -1,0 +1,62 @@
+{
+  "backtest_info": {
+    "symbol": "BTCUSDT",
+    "timeframe": "15m",
+    "strategy": "ml_signal",
+    "timestamp": "2025-09-22T13:34:57.833003",
+    "initial_capital": 10000
+  },
+  "backtest_results": {
+    "total_return": -0.9903417674859136,
+    "final_value": 96.58232514086463,
+    "total_trades": 5632,
+    "winning_trades": 2984,
+    "losing_trades": 2645,
+    "win_rate": 0.5298295454545454,
+    "returns": "2022-09-17 08:00:00   -0.025572\n2022-09-17 09:45:00    0.000463\n2022-09-17 16:00:00    0.011602\n2022-09-17 21:15:00   -0.005859\n2022-09-18 03:15:00   -0.003852\n                         ...   \n2025-03-04 09:15:00    0.000673\n2025-03-04 13:15:00   -0.012899\n2025-03-04 13:30:00   -0.004649\n2025-03-04 13:45:00   -0.009715\n2025-03-04 15:15:00   -0.015349\nLength: 5632, dtype: float64",
+    "trades": "                timestamp action    price    amount  confidence  portfolio_value       pnl          reason  periods_held\n0     2022-09-16 17:15:00  short  19361.0  0.413202    0.737018     10000.000000       NaN             NaN           NaN\n1     2022-09-17 08:00:00  cover  19856.1       NaN         NaN      9738.279738 -0.025572       stop_loss          59.0\n2     2022-09-17 08:30:00  short  19876.7  0.391948    0.960572      9738.279738       NaN             NaN           NaN\n3     2022-09-17 09:45:00  cover  19867.5       NaN         NaN      9736.944167  0.000463  signal_reverse           NaN\n4     2022-09-17 09:45:00    buy  19867.5  0.392075    0.969691      9736.944167       NaN             NaN           NaN\n...                   ...    ...      ...       ...         ...              ...       ...             ...           ...\n11256 2025-03-04 10:15:00    buy  83594.5  0.000967    0.983795       101.058069       NaN             NaN           NaN\n11257 2025-03-04 13:15:00   sell  82516.2       NaN         NaN        99.693869 -0.012899  signal_reverse           NaN\n11258 2025-03-04 13:30:00   sell  83205.9       NaN         NaN        99.170613 -0.004649  signal_reverse           NaN\n11259 2025-03-04 13:45:00   sell  82782.4       NaN         NaN        98.147692 -0.009715  signal_reverse           NaN\n11260 2025-03-04 15:15:00   sell  82311.4       NaN         NaN        96.582325 -0.015349       stop_loss          20.0\n\n[11261 rows x 9 columns]",
+    "sharpe_ratio": -0.2840027687019283,
+    "max_drawdown": -0.9903417674859136
+  },
+  "performance_analysis": {
+    "analysis_date": "2025-09-22T13:34:57.791762",
+    "period_start": "2022-09-17",
+    "period_end": "2025-03-04",
+    "data_points": 5632,
+    "return_metrics": {
+      "total_return": -0.716008418591657,
+      "annual_return": -0.6536244448543179,
+      "mean_return": -0.0001752874913491842,
+      "win_rate": 0.5298295454545454,
+      "avg_win": 0.005441660266704185,
+      "avg_loss": -0.006512337764508088,
+      "best_return": 0.0819401556373211,
+      "worst_return": -0.11288465114948294,
+      "max_consecutive_wins": 20,
+      "max_consecutive_losses": 15,
+      "current_streak": 4
+    },
+    "risk_metrics": {
+      "volatility": 0.009797801172925924,
+      "annual_volatility": 0.7619641057954717,
+      "downside_risk": 0.008076959503568043,
+      "annual_downside_risk": 0.6281361620899868,
+      "var_95": -0.014929739545062378,
+      "var_99": -0.026727253887698563,
+      "cvar_95": -0.02355082146359697,
+      "cvar_99": -0.04350911083228412,
+      "skewness": -0.5139955792518844,
+      "kurtosis": 13.57745663157855,
+      "tail_ratio": 0.9388076518635271
+    },
+    "drawdown_analysis": {
+      "max_drawdown": -0.7303243569424793,
+      "max_drawdown_date": "2025-03-04",
+      "max_drawdown_duration_days": 780,
+      "current_drawdown": -0.7303243569424793,
+      "is_in_drawdown": true,
+      "avg_drawdown": -0.3240000663924351,
+      "drawdown_periods": 4,
+      "recovery_periods": 4,
+      "drawdown_series": {
+        

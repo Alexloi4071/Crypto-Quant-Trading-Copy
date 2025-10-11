@@ -1,0 +1,62 @@
+{
+  "backtest_info": {
+    "symbol": "BTCUSDT",
+    "timeframe": "15m",
+    "strategy": "ml_signal",
+    "timestamp": "2025-09-22T13:17:23.203457",
+    "initial_capital": 10000
+  },
+  "backtest_results": {
+    "total_return": -0.999995174418034,
+    "final_value": 0.04825581965989007,
+    "total_trades": 15183,
+    "winning_trades": 8915,
+    "losing_trades": 6260,
+    "win_rate": 0.5871698610287822,
+    "returns": "1970-01-01 00:00:00.000000000   -0.015170\n1970-01-01 00:00:00.000000001    0.007851\n1970-01-01 00:00:00.000000002    0.002221\n1970-01-01 00:00:00.000000003   -0.000574\n1970-01-01 00:00:00.000000004   -0.000272\n                                   ...   \n1970-01-01 00:00:00.000015178    0.002427\n1970-01-01 00:00:00.000015179    0.002294\n1970-01-01 00:00:00.000015180    0.000315\n1970-01-01 00:00:00.000015181   -0.000881\n1970-01-01 00:00:00.000015182    0.002267\nLength: 15183, dtype: float64",
+    "trades": "                timestamp action     price    amount  confidence  portfolio_value       pnl          reason  periods_held\n0     2022-09-16 17:15:00  short   19361.0  0.098135    0.737018     10000.000000       NaN             NaN           NaN\n1     2022-09-16 20:00:00  cover   19654.7       NaN         NaN      9839.303290 -0.015170       stop_loss          11.0\n2     2022-09-16 20:30:00    buy   19717.5  0.094813    0.996575      9839.303290       NaN             NaN           NaN\n3     2022-09-17 02:30:00   sell   19872.3       NaN         NaN      9907.695243  0.007851       time_exit          24.0\n4     2022-09-17 06:30:00    buy   19812.1  0.095016    0.951417      9907.695243       NaN             NaN           NaN\n...                   ...    ...       ...       ...         ...              ...       ...             ...           ...\n30361 2025-09-15 15:45:00   sell  114788.4       NaN         NaN         0.048276  0.000315  signal_reverse           NaN\n30362 2025-09-15 15:45:00  short  114788.4  0.001000    0.884454         0.048276       NaN             NaN           NaN\n30363 2025-09-15 18:30:00  cover  114889.5       NaN         NaN         0.048190 -0.000881  signal_reverse           NaN\n30364 2025-09-15 18:30:00    buy  114889.5  0.001000    0.968946         0.048190       NaN             NaN           NaN\n30365 2025-09-15 19:15:00  close  115150.0       NaN         NaN         0.048256  0.002267             NaN           NaN\n\n[30366 rows x 9 columns]",
+    "sharpe_ratio": 0.2832971790144579,
+    "max_drawdown": -0.9999951836653687
+  },
+  "performance_analysis": {
+    "analysis_date": "2025-09-22T13:17:22.994879",
+    "period_start": "1970-01-01",
+    "period_end": "1970-01-01",
+    "data_points": 15183,
+    "return_metrics": {
+      "total_return": 3.171465549134963,
+      "annual_return": 1.1574147143410844e+18,
+      "mean_return": 0.00011462495655202649,
+      "win_rate": 0.5871698610287822,
+      "avg_win": 0.003408644746337621,
+      "avg_loss": -0.004576312651480907,
+      "best_return": 0.05822567530942264,
+      "worst_return": -0.11062625943907015,
+      "max_consecutive_wins": 16,
+      "max_consecutive_losses": 14,
+      "current_streak": 1
+    },
+    "risk_metrics": {
+      "volatility": 0.006422989388032742,
+      "annual_volatility": 3.8691780997100826,
+      "downside_risk": 0.004666131445559433,
+      "annual_downside_risk": 2.810855274518332,
+      "var_95": -0.009470562473147218,
+      "var_99": -0.015977307002990094,
+      "cvar_95": -0.013765829397361876,
+      "cvar_99": -0.02096563667997697,
+      "skewness": 0.9224207992506209,
+      "kurtosis": 16.277545876022117,
+      "tail_ratio": 0.8621603613041808
+    },
+    "drawdown_analysis": {
+      "max_drawdown": -0.45207442344540466,
+      "max_drawdown_date": "1970-01-01",
+      "max_drawdown_duration_days": 0,
+      "current_drawdown": -0.05197356326932105,
+      "is_in_drawdown": true,
+      "avg_drawdown": -0.13538414974569773,
+      "drawdown_periods": 139,
+      "recovery_periods": 139,
+      "drawdown_series": {
+        

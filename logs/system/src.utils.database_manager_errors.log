@@ -1,0 +1,4 @@
+2025-09-10 13:51:38 | [31mERROR[0m | src.utils.database_manager:_save_records_sqlite:546 | Failed to save records to ohlcv_data: Error binding parameter 0 - probably unsupported type.
+2025-09-10 13:51:38 | [31mERROR[0m | src.utils.database_manager:save_ohlcv_data:290 | Failed to save OHLCV data for BTCUSDT_1m: Error binding parameter 0 - probably unsupported type.
+2025-09-10 13:59:55 | [31mERROR[0m | src.utils.database_manager:_save_records_sqlite:546 | Failed to save records to ohlcv_data: Error binding parameter 0 - probably unsupported type.
+2025-09-10 13:59:55 | [31mERROR[0m | src.utils.database_manager:save_ohlcv_data:290 | Failed to save OHLCV data for BTCUSDT_1m: Error binding parameter 0 - probably unsupported type.

@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2025-09-20T19:58:55.025896",
+    "stage": "data_loading",
+    "status": "failed",
+    "details": "數據載入失敗: 原始OHLCV數據不存在: data/raw/BTCUSDT/BTCUSDT_15m_ohlcv.parquet",
+    "duration_seconds": 0.0,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T19:58:55.028894",
+    "stage": "complete_optimization",
+    "status": "failed",
+    "details": "完整優化失敗: 數據載入失敗",
+    "duration_seconds": 0.323,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  }
+]

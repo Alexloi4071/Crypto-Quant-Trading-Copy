@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2025-09-20T19:12:24.680773",
+    "stage": "label_optimization",
+    "status": "success",
+    "details": "標籤優化成功，最佳F1: 0.963361",
+    "duration_seconds": 766.826729,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T19:12:31.748611",
+    "stage": "feature_selection",
+    "status": "success",
+    "details": "兩階段特徵選擇成功: 22 → 22 → 22",
+    "duration_seconds": 6.486346,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T19:21:24.600777",
+    "stage": "model_optimization",
+    "status": "success",
+    "details": "模型優化成功，最佳F1: 0.959019",
+    "duration_seconds": 532.588164,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T19:21:24.954010",
+    "stage": "complete_optimization",
+    "status": "success",
+    "details": "完整優化成功，耗時 1307.2 秒",
+    "duration_seconds": 1307.182022,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  }
+]

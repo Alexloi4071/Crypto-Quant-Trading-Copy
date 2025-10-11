@@ -1,0 +1,198 @@
+2025-09-10 13:45:35 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:47:35 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:48:41 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:49:33 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:50:38 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:50:39 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2023-09-11 to 2025-09-10
+2025-09-10 13:50:42 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6919 candles for BTCUSDT 1m
+2025-09-10 13:51:36 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:51:37 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-09 to 2025-09-10
+2025-09-10 13:51:38 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 2000 candles for BTCUSDT 1m
+2025-09-10 13:58:57 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:58:57 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-07 to 2025-09-10
+2025-09-10 13:59:00 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 5000 candles for BTCUSDT 1m
+2025-09-10 13:59:41 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:59:41 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-10 to 2025-09-10
+2025-09-10 13:59:41 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 0 candles for BTCUSDT 1m
+2025-09-10 13:59:54 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 13:59:54 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-09 to 2025-09-10
+2025-09-10 13:59:55 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 2000 candles for BTCUSDT 1m
+2025-09-10 14:00:18 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:00:18 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-09 to 2025-09-10
+2025-09-10 14:00:19 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 2000 candles for BTCUSDT 1m
+2025-09-10 14:00:35 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:00:35 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-09 to 2025-09-10
+2025-09-10 14:00:35 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 2000 candles for BTCUSDT 1m
+2025-09-10 14:01:50 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:01:50 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-03 to 2025-09-10
+2025-09-10 14:01:54 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6930 candles for BTCUSDT 1m
+2025-09-10 14:03:41 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:03:41 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-10 to 2025-09-10
+2025-09-10 14:03:41 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 0 candles for BTCUSDT 1m
+2025-09-10 14:04:16 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:04:58 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 5m: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 15m: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 1h: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 4h: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 1d: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:11:52 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:11:52 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2023-09-11 to 2025-09-10
+2025-09-10 14:11:56 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6940 candles for BTCUSDT 1m
+2025-09-10 14:12:28 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-10 14:12:28 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-09 to 2025-09-10
+2025-09-10 14:12:29 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 2000 candles for BTCUSDT 1m
+2025-09-10 14:12:29 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-03 to 2025-09-10
+2025-09-10 14:12:32 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6941 candles for BTCUSDT 1m
+2025-09-10 14:12:32 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-08-11 to 2025-09-10
+2025-09-10 14:12:36 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6941 candles for BTCUSDT 1m
+2025-09-10 14:12:36 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-06-12 to 2025-09-10
+2025-09-10 14:12:39 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6941 candles for BTCUSDT 1m
+2025-09-10 14:12:39 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-03-14 to 2025-09-10
+2025-09-10 14:12:42 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6941 candles for BTCUSDT 1m
+2025-09-10 14:12:42 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2024-09-10 to 2025-09-10
+2025-09-10 14:12:46 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6941 candles for BTCUSDT 1m
+2025-09-10 14:12:46 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2023-09-11 to 2025-09-10
+2025-09-10 14:12:49 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 6941 candles for BTCUSDT 1m
+2025-09-10 14:21:55 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet
+2025-09-10 14:21:55 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-07 to 2025-09-10
+2025-09-10 14:21:58 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 5000 candles for BTCUSDT 1m
+2025-09-11 12:31:14 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 12:40:55 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-11 12:40:56 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 12:40:59 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 8000 candles for BTCUSDT 1m
+2025-09-11 12:41:02 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading ETHUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 12:41:06 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 8000 candles for ETHUSDT 1m
+2025-09-11 12:45:01 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 12:45:38 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://api.binance.com/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 13:06:54 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
+2025-09-11 13:10:37 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-11 13:10:37 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2023-09-12 to 2025-09-11
+2025-09-11 13:10:41 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 8000 candles for BTCUSDT 1m
+2025-09-11 13:17:13 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Testnet
+2025-09-11 13:17:14 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 13:17:18 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 8000 candles for BTCUSDT 1m
+2025-09-11 13:17:20 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading ETHUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 13:17:24 | [32mINFO[0m | src.data.collector:download_historical_data:109 | Downloaded 8000 candles for ETHUSDT 1m
+2025-09-11 13:18:29 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet
+2025-09-11 13:18:30 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 13:27:45 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet
+2025-09-11 13:27:46 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2025-09-04 to 2025-09-11
+2025-09-11 13:27:51 | [32mINFO[0m | src.data.collector:download_historical_data:123 | Downloaded 10888 candles for BTCUSDT 1m
+2025-09-11 13:29:04 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet
+2025-09-11 13:29:05 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 13:32:28 | [32mINFO[0m | src.data.collector:_setup_exchange:50 | Connected to Binance Mainnet
+2025-09-11 13:32:29 | [32mINFO[0m | src.data.collector:download_historical_data:72 | Downloading BTCUSDT 1m data from 2025-08-12 to 2025-09-11
+2025-09-11 13:32:31 | [32mINFO[0m | src.data.collector:download_historical_data:170 | Downloaded 33000 candles for BTCUSDT 1m
+2025-09-11 13:36:58 | [32mINFO[0m | src.data.collector:_setup_exchange:52 | Connected to Binance Mainnet (SPOT market)
+2025-09-11 13:36:59 | [32mINFO[0m | src.data.collector:download_historical_data:74 | Downloading BTCUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 13:38:22 | [32mINFO[0m | src.data.collector:download_historical_data:172 | Downloaded 1183000 candles for BTCUSDT 1m
+2025-09-11 13:40:28 | [32mINFO[0m | src.data.collector:download_historical_data:74 | Downloading ETHUSDT 1m data from 2022-09-12 to 2025-09-11
+2025-09-11 13:41:42 | [32mINFO[0m | src.data.collector:download_historical_data:172 | Downloaded 1183000 candles for ETHUSDT 1m
+2025-09-11 13:53:42 | [32mINFO[0m | src.data.collector:_setup_exchange:52 | Connected to Binance Mainnet (SPOT market)
+2025-09-11 14:13:13 | [31mERROR[0m | src.data.collector:_setup_exchange:56 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 14:15:36 | [31mERROR[0m | src.data.collector:_setup_exchange:56 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-13 13:26:55 | [32mINFO[0m | src.data.collector:_setup_exchange:46 | Connected to Binance Testnet (SPOT market)
+2025-09-16 18:20:12 | [31mERROR[0m | src.data.collector:_setup_exchange:50 | Failed to connect to Binance: binance {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
+2025-09-16 18:22:19 | [31mERROR[0m | src.data.collector:_setup_exchange:50 | Failed to connect to Binance: binance {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
+2025-09-16 18:30:31 | [32mINFO[0m | src.data.collector:_setup_exchange:46 | Connected to Binance Mainnet (SPOT market)
+2025-09-16 18:30:33 | [32mINFO[0m | src.data.collector:download_historical_data:68 | Downloading BTCUSDT 15m data from 2022-09-17 to 2025-09-16
+2025-09-16 18:34:05 | [32mINFO[0m | src.data.collector:_setup_exchange:46 | Connected to Binance Mainnet (FUTURE market)
+2025-09-16 18:34:06 | [32mINFO[0m | src.data.collector:download_historical_data:68 | Downloading BTCUSDT 1m data from 2022-09-17 to 2025-09-16
+2025-09-16 19:00:25 | [32mINFO[0m | src.data.collector:download_historical_data:166 | Downloaded 1577000 candles for BTCUSDT 1m
+2025-09-16 19:10:11 | [32mINFO[0m | src.data.collector:_setup_exchange:46 | Connected to Binance Mainnet (FUTURE market)
+2025-09-16 19:10:13 | [32mINFO[0m | src.data.collector:download_historical_data:68 | Downloading ETHUSDT 1m data from 2022-09-17 to 2025-09-16
+2025-09-16 19:36:33 | [32mINFO[0m | src.data.collector:download_historical_data:166 | Downloaded 1577000 candles for ETHUSDT 1m
+2025-09-16 20:23:53 | [32mINFO[0m | src.data.collector:_setup_exchange:46 | Connected to Binance Mainnet (FUTURE market)
+2025-09-16 20:23:57 | [32mINFO[0m | src.data.collector:_setup_exchange:46 | Connected to Binance Mainnet (FUTURE market)
+2025-09-16 20:24:01 | [32mINFO[0m | src.data.collector:collect_historical_data:375 | Starting historical data collection for BTCUSDT
+2025-09-16 20:24:01 | [32mINFO[0m | src.data.collector:download_historical_data:68 | Downloading BTCUSDT 1m data from 2025-09-15 to 2025-09-16
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:download_historical_data:166 | Downloaded 2000 candles for BTCUSDT 1m
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_db:467 | Saved BTCUSDT datasets to database
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:482 | Saved BTCUSDT 1m: 2000 records → D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\raw\BTCUSDT\BTCUSDT_1m_ohlcv.parquet
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:482 | Saved BTCUSDT 5m: 400 records → D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\raw\BTCUSDT\BTCUSDT_5m_ohlcv.parquet
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:482 | Saved BTCUSDT 15m: 134 records → D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\raw\BTCUSDT\BTCUSDT_15m_ohlcv.parquet
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:482 | Saved BTCUSDT 1h: 34 records → D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\raw\BTCUSDT\BTCUSDT_1h_ohlcv.parquet
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:482 | Saved BTCUSDT 4h: 9 records → D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\raw\BTCUSDT\BTCUSDT_4h_ohlcv.parquet
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:482 | Saved BTCUSDT 1d: 3 records → D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\raw\BTCUSDT\BTCUSDT_1d_ohlcv.parquet
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:_save_datasets_to_parquet:484 | Saved BTCUSDT datasets to parquet files
+2025-09-16 20:24:03 | [32mINFO[0m | src.data.collector:collect_historical_data:398 | Historical data collection completed for BTCUSDT
+2025-09-18 23:31:25 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-18 23:31:28 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 02:06:27 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 02:06:30 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 02:07:44 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 02:07:47 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 02:08:04 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 02:08:07 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:55:00 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:55:00 | [32mINFO[0m | src.data.collector:collect_historical_data:376 | Starting historical data collection for BTCUSDT
+2025-09-20 14:55:00 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2023-01-01 to 2024-12-31
+2025-09-20 14:55:33 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:55:33 | [32mINFO[0m | src.data.collector:collect_historical_data:376 | Starting historical data collection for BTCUSDT
+2025-09-20 14:55:33 | [32mINFO[0m | src.data.collector:download_historical_data:69 | Downloading BTCUSDT 1m data from 2022-09-16 to 2025-09-15
+2025-09-20 14:56:18 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:56:48 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:57:28 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:58:00 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 14:59:39 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 15:06:25 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 15:07:18 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 15:12:56 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 15:14:39 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 16:49:37 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 17:39:26 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-20 17:46:17 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:17:10 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:18:56 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:20:25 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:20:49 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:24:40 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:25:42 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:27:16 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:28:31 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:30:02 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:39:22 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:42:11 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:45:11 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 00:49:38 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 01:26:13 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 01:33:33 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 01:45:20 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 01:46:57 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 01:49:29 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 01:53:46 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 02:01:17 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 12:21:43 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 13:09:07 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 13:17:13 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 13:34:49 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 13:37:23 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 13:53:02 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 14:07:34 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-22 14:08:05 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-23 12:29:25 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-23 12:31:42 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-23 12:34:03 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-23 12:36:10 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-09-23 12:36:50 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://dapi.binance.com/dapi/v1/exchangeInfo
+2025-10-04 18:30:21 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-10-04 18:58:12 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-10-04 19:04:06 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-10-04 19:17:40 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)
+2025-10-05 20:59:48 | [32mINFO[0m | src.data.collector:_setup_exchange:47 | Connected to Binance Mainnet (FUTURE market)

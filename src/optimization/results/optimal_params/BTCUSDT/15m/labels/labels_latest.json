@@ -1,0 +1,16 @@
+{
+  "symbol": "BTCUSDT",
+  "timeframe": "15m",
+  "component": "labels",
+  "timestamp": "2025-09-21T02:31:45.461494",
+  "best_params": {
+    "lag": 3,
+    "label_type": "multiclass",
+    "pos_quantile": 0.8498054077153673
+  },
+  "best_score": 0.88658990868142,
+  "metadata": {
+    "source": "main_optimizer",
+    "version": "v53"
+  }
+}

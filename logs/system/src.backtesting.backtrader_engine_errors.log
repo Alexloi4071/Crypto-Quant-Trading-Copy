@@ -1,0 +1,1 @@
+2025-09-22 00:27:16 | [31mERROR[0m | src.backtesting.backtrader_engine:run_backtest:420 | Backtest failed for BTCUSDT_15m: 'close' is not in list

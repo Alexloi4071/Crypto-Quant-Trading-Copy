@@ -1,0 +1,481 @@
+2025-10-02 11:26:34,511 | INFO | optuna_system.coordinator:121 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-02 11:26:34,512 | INFO | optuna_system.coordinator:122 |    交易對: BTCUSDT
+2025-10-02 11:26:34,512 | INFO | optuna_system.coordinator:123 |    時間框: 15m
+2025-10-02 11:26:34,512 | INFO | optuna_system.coordinator:124 |    版本號: v1
+2025-10-02 11:26:34,526 | INFO | optuna_system.coordinator:167 | 15m 波動計算: std_mean=0.0023
+2025-10-02 11:26:34,526 | INFO | optuna_system.coordinator:167 | 1h 波動計算: std_mean=0.0047
+2025-10-02 11:26:34,537 | INFO | optuna_system.coordinator:167 | 4h 波動計算: std_mean=0.0095
+2025-10-02 11:26:34,542 | INFO | optuna_system.coordinator:167 | 1d 波動計算: std_mean=0.0250
+2025-10-02 11:26:34,542 | INFO | optuna_system.coordinator:202 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-02 11:26:34,543 | INFO | optuna_system.coordinator:694 | 🔧 Layer0：數據清洗與物化...
+2025-10-02 11:27:10,462 | INFO | optuna_system.coordinator:586 | 🧪 layer0_cleaning materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params.json | params_hash=fa2c1a166d82306c09bc5352ea0c1eb7
+2025-10-02 11:27:10,478 | INFO | optuna_system.coordinator:517 | 📄 layer0_cleaning 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params.json | params_hash=fa2c1a166d82306c09bc5352ea0c1eb7
+2025-10-02 11:27:10,546 | INFO | optuna_system.coordinator:529 | 💾 layer0_cleaning 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\cleaned\BTCUSDT_15m\cleaned_ohlcv_BTCUSDT_15m_fa2c1a166d82306c09bc5352ea0c1eb7.parquet | format=parquet | MD5=c6abf6484acf52ae7cc8a9068b0e5b62
+2025-10-02 11:27:10,567 | INFO | optuna_system.coordinator:722 | 🎯 Layer1：標籤生成與物化...
+2025-10-02 11:31:19,195 | INFO | optuna_system.coordinator:586 | 🧪 layer1_labels materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=a2c135ded77150a940b74eeb6d6d787d
+2025-10-02 11:31:19,751 | INFO | optuna_system.coordinator:517 | 📄 layer1_labels 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=a2c135ded77150a940b74eeb6d6d787d
+2025-10-02 11:31:19,826 | INFO | optuna_system.coordinator:529 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\labels_BTCUSDT_15m_a2c135ded77150a940b74eeb6d6d787d.parquet | format=parquet | MD5=909e9c965e5963fff8b1d6037c0293fb
+2025-10-02 11:31:19,880 | INFO | optuna_system.coordinator:760 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-02 15:03:36,241 | INFO | optuna_system.coordinator:586 | 🧪 layer2_features materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=59c1d7d0793d7d60d148b24c0750cd59
+2025-10-02 15:10:53,536 | INFO | optuna_system.coordinator:517 | 📄 layer2_features 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=59c1d7d0793d7d60d148b24c0750cd59
+2025-10-02 15:10:53,672 | INFO | optuna_system.coordinator:529 | 💾 layer2_features 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\features\BTCUSDT_15m\features_BTCUSDT_15m_59c1d7d0793d7d60d148b24c0750cd59.parquet | format=parquet | MD5=ea72ce75d386747e53a21a0c05181a5b
+2025-10-02 15:10:53,713 | WARNING | optuna_system.coordinator:770 | ⚠️ Layer2分數過低: 0.4659，建議增加試驗次數或檢查特徵質量
+2025-10-02 15:10:53,713 | INFO | optuna_system.coordinator:775 | ✅ 保留策略特徵: 0個
+2025-10-02 15:10:53,713 | WARNING | optuna_system.coordinator:777 | ⚠️ 警告: 未選中任何策略特徵（Wyckoff/TD/Micro）
+2025-10-02 15:10:53,714 | INFO | optuna_system.coordinator:779 | ✅ Layer2特徵優化完成
+2025-10-02 17:48:23,448 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-02 17:48:23,448 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-02 17:48:23,449 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-02 17:48:23,449 | INFO | optuna_system.coordinator:125 |    版本號: v2
+2025-10-02 17:48:23,465 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-02 17:48:23,471 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-02 17:48:23,476 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-02 17:48:23,480 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-02 17:48:23,481 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-02 17:48:23,482 | INFO | optuna_system.coordinator:723 | 🎯 Layer1：標籤生成與物化...
+2025-10-02 17:53:04,855 | INFO | optuna_system.coordinator:587 | 🧪 layer1_labels materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=f090780366e3d9773ee5819cf3be3fc7
+2025-10-02 17:53:05,417 | INFO | optuna_system.coordinator:518 | 📄 layer1_labels 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=f090780366e3d9773ee5819cf3be3fc7
+2025-10-02 17:53:05,492 | INFO | optuna_system.coordinator:530 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\labels_BTCUSDT_15m_f090780366e3d9773ee5819cf3be3fc7.parquet | format=parquet | MD5=7f2cc06ccbfe2bd4b1d5278a92144553
+2025-10-02 17:53:05,517 | INFO | optuna_system.coordinator:761 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 01:18:29,110 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 01:18:29,115 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 01:18:29,115 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 01:18:29,115 | INFO | optuna_system.coordinator:125 |    版本號: v1
+2025-10-03 01:18:29,132 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 01:18:29,140 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 01:18:29,145 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 01:18:29,148 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 01:18:29,149 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 01:18:29,150 | INFO | optuna_system.coordinator:689 | 🔧 Layer0：數據清洗與物化...
+2025-10-03 11:10:19,945 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 11:10:19,945 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 11:10:19,945 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 11:10:19,946 | INFO | optuna_system.coordinator:125 |    版本號: v2
+2025-10-03 11:10:19,965 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 11:10:19,972 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 11:10:19,976 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 11:10:19,981 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 11:10:19,981 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 11:10:19,983 | INFO | optuna_system.coordinator:689 | 🔧 Layer0：數據清洗與物化...
+2025-10-03 11:10:56,334 | INFO | optuna_system.coordinator:581 | 🧪 layer0_cleaning materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params.json | params_hash=0cfa0c8a0e12eb18a4ce6e17fc661f5a
+2025-10-03 11:10:56,337 | INFO | optuna_system.coordinator:512 | 📄 layer0_cleaning 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params.json | params_hash=0cfa0c8a0e12eb18a4ce6e17fc661f5a
+2025-10-03 11:10:56,408 | INFO | optuna_system.coordinator:524 | 💾 layer0_cleaning 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\cleaned\BTCUSDT_15m\v2\cleaned_ohlcv_BTCUSDT_15m_0cfa0c8a0e12eb18a4ce6e17fc661f5a.parquet | format=parquet | MD5=39b86806dee933cde7e4449fa6d7604b
+2025-10-03 11:10:56,418 | INFO | optuna_system.coordinator:717 | 🎯 Layer1：標籤生成與物化...
+2025-10-03 11:17:36,736 | INFO | optuna_system.coordinator:581 | 🧪 layer1_labels materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=e1137ca7a6347c4206a9ba433e0f4378
+2025-10-03 11:17:37,382 | INFO | optuna_system.coordinator:512 | 📄 layer1_labels 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=e1137ca7a6347c4206a9ba433e0f4378
+2025-10-03 11:17:37,475 | INFO | optuna_system.coordinator:524 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\v2\labels_BTCUSDT_15m_e1137ca7a6347c4206a9ba433e0f4378.parquet | format=parquet | MD5=e11295bfc82dae09c3397ede79a68a1b
+2025-10-03 11:17:37,523 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 15:35:06,173 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 15:35:06,173 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 15:35:06,174 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 15:35:06,174 | INFO | optuna_system.coordinator:125 |    版本號: v3
+2025-10-03 15:35:06,190 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 15:35:06,197 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 15:35:06,202 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 15:35:06,207 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 15:35:06,207 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 15:35:06,208 | INFO | optuna_system.coordinator:717 | 🎯 Layer1：標籤生成與物化...
+2025-10-03 15:38:53,079 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 15:38:53,079 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 15:38:53,079 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 15:38:53,080 | INFO | optuna_system.coordinator:125 |    版本號: v4
+2025-10-03 15:38:53,158 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 15:38:53,165 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 15:38:53,170 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 15:38:53,174 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 15:38:53,174 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 15:38:53,175 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 15:41:35,433 | INFO | optuna_system.coordinator:581 | 🧪 layer1_labels materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=a6bbd95204f5267137c2eaf050ca7241
+2025-10-03 15:41:36,023 | INFO | optuna_system.coordinator:512 | 📄 layer1_labels 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=a6bbd95204f5267137c2eaf050ca7241
+2025-10-03 15:41:36,127 | INFO | optuna_system.coordinator:524 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\v3\labels_BTCUSDT_15m_a6bbd95204f5267137c2eaf050ca7241.parquet | format=parquet | MD5=8358e3677f108935462b743b278bf162
+2025-10-03 15:41:36,168 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 15:49:03,688 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 15:49:03,688 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 15:49:03,696 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 15:49:03,697 | INFO | optuna_system.coordinator:125 |    版本號: v5
+2025-10-03 15:49:03,770 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 15:49:03,777 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 15:49:03,781 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 15:49:03,785 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 15:49:03,785 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 15:49:03,785 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 16:59:41,830 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 16:59:41,830 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 16:59:41,831 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 16:59:41,831 | INFO | optuna_system.coordinator:125 |    版本號: v6
+2025-10-03 16:59:41,910 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 16:59:41,918 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 16:59:41,923 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 16:59:41,926 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 16:59:41,927 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 16:59:41,927 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 17:27:42,200 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 17:27:42,201 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 17:27:42,201 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 17:27:42,201 | INFO | optuna_system.coordinator:125 |    版本號: v7
+2025-10-03 17:27:42,292 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 17:27:42,300 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 17:27:42,305 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 17:27:42,311 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 17:27:42,312 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 17:27:42,312 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 18:04:53,981 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-03 18:04:53,982 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-03 18:04:53,982 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-03 18:04:53,982 | INFO | optuna_system.coordinator:125 |    版本號: v8
+2025-10-03 18:04:54,057 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-03 18:04:54,067 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-03 18:04:54,075 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-03 18:04:54,089 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-03 18:04:54,090 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-03 18:04:54,091 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-03 23:05:41,950 | INFO | optuna_system.coordinator:581 | 🧪 layer2_features materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=3960f6044a1a4b2a93602e9dcfda307f
+2025-10-03 23:07:16,077 | WARNING | optuna_system.coordinator:494 | ⚠️ Layer2物化缺失特徵列: ['volume_sma_ratio', 'price_volume', 'macd', 'wyk_phase', 'micro_spread_est', 'td_signal_buy', 'wyk_volume_divergence']
+2025-10-03 23:07:16,152 | INFO | optuna_system.coordinator:512 | 📄 layer2_features 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=3960f6044a1a4b2a93602e9dcfda307f
+2025-10-03 23:07:16,516 | INFO | optuna_system.coordinator:524 | 💾 layer2_features 物化輸出: data\processed\features\BTCUSDT_15m\v8\features_BTCUSDT_15m_3960f6044a1a4b2a93602e9dcfda307f.parquet | format=parquet | MD5=08091bebcb4e2c2a5581f197431a1f3b
+2025-10-03 23:07:16,602 | WARNING | optuna_system.coordinator:876 | ⚠️ Layer2分數過低: 0.4378，建議增加試驗次數或檢查特徵質量
+2025-10-03 23:07:16,602 | INFO | optuna_system.coordinator:881 | ✅ 保留策略特徵: 5個
+2025-10-03 23:07:16,602 | INFO | optuna_system.coordinator:885 | ✅ Layer2特徵優化完成
+2025-10-04 17:17:54,194 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-04 17:17:54,194 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-04 17:17:54,195 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-04 17:17:54,195 | INFO | optuna_system.coordinator:125 |    版本號: v1
+2025-10-04 17:17:54,208 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-04 17:17:54,218 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-04 17:17:54,223 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-04 17:17:54,228 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-04 17:17:54,228 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-04 17:17:54,230 | INFO | optuna_system.coordinator:689 | 🔧 Layer0：數據清洗與物化...
+2025-10-04 17:18:31,048 | INFO | optuna_system.coordinator:581 | 🧪 layer0_cleaning materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params.json | params_hash=db69cc881c51f9c76de29a39aed0ddbd
+2025-10-04 17:18:31,074 | INFO | optuna_system.coordinator:512 | 📄 layer0_cleaning 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params.json | params_hash=db69cc881c51f9c76de29a39aed0ddbd
+2025-10-04 17:18:31,145 | INFO | optuna_system.coordinator:524 | 💾 layer0_cleaning 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\cleaned\BTCUSDT_15m\v1\cleaned_ohlcv_BTCUSDT_15m_db69cc881c51f9c76de29a39aed0ddbd.parquet | format=parquet | MD5=625676c53424e4b5af5556784f0d0b0d
+2025-10-04 17:18:31,154 | INFO | optuna_system.coordinator:717 | 🎯 Layer1：標籤生成與物化...
+2025-10-04 17:23:38,613 | INFO | optuna_system.coordinator:581 | 🧪 layer1_labels materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=c97e3b785f8d56f9bde54744ac50ba96
+2025-10-04 17:23:39,109 | INFO | optuna_system.coordinator:512 | 📄 layer1_labels 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=c97e3b785f8d56f9bde54744ac50ba96
+2025-10-04 17:23:39,188 | INFO | optuna_system.coordinator:524 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\v1\labels_BTCUSDT_15m_c97e3b785f8d56f9bde54744ac50ba96.parquet | format=parquet | MD5=fe7b10626d801d840a6be4dc0bfe1fd3
+2025-10-04 17:23:39,231 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-04 17:25:26,189 | ERROR | optuna_system.coordinator:889 | ❌ Layer2特徵優化失敗: module 'optuna' has no attribute 'FrozenTrial'
+2025-10-04 17:33:45,566 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-04 17:33:45,567 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-04 17:33:45,567 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-04 17:33:45,567 | INFO | optuna_system.coordinator:125 |    版本號: v2
+2025-10-04 17:33:45,582 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-04 17:33:45,592 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-04 17:33:45,597 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-04 17:33:45,603 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-04 17:33:45,603 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-04 17:33:45,604 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-04 17:58:33,229 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-04 17:58:33,230 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-04 17:58:33,230 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-04 17:58:33,230 | INFO | optuna_system.coordinator:125 |    版本號: v3
+2025-10-04 17:58:33,246 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-04 17:58:33,252 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-04 17:58:33,257 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-04 17:58:33,262 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-04 17:58:33,263 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-04 17:58:33,263 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-04 18:07:32,031 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-04 18:07:32,031 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-04 18:07:32,031 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-04 18:07:32,032 | INFO | optuna_system.coordinator:125 |    版本號: v4
+2025-10-04 18:07:32,046 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-04 18:07:32,052 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-04 18:07:32,058 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-04 18:07:32,062 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-04 18:07:32,063 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-04 18:07:32,063 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-04 19:27:49,628 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-04 19:27:49,629 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-04 19:27:49,629 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-04 19:27:49,629 | INFO | optuna_system.coordinator:125 |    版本號: v5
+2025-10-04 19:27:49,646 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-04 19:27:49,652 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-04 19:27:49,658 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-04 19:27:49,662 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-04 19:27:49,662 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-04 19:27:49,663 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-05 15:50:30,478 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-05 15:50:30,490 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-05 15:50:30,491 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-05 15:50:30,491 | INFO | optuna_system.coordinator:125 |    版本號: v6
+2025-10-05 15:50:30,510 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-05 15:50:30,517 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-05 15:50:30,522 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-05 15:50:30,529 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-05 15:50:30,529 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-05 15:50:30,529 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-06 19:14:01,302 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-06 19:14:01,304 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-06 19:14:01,304 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-06 19:14:01,304 | INFO | optuna_system.coordinator:125 |    版本號: v7
+2025-10-06 19:14:01,329 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-06 19:14:01,331 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-06 19:14:01,375 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-06 19:14:01,377 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-06 19:14:01,408 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-06 19:14:01,410 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-06 19:14:01,442 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-06 19:14:01,443 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-06 19:14:01,443 | INFO | optuna_system.coordinator:755 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-07 15:55:36,627 | ERROR | optuna_system.coordinator:889 | ❌ Layer2特徵優化失敗: Repetition level histogram size mismatch
+2025-10-07 16:05:47,155 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 16:05:47,155 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 16:05:47,155 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 16:05:47,155 | INFO | optuna_system.coordinator:125 |    版本號: v8
+2025-10-07 16:05:47,227 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 16:05:47,230 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:05:47,276 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 16:05:47,279 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:05:47,321 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 16:05:47,324 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:05:47,360 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 16:05:47,360 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 16:08:31,270 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 16:08:31,271 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 16:08:31,271 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 16:08:31,271 | INFO | optuna_system.coordinator:125 |    版本號: v9
+2025-10-07 16:08:31,338 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 16:08:31,341 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:08:31,388 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 16:08:31,390 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:08:31,429 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 16:08:31,432 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:08:31,467 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 16:08:31,467 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 16:12:59,779 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 16:12:59,779 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 16:12:59,779 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 16:12:59,779 | INFO | optuna_system.coordinator:125 |    版本號: v10
+2025-10-07 16:12:59,846 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 16:12:59,848 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:12:59,885 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 16:12:59,887 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:12:59,927 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 16:12:59,929 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:12:59,957 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 16:12:59,958 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 16:17:11,415 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 16:17:11,415 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 16:17:11,416 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 16:17:11,416 | INFO | optuna_system.coordinator:125 |    版本號: v11
+2025-10-07 16:17:11,498 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 16:17:11,500 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:17:11,557 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 16:17:11,559 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:17:11,604 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 16:17:11,607 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:17:11,655 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 16:17:11,655 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 16:27:55,740 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 16:27:55,740 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 16:27:55,740 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 16:27:55,740 | INFO | optuna_system.coordinator:125 |    版本號: v12
+2025-10-07 16:27:55,791 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 16:27:55,793 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:27:55,830 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 16:27:55,832 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:27:55,864 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 16:27:55,866 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 16:27:55,893 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 16:27:55,893 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 16:29:51,859 | WARNING | optuna_system.coordinator:502 | ⚠️ Layer2物化缺失特徵列: ['macd', 'price_volume', 'macd_histogram', 'micro_spread_est']
+2025-10-07 16:29:51,947 | INFO | optuna_system.coordinator:520 | 📄 layer2_features 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=a37abceea1e1400a3d2029ce93f0df32
+2025-10-07 16:29:52,171 | INFO | optuna_system.coordinator:532 | 💾 layer2_features 物化輸出: data\processed\features\BTCUSDT_15m\v12\features_BTCUSDT_15m_a37abceea1e1400a3d2029ce93f0df32.parquet | format=parquet | MD5=0a372768e57ee8a42affb6e6deb031a6
+2025-10-07 21:54:06,944 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 21:54:06,944 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 21:54:06,945 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 21:54:06,945 | INFO | optuna_system.coordinator:125 |    版本號: v13
+2025-10-07 21:54:07,002 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 21:54:07,006 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 21:54:07,045 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 21:54:07,047 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 21:54:07,080 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 21:54:07,083 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 21:54:07,113 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 21:54:07,113 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 21:54:07,114 | INFO | optuna_system.coordinator:763 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-07 22:00:45,745 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-07 22:00:45,745 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-07 22:00:45,745 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-07 22:00:45,746 | INFO | optuna_system.coordinator:125 |    版本號: v14
+2025-10-07 22:00:45,800 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-07 22:00:45,802 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 22:00:45,839 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-07 22:00:45,841 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 22:00:45,872 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-07 22:00:45,875 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-07 22:00:45,903 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-07 22:00:45,903 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-07 22:00:45,904 | INFO | optuna_system.coordinator:763 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-08 04:35:05,759 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-08 04:35:05,760 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-08 04:35:05,760 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-08 04:35:05,760 | INFO | optuna_system.coordinator:125 |    版本號: v16
+2025-10-08 04:35:05,864 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-08 04:35:05,870 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-08 04:35:05,914 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-08 04:35:05,917 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-08 04:35:05,950 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-08 04:35:05,954 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-08 04:35:05,983 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-08 04:35:05,983 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-08 04:35:05,984 | INFO | optuna_system.coordinator:763 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-08 09:52:12,040 | ERROR | optuna_system.coordinator:897 | ❌ Layer2特徵優化失敗: layer2_features 缺少上一層資料
+2025-10-08 10:49:28,772 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-08 10:49:28,772 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-08 10:49:28,773 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-08 10:49:28,773 | INFO | optuna_system.coordinator:125 |    版本號: v17
+2025-10-08 10:49:28,830 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-08 10:49:28,833 | WARNING | optuna_system.coordinator:171 | ⚠️ 1h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-08 10:49:28,867 | INFO | optuna_system.coordinator:188 | 1h 回退重採樣自15m: std_mean=0.0047
+2025-10-08 10:49:28,870 | WARNING | optuna_system.coordinator:171 | ⚠️ 4h 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-08 10:49:28,899 | INFO | optuna_system.coordinator:188 | 4h 回退重採樣自15m: std_mean=0.0095
+2025-10-08 10:49:28,902 | WARNING | optuna_system.coordinator:171 | ⚠️ 1d 波動計算讀取失敗，嘗試回退: Repetition level histogram size mismatch
+2025-10-08 10:49:28,930 | INFO | optuna_system.coordinator:188 | 1d 回退重採樣自15m: std_mean=0.0250
+2025-10-08 10:49:28,931 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-08 10:49:28,932 | INFO | optuna_system.coordinator:793 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-08 10:49:29,200 | INFO | optuna_system.coordinator:423 | 🧩 已回退重建Layer1標籤並物化: data\processed\labels\BTCUSDT_15m\v17\labels_BTCUSDT_15m_c97e3b785f8d56f9bde54744ac50ba96.parquet
+2025-10-08 18:19:36,969 | INFO | __main__:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-08 18:19:36,977 | INFO | __main__:123 |    交易對: BTCUSDT
+2025-10-08 18:19:36,977 | INFO | __main__:124 |    時間框: 15m
+2025-10-08 18:19:36,977 | INFO | __main__:125 |    版本號: v19
+2025-10-08 18:19:37,028 | INFO | __main__:168 | 15m 波動計算: std_mean=0.0023
+2025-10-08 18:19:37,035 | INFO | __main__:168 | 1h 波動計算: std_mean=0.0047
+2025-10-08 18:19:37,040 | INFO | __main__:168 | 4h 波動計算: std_mean=0.0095
+2025-10-08 18:19:37,044 | INFO | __main__:168 | 1d 波動計算: std_mean=0.0250
+2025-10-08 18:19:37,045 | INFO | __main__:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-08 18:19:37,045 | INFO | __main__:1248 | 🚀 開始分階段串聯優化流程（Layer0→Layer1→Layer2聯動）...
+2025-10-08 18:19:37,046 | INFO | __main__:1251 | 📊 阶段一：Layer0數據清洗與統計分析...
+2025-10-08 18:19:37,046 | INFO | __main__:737 | 🔧 Layer0：數據清洗與物化...
+2025-10-08 18:19:48,218 | INFO | __main__:629 | 🧪 layer0_cleaning materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params_15m.json | params_hash=2bcf1920a2e9b0ecbe369e8e7ba68e84
+2025-10-08 18:19:48,221 | INFO | __main__:550 | 📄 layer0_cleaning 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\cleaning_params_15m.json | params_hash=2bcf1920a2e9b0ecbe369e8e7ba68e84
+2025-10-08 18:19:48,290 | INFO | __main__:562 | 💾 layer0_cleaning 物化輸出: data\processed\cleaned\BTCUSDT_15m\v19\cleaned_ohlcv_BTCUSDT_15m_2bcf1920a2e9b0ecbe369e8e7ba68e84.parquet | format=parquet | MD5=2b85db64de61aa1b3f84591b510c305e
+2025-10-08 18:19:48,307 | INFO | __main__:1254 | 🏷️ 阶段二：Layer1標籤優化...
+2025-10-08 18:19:48,308 | INFO | __main__:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-08 18:21:57,458 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-08 18:21:57,458 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-08 18:21:57,459 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-08 18:21:57,459 | INFO | optuna_system.coordinator:125 |    版本號: v20
+2025-10-08 18:21:57,477 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-08 18:21:57,484 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-08 18:21:57,496 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-08 18:21:57,541 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-08 18:21:57,554 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-08 18:21:57,563 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-08 18:22:34,374 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-08 18:22:34,374 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-08 18:22:34,375 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-08 18:22:34,375 | INFO | optuna_system.coordinator:125 |    版本號: v21
+2025-10-08 18:22:34,391 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-08 18:22:34,398 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-08 18:22:34,403 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-08 18:22:34,406 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-08 18:22:34,407 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-08 18:22:34,408 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-08 18:27:21,801 | INFO | optuna_system.coordinator:629 | 🧪 layer1_labels materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=c46948a769c850328d36f8cc0ecf1f0b
+2025-10-08 18:27:22,302 | INFO | optuna_system.coordinator:550 | 📄 layer1_labels 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=c46948a769c850328d36f8cc0ecf1f0b
+2025-10-08 18:27:22,376 | INFO | optuna_system.coordinator:562 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\v21\labels_BTCUSDT_15m_c46948a769c850328d36f8cc0ecf1f0b.parquet | format=parquet | MD5=5d792c3afb88912be607e6a7850a428c
+2025-10-08 18:27:22,413 | INFO | optuna_system.coordinator:803 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-08 18:47:47,426 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-08 18:47:47,426 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-08 18:47:47,426 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-08 18:47:47,427 | INFO | optuna_system.coordinator:125 |    版本號: v22
+2025-10-08 18:47:47,441 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-08 18:47:47,448 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-08 18:47:47,454 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-08 18:47:47,459 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-08 18:47:47,459 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-08 18:47:47,460 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-08 18:52:36,152 | INFO | optuna_system.coordinator:629 | 🧪 layer1_labels materialize 前檢查: JSON=d:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=72aa74b9821e713db3053b4e5018779a
+2025-10-08 18:52:36,664 | INFO | optuna_system.coordinator:550 | 📄 layer1_labels 超參數JSON: d:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=72aa74b9821e713db3053b4e5018779a
+2025-10-08 18:52:36,742 | INFO | optuna_system.coordinator:562 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\v22\labels_BTCUSDT_15m_72aa74b9821e713db3053b4e5018779a.parquet | format=parquet | MD5=3992a5c0dc2a5048b838150d0c50e43e
+2025-10-08 18:52:36,773 | INFO | optuna_system.coordinator:803 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-10 12:29:24,920 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-10 12:29:24,920 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-10 12:29:24,920 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-10 12:29:24,920 | INFO | optuna_system.coordinator:125 |    版本號: v24
+2025-10-10 12:29:24,939 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-10 12:29:24,948 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-10 12:29:24,953 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-10 12:29:24,957 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-10 12:29:24,957 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-10 12:29:24,958 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-10 13:16:34,205 | INFO | optuna_system.coordinator:629 | 🧪 layer1_labels materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=105cb49df0a0718b6730f0f9e5d2cc73
+2025-10-10 13:16:34,391 | ERROR | optuna_system.coordinator:787 | ❌ Layer1標籤優化失敗: Layer1長度不一致: aligned=0, expected=105130
+2025-10-10 13:23:57,840 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-10 13:23:57,840 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-10 13:23:57,840 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-10 13:23:57,840 | INFO | optuna_system.coordinator:125 |    版本號: v25
+2025-10-10 13:23:57,863 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-10 13:23:57,879 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-10 13:23:57,888 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-10 13:23:57,893 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-10 13:23:57,893 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-10 13:23:57,905 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-10 14:12:00,528 | INFO | optuna_system.coordinator:629 | 🧪 layer1_labels materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=1549038c86896e9a36e1e300b76cb698
+2025-10-10 14:12:00,705 | ERROR | optuna_system.coordinator:787 | ❌ Layer1標籤優化失敗: Layer1長度不一致: aligned=0, expected=105126
+2025-10-10 14:14:03,672 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-10 14:14:03,672 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-10 14:14:03,673 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-10 14:14:03,673 | INFO | optuna_system.coordinator:125 |    版本號: v26
+2025-10-10 14:14:03,687 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-10 14:14:03,694 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-10 14:14:03,698 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-10 14:14:03,703 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-10 14:14:03,703 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-10 14:14:03,704 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
+2025-10-10 14:18:38,680 | INFO | optuna_system.coordinator:629 | 🧪 layer1_labels materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=12e1d547f9ae94cc898119f1e171ff02
+2025-10-10 14:18:39,202 | INFO | optuna_system.coordinator:550 | 📄 layer1_labels 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\label_params_15m.json | params_hash=12e1d547f9ae94cc898119f1e171ff02
+2025-10-10 14:18:39,270 | INFO | optuna_system.coordinator:562 | 💾 layer1_labels 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\labels\BTCUSDT_15m\v26\labels_BTCUSDT_15m_12e1d547f9ae94cc898119f1e171ff02.parquet | format=parquet | MD5=99d2cfec8d5633abd56b300fb809425d
+2025-10-10 14:54:17,508 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-10 14:54:17,508 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-10 14:54:17,508 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-10 14:54:17,508 | INFO | optuna_system.coordinator:125 |    版本號: v28
+2025-10-10 14:54:17,524 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-10 14:54:17,530 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-10 14:54:17,535 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-10 14:54:17,539 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-10 14:54:17,540 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-10 14:54:17,540 | INFO | optuna_system.coordinator:803 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-10 14:58:27,587 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-10 14:58:27,587 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-10 14:58:27,587 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-10 14:58:27,587 | INFO | optuna_system.coordinator:125 |    版本號: v29
+2025-10-10 14:58:27,612 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-10 14:58:27,621 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-10 14:58:27,625 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-10 14:58:27,631 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-10 14:58:27,631 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-10 14:58:27,631 | INFO | optuna_system.coordinator:803 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-10 15:05:14,109 | INFO | optuna_system.coordinator:629 | 🧪 layer2_features materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=dd14029075aeb9ec48f94e54e170ef5e
+2025-10-10 15:07:25,698 | WARNING | optuna_system.coordinator:532 | ⚠️ Layer2物化缺失特徵列: ['price_volume', 'sma_5', 'macd', 'micro_spread_est', 'macd_histogram', 'williams_r_14', 'williams_r_21']
+2025-10-10 15:07:25,787 | INFO | optuna_system.coordinator:550 | 📄 layer2_features 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=dd14029075aeb9ec48f94e54e170ef5e
+2025-10-10 15:07:25,960 | INFO | optuna_system.coordinator:562 | 💾 layer2_features 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\features\BTCUSDT_15m\v28\features_BTCUSDT_15m_dd14029075aeb9ec48f94e54e170ef5e.parquet | format=parquet | MD5=266fe30eb351233e45a60efd6428b589
+2025-10-10 15:07:26,095 | WARNING | optuna_system.coordinator:933 | ⚠️ Layer2分數過低: 0.0000，建議增加試驗次數或檢查特徵質量
+2025-10-10 15:07:26,095 | INFO | optuna_system.coordinator:938 | ✅ 保留策略特徵: 2個
+2025-10-10 15:07:26,095 | INFO | optuna_system.coordinator:942 | ✅ Layer2特徵優化完成
+2025-10-10 15:13:31,109 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-10 15:13:31,109 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-10 15:13:31,109 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-10 15:13:31,109 | INFO | optuna_system.coordinator:125 |    版本號: v30
+2025-10-10 15:13:31,133 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-10 15:13:31,141 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-10 15:13:31,146 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-10 15:13:31,151 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-10 15:13:31,151 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-10 15:13:31,151 | INFO | optuna_system.coordinator:803 | 🎯 Layer2單一時框特徵優化: 15m...
+2025-10-10 15:28:46,555 | INFO | optuna_system.coordinator:629 | 🧪 layer2_features materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=307432a422c63ca09eb9a8004ee6db3a
+2025-10-10 15:30:40,175 | INFO | optuna_system.coordinator:550 | 📄 layer2_features 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=307432a422c63ca09eb9a8004ee6db3a
+2025-10-10 15:30:40,474 | INFO | optuna_system.coordinator:562 | 💾 layer2_features 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\features\BTCUSDT_15m\v29\features_BTCUSDT_15m_307432a422c63ca09eb9a8004ee6db3a.parquet | format=parquet | MD5=b6c7dca9343a014c9e8cd8f9426247e1
+2025-10-10 15:30:40,656 | WARNING | optuna_system.coordinator:933 | ⚠️ Layer2分數過低: 0.4500，建議增加試驗次數或檢查特徵質量
+2025-10-10 15:30:40,656 | INFO | optuna_system.coordinator:938 | ✅ 保留策略特徵: 0個
+2025-10-10 15:30:40,656 | WARNING | optuna_system.coordinator:940 | ⚠️ 警告: 未選中任何策略特徵（Wyckoff/TD/Micro）
+2025-10-10 15:30:40,656 | INFO | optuna_system.coordinator:942 | ✅ Layer2特徵優化完成
+2025-10-10 15:36:56,220 | INFO | optuna_system.coordinator:629 | 🧪 layer2_features materialize 前檢查: JSON=D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=bb7475478d1233a7bc0b3a594c3a7daa
+2025-10-10 15:38:41,834 | INFO | optuna_system.coordinator:550 | 📄 layer2_features 超參數JSON: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\optuna_system\configs\feature_params_15m.json | params_hash=bb7475478d1233a7bc0b3a594c3a7daa
+2025-10-10 15:38:41,947 | INFO | optuna_system.coordinator:562 | 💾 layer2_features 物化輸出: D:\crypto-quant-trading-copy\crypto-quant-trading-copy\crypto-quant-trading-copy\data\processed\features\BTCUSDT_15m\v30\features_BTCUSDT_15m_bb7475478d1233a7bc0b3a594c3a7daa.parquet | format=parquet | MD5=a2cc6698e3f6ece49ed5ae57878f4157
+2025-10-10 15:38:42,195 | WARNING | optuna_system.coordinator:933 | ⚠️ Layer2分數過低: 0.4323，建議增加試驗次數或檢查特徵質量
+2025-10-10 15:38:42,196 | INFO | optuna_system.coordinator:938 | ✅ 保留策略特徵: 0個
+2025-10-10 15:38:42,196 | WARNING | optuna_system.coordinator:940 | ⚠️ 警告: 未選中任何策略特徵（Wyckoff/TD/Micro）
+2025-10-10 15:38:42,196 | INFO | optuna_system.coordinator:942 | ✅ Layer2特徵優化完成

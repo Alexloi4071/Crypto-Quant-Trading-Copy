@@ -1,0 +1,26 @@
+2025-09-11 14:31:11 | [32mINFO[0m | src.features.feature_selector:optimize_features:98 | Starting feature optimization with method: combined
+2025-09-11 14:31:12 | [32mINFO[0m | src.features.feature_selector:_clean_data:144 | Removed 4 constant features
+2025-09-11 14:31:12 | [32mINFO[0m | src.features.feature_selector:_combined_selection:157 | Running combined feature selection
+2025-09-11 14:31:26 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed mutual_info selection: 145 features scored
+2025-09-11 14:31:26 | [31mERROR[0m | src.features.feature_selector:_lightgbm_selection:437 | LightGBM selection failed: Label must be in [0, 3), but found -1 in label
+2025-09-11 14:31:26 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed lightgbm selection: 0 features scored
+2025-09-11 14:31:26 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed f_classif selection: 145 features scored
+2025-09-11 14:31:27 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed correlation selection: 145 features scored
+2025-09-11 14:31:28 | [32mINFO[0m | src.features.feature_selector:_remove_correlated_features:261 | Removed 39 highly correlated features
+2025-09-11 14:31:28 | [32mINFO[0m | src.features.feature_selector:_combined_selection:218 | Combined selection completed: 30 features selected
+2025-09-11 14:31:28 | [32mINFO[0m | src.features.feature_selector:optimize_features:98 | Starting feature optimization with method: lightgbm
+2025-09-11 14:31:28 | [31mERROR[0m | src.features.feature_selector:_lightgbm_selection:437 | LightGBM selection failed: Label must be in [0, 3), but found -1 in label
+2025-09-11 14:31:28 | [32mINFO[0m | src.features.feature_selector:optimize_features:98 | Starting feature optimization with method: mutual_info
+2025-09-11 14:40:10 | [32mINFO[0m | src.features.feature_selector:optimize_features:98 | Starting feature optimization with method: combined
+2025-09-11 14:40:10 | [32mINFO[0m | src.features.feature_selector:_clean_data:144 | Removed 4 constant features
+2025-09-11 14:40:10 | [32mINFO[0m | src.features.feature_selector:_combined_selection:157 | Running combined feature selection
+2025-09-11 14:40:26 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed mutual_info selection: 145 features scored
+2025-09-11 14:40:27 | [31mERROR[0m | src.features.feature_selector:_lightgbm_selection:437 | LightGBM selection failed: Label must be in [0, 3), but found -1 in label
+2025-09-11 14:40:27 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed lightgbm selection: 0 features scored
+2025-09-11 14:40:27 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed f_classif selection: 145 features scored
+2025-09-11 14:40:27 | [32mINFO[0m | src.features.feature_selector:_combined_selection:191 | Completed correlation selection: 145 features scored
+2025-09-11 14:40:29 | [32mINFO[0m | src.features.feature_selector:_remove_correlated_features:261 | Removed 39 highly correlated features
+2025-09-11 14:40:29 | [32mINFO[0m | src.features.feature_selector:_combined_selection:218 | Combined selection completed: 30 features selected
+2025-09-11 14:40:29 | [32mINFO[0m | src.features.feature_selector:optimize_features:98 | Starting feature optimization with method: lightgbm
+2025-09-11 14:40:29 | [31mERROR[0m | src.features.feature_selector:_lightgbm_selection:437 | LightGBM selection failed: Label must be in [0, 3), but found -1 in label
+2025-09-11 14:40:29 | [32mINFO[0m | src.features.feature_selector:optimize_features:98 | Starting feature optimization with method: mutual_info

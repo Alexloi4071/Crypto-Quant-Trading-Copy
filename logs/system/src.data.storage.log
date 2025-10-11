@@ -1,0 +1,70 @@
+2025-09-10 13:47:35 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-10 13:48:41 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-10 13:48:42 | [31mERROR[0m | src.data.storage:initialize:69 | Data storage initialization failed: 'DatabaseManager' object has no attribute 'connect'
+2025-09-10 13:49:33 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-10 13:49:35 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-10 13:49:35 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-10 13:50:38 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-10 13:50:39 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-10 13:50:39 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-10 13:50:43 | [31mERROR[0m | src.data.storage:store_ohlcv_data:97 | Failed to store OHLCV data: 'DatabaseManager' object has no attribute 'store_ohlcv_data'
+2025-09-10 13:51:36 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-10 13:51:37 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-10 13:51:37 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-10 13:51:38 | [31mERROR[0m | src.data.storage:store_ohlcv_data:98 | Failed to store OHLCV data: Error binding parameter 0 - probably unsupported type.
+2025-09-11 12:40:55 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 12:40:56 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 12:40:56 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:17:13 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:17:14 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:17:14 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:18:29 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:18:30 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:18:30 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:27:45 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:27:46 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:27:46 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:29:04 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:29:05 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:29:05 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:32:28 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:32:29 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:32:29 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:36:58 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:36:59 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:36:59 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 13:53:42 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 13:53:44 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 13:53:44 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 14:40:10 | [32mINFO[0m | src.data.storage:__init__:55 | Data storage initialized
+2025-09-11 14:40:10 | [32mINFO[0m | src.data.storage:initialize:62 | Database connection initialized
+2025-09-11 14:40:10 | [32mINFO[0m | src.data.storage:initialize:64 | Data storage connections initialized
+2025-09-11 14:40:10 | [31mERROR[0m | src.data.storage:store_feature_data:231 | Failed to store feature data: 'DatabaseManager' object has no attribute 'store_feature_data'
+2025-09-11 14:40:31 | [31mERROR[0m | src.data.storage:store_feature_data:231 | Failed to store feature data: 'DatabaseManager' object has no attribute 'store_feature_data'
+2025-09-13 13:26:55 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-13 13:26:56 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-13 13:26:56 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-16 18:30:31 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-16 18:30:33 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-16 18:30:33 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-16 18:34:05 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-16 18:34:06 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-16 18:34:06 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-16 19:10:11 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-16 19:10:13 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-16 19:10:13 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-16 20:23:57 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-16 20:24:01 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-16 20:24:01 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-18 23:31:28 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-18 23:31:29 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-18 23:31:29 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-20 02:06:30 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-20 02:06:31 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-20 02:06:31 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-20 02:07:47 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-20 02:07:48 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-20 02:07:48 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized
+2025-09-20 02:08:07 | [32mINFO[0m | src.data.storage:__init__:56 | Data storage initialized
+2025-09-20 02:08:08 | [32mINFO[0m | src.data.storage:initialize:63 | Database connection initialized
+2025-09-20 02:08:08 | [32mINFO[0m | src.data.storage:initialize:65 | Data storage connections initialized

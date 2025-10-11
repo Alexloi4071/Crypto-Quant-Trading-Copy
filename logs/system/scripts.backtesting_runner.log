@@ -1,0 +1,28 @@
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:__init__:49 | 回測運行器初始化完成
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:run_single_backtest:63 | 開始回測: BTCUSDT 15m ml_signal
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:run_single_backtest:72 | 準備回測數據
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_prepare_backtest_data:477 | 加載重采數據: data/raw/BTCUSDT/BTCUSDT_15m_ohlcv.parquet
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_prepare_backtest_data:486 | 使用完整數據，未過濾日期範圍
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_prepare_backtest_data:488 | 成功加載 BTCUSDT 15m 數據: 105134 條記錄
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_prepare_backtest_data:489 | 數據時間範圍: 2022-09-16 16:00:00 到 2025-09-15 19:15:00
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:run_single_backtest:82 | 加載預處理的特徵和標籤
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_load_preprocessed_features_labels:434 | 加載特徵數據: data/processed/features/BTCUSDT_15m/v55/BTCUSDT_15m_selected_features.parquet
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_load_preprocessed_features_labels:436 | 特徵數據形狀: (105134, 20)
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_load_preprocessed_features_labels:443 | 加載標籤數據: data/processed/labels/BTCUSDT_15m/v55/BTCUSDT_15m_labels.parquet
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_load_preprocessed_features_labels:445 | 標籤數據形狀: (105134, 1)
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_load_preprocessed_features_labels:455 | 時間對齊後數據量: 105134 條記錄
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_load_preprocessed_features_labels:456 | 時間範圍: 2022-09-16 16:00:00 到 2025-09-15 19:15:00
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:run_single_backtest:90 | 加載模型: results/models/BTCUSDT_15m_v55
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:run_single_backtest:108 | 執行基於預處理數據的回測
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:533 | 開始基於預處理數據的回測
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:536 | 處理時區對齊
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:561 | 對齊後數據量: 105134 條記錄
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:569 | 執行模型預測
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:570 | 特徵數據形狀: (105134, 20)
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:571 | 模型期望特徵: ['return_mean_1', 'return_3_abs', 'return_3', 'return_std_3', 'ATR_Norm_14', 'return_1_abs', 'volume_momentum_5', 'StochRSI_D_21', 'volume_momentum_20', 'return_std_20', 'oc_ratio', 'return_mean_3', 'return_5_abs', 'return_std_50', 'StochRSI_K_21', 'Vol_Ratio_50', 'Vol_MA_50', 'KDJ_D', 'ATR_14', 'KDJ_J']
+2025-09-22 00:20:25 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:577 | 重新排序後特徵列: ['return_mean_1', 'return_3_abs', 'return_3', 'return_std_3', 'ATR_Norm_14', 'return_1_abs', 'volume_momentum_5', 'StochRSI_D_21', 'volume_momentum_20', 'return_std_20', 'oc_ratio', 'return_mean_3', 'return_5_abs', 'return_std_50', 'StochRSI_K_21', 'Vol_Ratio_50', 'Vol_MA_50', 'KDJ_D', 'ATR_14', 'KDJ_J']
+2025-09-22 00:20:26 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:610 | 回測參數: 初始資金=10000, 手續費=0.001, 最小置信度=0.6
+2025-09-22 00:20:26 | [32mINFO[0m | scripts.backtesting_runner:_run_preprocessed_backtest:617 | 高置信度信號數量: 96329 / 105134
+2025-09-22 12:21:43 | [32mINFO[0m | scripts.backtesting_runner:__init__:50 | 回測運行器初始化完成
+2025-09-22 12:21:43 | [33mWARNING[0m | scripts.backtesting_runner:_validate_and_align_features:1286 | 特徵匹配率低: 66.7% (2/3)
+缺少特徵: ['missing_feature']

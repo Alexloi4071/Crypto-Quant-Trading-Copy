@@ -1,0 +1,17 @@
+{
+  "version": "v2",
+  "created_at": "2025-09-17T20:43:02.755325",
+  "symbol": "BTCUSDT",
+  "timeframe": "1h",
+  "performance": {
+    "final_f1_score": 0.9530399363049575,
+    "selected_features_count": 21,
+    "overfitting_risk": "LOW"
+  },
+  "file_paths": {
+    "labels": "data/processed/labels/BTCUSDT_1h/v2/BTCUSDT_1h_labels.parquet",
+    "selected_features": "data/processed/features/BTCUSDT_1h/v2/BTCUSDT_1h_selected_features.parquet",
+    "results": "results/modular_optimization/BTCUSDT_1h/v2\\modular_optuna_results.json",
+    "models": "results/models/BTCUSDT_1h/v2"
+  }
+}

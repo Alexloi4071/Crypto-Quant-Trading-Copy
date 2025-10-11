@@ -1,0 +1,2 @@
+2025-09-12 13:13:05 | [31mERROR[0m | src.labels.label_generator:generate_labels:171 | Failed to generate labels for ['1h']: unhashable type: 'list'
+2025-09-12 13:14:04 | [31mERROR[0m | src.labels.label_generator:generate_labels:171 | Failed to generate labels for ['1h']: unhashable type: 'list'

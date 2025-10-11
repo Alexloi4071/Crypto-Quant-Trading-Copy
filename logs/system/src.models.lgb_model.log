@@ -1,0 +1,155 @@
+2025-09-20 14:23:43 | [32mINFO[0m | src.models.lgb_model:train_model:635 | Starting training for LightGBM model
+2025-09-20 14:23:46 | [32mINFO[0m | src.models.lgb_model:train_model:649 | Applied SMOTE: 105134 -> 155720 samples
+2025-09-20 14:23:46 | [32mINFO[0m | src.models.lgb_model:fit:105 | Training LightGBM model for BTCUSDT_15m_v7
+2025-09-20 14:23:47 | [32mINFO[0m | src.models.lgb_model:fit:159 | LightGBM model training completed
+2025-09-20 14:23:47 | [32mINFO[0m | src.models.lgb_model:train_model:662 | Model training completed successfully
+2025-09-20 14:24:16 | [32mINFO[0m | src.models.lgb_model:train_model:635 | Starting training for LightGBM model
+2025-09-20 14:30:49 | [32mINFO[0m | src.models.lgb_model:train_model:635 | Starting training for LightGBM model
+2025-09-20 14:30:52 | [32mINFO[0m | src.models.lgb_model:train_model:649 | Applied SMOTE: 105134 -> 155720 samples
+2025-09-20 14:30:52 | [32mINFO[0m | src.models.lgb_model:fit:105 | Training LightGBM model for BTCUSDT_15m_v7
+2025-09-20 14:30:53 | [32mINFO[0m | src.models.lgb_model:fit:159 | LightGBM model training completed
+2025-09-20 14:30:53 | [32mINFO[0m | src.models.lgb_model:train_model:662 | Model training completed successfully
+2025-09-20 14:36:15 | [32mINFO[0m | src.models.lgb_model:train_model:635 | Starting training for LightGBM model
+2025-09-20 14:36:17 | [32mINFO[0m | src.models.lgb_model:train_model:649 | Applied SMOTE: 105134 -> 155720 samples
+2025-09-20 14:36:17 | [32mINFO[0m | src.models.lgb_model:fit:105 | Training LightGBM model for BTCUSDT_15m_v7
+2025-09-20 14:36:19 | [32mINFO[0m | src.models.lgb_model:fit:159 | LightGBM model training completed
+2025-09-20 14:36:19 | [32mINFO[0m | src.models.lgb_model:train_model:662 | Model training completed successfully
+2025-09-20 14:36:19 | [32mINFO[0m | src.models.lgb_model:save_model:253 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v7
+2025-09-20 14:36:47 | [32mINFO[0m | src.models.lgb_model:train_model:635 | Starting training for LightGBM model
+2025-09-20 14:36:50 | [32mINFO[0m | src.models.lgb_model:train_model:649 | Applied SMOTE: 105134 -> 155720 samples
+2025-09-20 14:36:50 | [32mINFO[0m | src.models.lgb_model:fit:105 | Training LightGBM model for BTCUSDT_15m_v7
+2025-09-20 14:36:51 | [32mINFO[0m | src.models.lgb_model:fit:159 | LightGBM model training completed
+2025-09-20 14:36:51 | [32mINFO[0m | src.models.lgb_model:train_model:662 | Model training completed successfully
+2025-09-20 14:36:51 | [32mINFO[0m | src.models.lgb_model:save_model:253 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v7
+2025-09-20 14:37:33 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 14:56:19 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 14:56:19 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 14:56:49 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 14:56:49 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 14:57:29 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 14:57:29 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 14:58:00 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 14:58:00 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 14:59:41 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 14:59:41 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 15:03:25 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 15:03:25 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 15:06:25 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 15:06:25 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 15:07:18 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 15:07:18 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 15:07:18 | [31mERROR[0m | src.models.lgb_model:predict:189 | Error making predictions: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+2025-09-20 15:12:56 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 15:12:56 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 15:12:56 | [31mERROR[0m | src.models.lgb_model:predict:189 | Error making predictions: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+2025-09-20 15:14:39 | [32mINFO[0m | src.models.lgb_model:load_model:280 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 15:14:39 | [32mINFO[0m | src.models.lgb_model:load_model:778 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 16:49:38 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v7
+2025-09-20 16:49:38 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v7
+2025-09-20 17:00:11 | [31mERROR[0m | src.models.lgb_model:load_model:254 | Error loading model: No module named 'numpy._core'
+2025-09-20 17:00:11 | [31mERROR[0m | src.models.lgb_model:load_model:454 | Error loading model: No module named 'numpy._core'
+2025-09-20 17:37:21 | [32mINFO[0m | src.models.lgb_model:train_model:288 | Starting training for LightGBM model
+2025-09-20 17:37:23 | [32mINFO[0m | src.models.lgb_model:train_model:302 | Applied SMOTE: 105134 -> 189246 samples
+2025-09-20 17:37:23 | [32mINFO[0m | src.models.lgb_model:fit:76 | Training LightGBM model for BTCUSDT_15m_v8
+2025-09-20 17:37:25 | [32mINFO[0m | src.models.lgb_model:fit:130 | LightGBM model training completed
+2025-09-20 17:37:25 | [32mINFO[0m | src.models.lgb_model:train_model:315 | Model training completed successfully
+2025-09-20 17:37:25 | [32mINFO[0m | src.models.lgb_model:save_model:224 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v8
+2025-09-20 17:39:27 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v8
+2025-09-20 17:39:27 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v8
+2025-09-20 17:46:18 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v8
+2025-09-20 17:46:18 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v8
+2025-09-22 00:01:15 | [32mINFO[0m | src.models.lgb_model:train_model:288 | Starting training for LightGBM model
+2025-09-22 00:01:18 | [32mINFO[0m | src.models.lgb_model:train_model:302 | Applied SMOTE: 105134 -> 179235 samples
+2025-09-22 00:01:18 | [32mINFO[0m | src.models.lgb_model:fit:76 | Training LightGBM model for BTCUSDT_15m_v55
+2025-09-22 00:01:20 | [32mINFO[0m | src.models.lgb_model:fit:130 | LightGBM model training completed
+2025-09-22 00:01:21 | [32mINFO[0m | src.models.lgb_model:train_model:315 | Model training completed successfully
+2025-09-22 00:01:21 | [32mINFO[0m | src.models.lgb_model:save_model:224 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v55
+2025-09-22 00:04:10 | [32mINFO[0m | src.models.lgb_model:train_model:288 | Starting training for LightGBM model
+2025-09-22 00:04:13 | [32mINFO[0m | src.models.lgb_model:train_model:302 | Applied SMOTE: 105134 -> 179235 samples
+2025-09-22 00:04:13 | [32mINFO[0m | src.models.lgb_model:fit:76 | Training LightGBM model for BTCUSDT_15m_v55
+2025-09-22 00:04:15 | [32mINFO[0m | src.models.lgb_model:fit:130 | LightGBM model training completed
+2025-09-22 00:04:15 | [32mINFO[0m | src.models.lgb_model:train_model:315 | Model training completed successfully
+2025-09-22 00:04:15 | [32mINFO[0m | src.models.lgb_model:save_model:224 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v55
+2025-09-22 00:05:24 | [32mINFO[0m | src.models.lgb_model:train_model:288 | Starting training for LightGBM model
+2025-09-22 00:05:26 | [32mINFO[0m | src.models.lgb_model:train_model:302 | Applied SMOTE: 105134 -> 179235 samples
+2025-09-22 00:05:26 | [32mINFO[0m | src.models.lgb_model:fit:76 | Training LightGBM model for BTCUSDT_15m_v55
+2025-09-22 00:05:28 | [32mINFO[0m | src.models.lgb_model:fit:130 | LightGBM model training completed
+2025-09-22 00:05:28 | [32mINFO[0m | src.models.lgb_model:train_model:315 | Model training completed successfully
+2025-09-22 00:05:28 | [32mINFO[0m | src.models.lgb_model:save_model:224 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v55
+2025-09-22 00:12:36 | [32mINFO[0m | src.models.lgb_model:train_model:288 | Starting training for LightGBM model
+2025-09-22 00:12:38 | [32mINFO[0m | src.models.lgb_model:train_model:302 | Applied SMOTE: 105134 -> 179235 samples
+2025-09-22 00:12:38 | [32mINFO[0m | src.models.lgb_model:fit:76 | Training LightGBM model for BTCUSDT_15m_v55
+2025-09-22 00:12:40 | [32mINFO[0m | src.models.lgb_model:fit:130 | LightGBM model training completed
+2025-09-22 00:12:40 | [32mINFO[0m | src.models.lgb_model:train_model:315 | Model training completed successfully
+2025-09-22 00:12:40 | [32mINFO[0m | src.models.lgb_model:save_model:224 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v55
+2025-09-22 00:18:56 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:18:56 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:20:25 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:20:25 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:20:49 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:20:49 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:21:22 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:21:22 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:22:17 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:22:17 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:24:12 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:24:12 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:24:40 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:24:40 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:25:42 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:25:42 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:28:31 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:28:31 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:30:02 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:30:02 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:34:05 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:34:05 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:39:23 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:39:23 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:42:11 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:42:11 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:42:11 | [31mERROR[0m | src.models.lgb_model:predict:160 | Error making predictions: "['return_mean_1', 'return_3_abs', 'return_3', 'return_std_3', 'return_1_abs', 'volume_momentum_5', 'StochRSI_D_21', 'oc_ratio', 'return_mean_3', 'return_5_abs', 'StochRSI_K_21', 'Vol_Ratio_50', 'Vol_MA_50', 'KDJ_D', 'KDJ_J'] not in index"
+2025-09-22 00:45:11 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:45:11 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 00:49:38 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 00:49:38 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 01:26:13 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 01:26:13 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 01:33:33 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 01:33:33 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 01:46:57 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 01:46:57 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 01:49:30 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 01:49:30 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 01:53:46 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 01:53:46 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 02:01:17 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 02:01:17 | [32mINFO[0m | src.models.lgb_model:load_model:450 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 12:34:27 | [32mINFO[0m | src.models.lgb_model:_load_optimal_params:311 | 📊 從 results\optimal_params\BTCUSDT\15m\model\model_latest.json 加載了 12 個優化參數
+2025-09-22 12:34:27 | [32mINFO[0m | src.models.lgb_model:create_model:286 | ✅ 已加載優化參數: 12 個參數
+2025-09-22 12:34:27 | [32mINFO[0m | src.models.lgb_model:train_model:323 | Starting training for LightGBM model
+2025-09-22 12:34:30 | [32mINFO[0m | src.models.lgb_model:train_model:337 | Applied SMOTE: 105134 -> 179235 samples
+2025-09-22 12:34:30 | [32mINFO[0m | src.models.lgb_model:fit:76 | Training LightGBM model for BTCUSDT_15m_v55
+2025-09-22 12:34:32 | [32mINFO[0m | src.models.lgb_model:fit:130 | LightGBM model training completed
+2025-09-22 12:34:32 | [32mINFO[0m | src.models.lgb_model:train_model:350 | Model training completed successfully
+2025-09-22 12:34:32 | [32mINFO[0m | src.models.lgb_model:save_model:224 | Model saved to D:\crypto-quant-trading-copy\crypto-quant-trading-copy\results\models\BTCUSDT_15m_v55
+2025-09-22 13:09:07 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 13:09:07 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 13:17:13 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 13:17:13 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 13:34:49 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 13:34:49 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 13:37:23 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 13:37:23 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 13:53:02 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 13:53:02 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 14:07:34 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 14:07:34 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-22 14:08:05 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-22 14:08:05 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-23 12:37:18 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-23 12:37:18 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-23 12:47:26 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-23 12:47:26 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55
+2025-09-23 12:48:09 | [32mINFO[0m | src.models.lgb_model:load_model:251 | Model loaded from results\models\BTCUSDT_15m_v55
+2025-09-23 12:48:09 | [32mINFO[0m | src.models.lgb_model:load_model:485 | Loaded lightgbm model from results\models\BTCUSDT_15m_v55

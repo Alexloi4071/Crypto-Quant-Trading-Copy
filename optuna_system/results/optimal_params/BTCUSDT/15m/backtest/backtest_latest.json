@@ -1,0 +1,28 @@
+{
+  "symbol": "BTCUSDT",
+  "timeframe": "15m",
+  "optimization_timestamp": "2025-09-22T14:05:39.419580",
+  "best_params": {
+    "min_confidence": 0.3494154215790904,
+    "stop_loss_pct": 0.02403869293161854,
+    "take_profit_pct": 0.013327861622101077,
+    "max_hold_periods": 12,
+    "min_hold_periods": 3,
+    "cooldown_periods": 4,
+    "position_size": 0.2795149951183359,
+    "total_cost": 0.0015348466800270708
+  },
+  "best_score": 6.101143509413771,
+  "performance_metrics": {
+    "total_return": -0.9900453193481843,
+    "final_value": 99.54680651815778,
+    "total_trades": 5297,
+    "win_rate": 0.5280347366433831,
+    "sharpe_ratio": -0.49474531567523494,
+    "max_drawdown": -0.9900453193481843
+  },
+  "optimization_config": {
+    "objective": "total_return",
+    "optimization_method": "optuna_tpe"
+  }
+}

@@ -1,0 +1,3 @@
+2025-09-13 13:07:40 | [32mINFO[0m | scripts.data_downloader:__init__:54 | Data downloader initialized
+2025-09-13 13:07:40 | [32mINFO[0m | scripts.data_downloader:resample_data:471 | Starting data resampling for 2 symbols to ['15m', '1D']
+2025-09-13 13:07:40 | [32mINFO[0m | scripts.data_downloader:resample_data:592 | Data resampling completed: 0 successful, 4 failed

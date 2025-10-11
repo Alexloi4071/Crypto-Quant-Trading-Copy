@@ -1,0 +1,62 @@
+{
+  "backtest_info": {
+    "symbol": "BTCUSDT",
+    "timeframe": "15m",
+    "strategy": "ml_signal",
+    "timestamp": "2025-09-22T14:07:43.475163",
+    "initial_capital": 10000
+  },
+  "backtest_results": {
+    "total_return": -0.9900453193481843,
+    "final_value": 99.54680651815778,
+    "total_trades": 5297,
+    "winning_trades": 2797,
+    "losing_trades": 2498,
+    "win_rate": 0.5280347366433831,
+    "returns": "2022-09-17 02:15:00   -0.027220\n2022-09-17 09:45:00    0.002796\n2022-09-17 16:00:00    0.012234\n2022-09-17 21:00:00   -0.000773\n2022-09-18 03:15:00   -0.000845\n                         ...   \n2024-09-17 02:45:00    0.001669\n2024-09-17 07:30:00    0.000667\n2024-09-17 10:30:00   -0.008432\n2024-09-17 12:15:00    0.001668\n2024-09-17 18:15:00   -0.030796\nLength: 5297, dtype: float64",
+    "trades": "                timestamp action    price    amount  confidence  portfolio_value       pnl          reason  periods_held\n0     2022-09-16 17:15:00  short  19361.0  0.144370    0.737018     10000.000000       NaN             NaN           NaN\n1     2022-09-17 02:15:00  cover  19888.0       NaN         NaN      9721.803316 -0.027220       stop_loss          36.0\n2     2022-09-17 06:30:00    buy  19812.1  0.137158    0.951417      9721.803316       NaN             NaN           NaN\n3     2022-09-17 09:45:00   sell  19867.5       NaN         NaN      9743.155030  0.002796       time_exit          13.0\n4     2022-09-17 10:45:00    buy  19855.1  0.137162    0.567315      9743.155030       NaN             NaN           NaN\n...                   ...    ...      ...       ...         ...              ...       ...             ...           ...\n10589 2024-09-17 10:30:00  cover  59142.0       NaN         NaN       102.663855 -0.008432       time_exit          12.0\n10590 2024-09-17 11:45:00    buy  59055.1  0.000486    0.579814       102.663855       NaN             NaN           NaN\n10591 2024-09-17 12:15:00   sell  59153.6       NaN         NaN       102.773493  0.001668  signal_reverse           NaN\n10592 2024-09-17 12:15:00  short  59153.6  0.000486    0.789265       102.773493       NaN             NaN           NaN\n10593 2024-09-17 18:15:00  cover  60975.3       NaN         NaN        99.546807 -0.030796       stop_loss          24.0\n\n[10594 rows x 9 columns]",
+    "sharpe_ratio": -0.49474531567523494,
+    "max_drawdown": -0.9900453193481843
+  },
+  "performance_analysis": {
+    "analysis_date": "2025-09-22T14:07:43.436839",
+    "period_start": "2022-09-17",
+    "period_end": "2024-09-17",
+    "data_points": 5297,
+    "return_metrics": {
+      "total_return": -0.7605964164886658,
+      "annual_return": -0.7658379858107314,
+      "mean_return": -0.00024000790560818746,
+      "win_rate": 0.5280347366433831,
+      "avg_win": 0.004317956805831237,
+      "avg_loss": -0.005343733811816068,
+      "best_return": 0.044908120148055945,
+      "worst_return": -0.08926333316742753,
+      "max_consecutive_wins": 12,
+      "max_consecutive_losses": 11,
+      "current_streak": 1
+    },
+    "risk_metrics": {
+      "volatility": 0.007700946860653794,
+      "annual_volatility": 0.5988940768333835,
+      "downside_risk": 0.006763449966621944,
+      "annual_downside_risk": 0.5259859855239855,
+      "var_95": -0.01152090795595594,
+      "var_99": -0.02437768199956982,
+      "cvar_95": -0.020043274163987317,
+      "cvar_99": -0.03706327700387925,
+      "skewness": -1.1712411751044989,
+      "kurtosis": 11.748387510997267,
+      "tail_ratio": 1.1688055699183457
+    },
+    "drawdown_analysis": {
+      "max_drawdown": -0.7773033550247885,
+      "max_drawdown_date": "2024-08-25",
+      "max_drawdown_duration_days": 591,
+      "current_drawdown": -0.7711967566439814,
+      "is_in_drawdown": true,
+      "avg_drawdown": -0.4243712642256551,
+      "drawdown_periods": 9,
+      "recovery_periods": 9,
+      "drawdown_series": {
+        

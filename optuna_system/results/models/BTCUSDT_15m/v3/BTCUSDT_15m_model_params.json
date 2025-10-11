@@ -1,0 +1,46 @@
+{
+  "best_params": {
+    "num_leaves": 33,
+    "max_depth": 8,
+    "n_estimators": 67,
+    "learning_rate": 0.20030221163388234,
+    "feature_fraction": 0.9141739170791049,
+    "bagging_fraction": 0.9244955920504974,
+    "bagging_freq": 3,
+    "min_child_samples": 18,
+    "reg_alpha": 0.3547327526604538,
+    "reg_lambda": 0.1023623444999362,
+    "min_split_gain": 0.8355162151175747,
+    "subsample": 0.924835374042828
+  },
+  "best_score": 0.9424865329417195,
+  "cv_results": {
+    "best_trial_number": 43,
+    "avg_f1_score": 0.9424865329417195,
+    "fold_scores": [
+      0.9810671110943365,
+      0.9734893104565331,
+      0.9562665007089112,
+      0.934599108509591,
+      0.9156052442169854,
+      0.9351003896192615,
+      0.9386621103575681,
+      0.9333740916353088,
+      0.9378950297354288,
+      0.9188064330832706
+    ],
+    "score_std": 0.02039211323626721,
+    "total_trials": 50,
+    "successful_trials": 50,
+    "pruned_trials": 0,
+    "avg_precision": 0.9326856060350913,
+    "precision_std": 0.022923371099724747,
+    "avg_recall": 0.9595643489013602,
+    "recall_std": 0.014416140683864336,
+    "avg_accuracy": 0.9595643489013602,
+    "accuracy_std": 0.014416140683864336
+  },
+  "version": "v3",
+  "symbol": "BTCUSDT",
+  "timeframe": "15m"
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "timestamp": "2025-09-20T17:58:23.435312",
+    "stage": "label_optimization",
+    "status": "success",
+    "details": "標籤優化成功，最佳F1: 0.960973",
+    "duration_seconds": 678.857907,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T17:58:23.905406",
+    "stage": "label_optimization",
+    "status": "failed",
+    "details": "標籤優化失敗: Unknown format code 'f' for object of type 'str'",
+    "duration_seconds": 679.327142,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T17:58:23.905968",
+    "stage": "complete_optimization",
+    "status": "failed",
+    "details": "完整優化失敗: 標籤優化失敗",
+    "duration_seconds": 679.41786,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  }
+]

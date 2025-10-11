@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2025-09-20T16:57:25.390413",
+    "stage": "data_loading",
+    "status": "failed",
+    "details": "數據載入失敗: maximum recursion depth exceeded while calling a Python object",
+    "duration_seconds": 0.0,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  },
+  {
+    "timestamp": "2025-09-20T16:57:25.480413",
+    "stage": "complete_optimization",
+    "status": "failed",
+    "details": "完整優化失敗: 數據載入失敗",
+    "duration_seconds": 1.049127,
+    "symbol": "BTCUSDT",
+    "timeframe": "15m"
+  }
+]

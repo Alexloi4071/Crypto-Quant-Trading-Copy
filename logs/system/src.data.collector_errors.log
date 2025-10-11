@@ -1,0 +1,29 @@
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 5m: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 15m: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 1h: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 4h: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-10 14:04:58 | [31mERROR[0m | src.data.collector:_resample_data:374 | Error resampling data to 1d: Only valid with DatetimeIndex, TimedeltaIndex or PeriodIndex, but got an instance of 'Index'
+2025-09-11 12:31:14 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 12:45:01 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 12:45:38 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://api.binance.com/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 13:06:54 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
+2025-09-11 14:13:13 | [31mERROR[0m | src.data.collector:_setup_exchange:56 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-11 14:15:36 | [31mERROR[0m | src.data.collector:_setup_exchange:56 | Failed to connect to Binance: binance GET https://testnet.binance.vision/api/v3/exchangeInfo 451  {
+  "code": 0,
+  "msg": "Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."
+}
+2025-09-16 18:20:12 | [31mERROR[0m | src.data.collector:_setup_exchange:50 | Failed to connect to Binance: binance {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
+2025-09-16 18:22:19 | [31mERROR[0m | src.data.collector:_setup_exchange:50 | Failed to connect to Binance: binance {"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}
+2025-09-23 12:36:50 | [31mERROR[0m | src.data.collector:_setup_exchange:51 | Failed to connect to Binance: binance GET https://dapi.binance.com/dapi/v1/exchangeInfo

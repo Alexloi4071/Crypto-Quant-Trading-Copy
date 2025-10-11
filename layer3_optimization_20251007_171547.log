@@ -1,0 +1,1146 @@
+2025-10-07 17:15:47,816 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:47,817 - __main__ - INFO - Layer3 五模型集成优化启动器
+2025-10-07 17:15:47,817 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:47,817 - __main__ - INFO - 当前时间: 2025-10-07 17:15:47
+2025-10-07 17:15:47,818 - __main__ - INFO - 工作目录: D:\crypto-quant-trading-copy\crypto-quant-trading-copy
+2025-10-07 17:15:47,818 - __main__ - INFO - 
+2025-10-07 17:15:47,820 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:47,825 - __main__ - INFO - 检查Layer3前置条件...
+2025-10-07 17:15:47,826 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:47,935 - __main__ - INFO - ✅ Layer1 标签文件:
+2025-10-07 17:15:47,935 - __main__ - INFO -    路径: data\processed\labels\BTCUSDT_15m\v1\labels_BTCUSDT_15m_c97e3b785f8d56f9bde54744ac50ba96.parquet
+2025-10-07 17:15:47,936 - __main__ - INFO -    大小: 4.40MB
+2025-10-07 17:15:47,936 - __main__ - INFO -    修改时间: 2025-10-04 17:23:39
+2025-10-07 17:15:47,937 - __main__ - INFO -    形状: (105127, 6)
+2025-10-07 17:15:47,939 - __main__ - INFO -    标签分布: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:15:48,000 - __main__ - INFO - ✅ Layer2 特征文件:
+2025-10-07 17:15:48,001 - __main__ - INFO -    路径: data\processed\features\BTCUSDT_15m\v12\features_BTCUSDT_15m_a37abceea1e1400a3d2029ce93f0df32.parquet
+2025-10-07 17:15:48,001 - __main__ - INFO -    大小: 11.62MB
+2025-10-07 17:15:48,002 - __main__ - INFO -    修改时间: 2025-10-07 16:29:52
+2025-10-07 17:15:48,002 - __main__ - INFO -    形状: (105127, 33) (样本数 × 特征数)
+2025-10-07 17:15:48,003 - __main__ - INFO - ✅ Layer0 清洗文件: data\processed\cleaned\BTCUSDT_15m\cleaned_ohlcv.pkl
+2025-10-07 17:15:48,003 - __main__ - INFO - 
+✅ 所有前置条件满足！准备开始Layer3优化...
+
+2025-10-07 17:15:48,005 - __main__ - INFO - 准备配置文件...
+2025-10-07 17:15:48,096 - __main__ - INFO - ✅ 标签文件已复制到: configs\labels_15m.parquet
+2025-10-07 17:15:48,276 - __main__ - INFO - ✅ 特征文件已复制到: configs\selected_features_15m.parquet
+2025-10-07 17:15:48,348 - __main__ - INFO - ✅ 清洗文件已复制到: configs\cleaned_ohlcv_15m.parquet
+2025-10-07 17:15:48,350 - __main__ - INFO - 本次使用每模型 trials = 50，约等于总计 250 trials
+2025-10-07 17:15:48,350 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:48,351 - __main__ - INFO - 开始Layer3五模型超参数优化...
+2025-10-07 17:15:48,351 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:50,330 - __main__ - INFO - 
+配置参数:
+2025-10-07 17:15:50,331 - __main__ - INFO -   - 数据路径: data
+2025-10-07 17:15:50,331 - __main__ - INFO -   - 配置路径: configs
+2025-10-07 17:15:50,332 - __main__ - INFO -   - 结果路径: optuna_system/results/BTCUSDT_15m
+2025-10-07 17:15:50,332 - __main__ - INFO -   - 交易对: BTCUSDT
+2025-10-07 17:15:50,332 - __main__ - INFO -   - 时间框架: 15m
+2025-10-07 17:15:50,333 - __main__ - INFO -   - 每个模型trials: 50
+2025-10-07 17:15:50,333 - __main__ - INFO -   - 总计trials: 250
+2025-10-07 17:15:50,333 - __main__ - INFO -   - 模型列表: ['lightgbm', 'xgboost', 'catboost', 'randomforest', 'extratrees']
+2025-10-07 17:15:50,334 - __main__ - INFO - 
+2025-10-07 17:15:50,334 - __main__ - INFO - ⏰ 开始时间: 2025-10-07 17:15:50
+2025-10-07 17:15:50,335 - __main__ - INFO - ================================================================================
+2025-10-07 17:15:50,335 - optuna_system.optimizers.optuna_model - INFO - ================================================================================
+2025-10-07 17:15:50,335 - optuna_system.optimizers.optuna_model - INFO - 開始多模型集成優化（第3層）...
+2025-10-07 17:15:50,336 - optuna_system.optimizers.optuna_model - INFO - ================================================================================
+2025-10-07 17:15:50,336 - optuna_system.optimizers.optuna_model - INFO - 可用模型: ['lightgbm', 'xgboost', 'randomforest', 'extratrees']
+2025-10-07 17:15:50,337 - optuna_system.optimizers.optuna_model - INFO - 
+============================================================
+2025-10-07 17:15:50,337 - optuna_system.optimizers.optuna_model - INFO - 處理模型: LIGHTGBM
+2025-10-07 17:15:50,337 - optuna_system.optimizers.optuna_model - INFO - ============================================================
+2025-10-07 17:15:50,338 - optuna_system.optimizers.optuna_model - INFO - 開始優化 lightgbm 模型...
+2025-10-07 17:15:50,367 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:15:50,381 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:15:50,398 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:15:50,441 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:15:50,443 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:17:33,983 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:17:33,996 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:17:34,011 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:17:34,081 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:17:34,083 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:19:48,299 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:19:48,311 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:19:48,326 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:19:48,381 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:19:48,383 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:21:05,719 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:21:05,734 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:21:05,750 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:21:05,804 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:21:05,805 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:21:35,844 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:21:35,864 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:21:35,883 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:21:35,954 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:21:35,958 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:29:24,613 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:29:24,626 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:29:24,641 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:29:24,694 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:29:24,696 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:33:53,738 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:33:53,750 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:33:53,763 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:33:53,812 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:33:53,813 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:34:57,990 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:34:58,006 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:34:58,021 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:34:58,085 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:34:58,088 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:35:24,357 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:35:24,372 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:35:24,393 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:35:24,446 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:35:24,447 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:35:54,683 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:35:54,696 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:35:54,715 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:35:54,771 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:35:54,774 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:36:41,938 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:36:41,953 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:36:41,968 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:36:42,032 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:36:42,034 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:39:54,986 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:39:54,997 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:39:55,011 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:39:55,058 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:39:55,060 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:41:38,008 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:41:38,019 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:41:38,032 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:41:38,088 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:41:38,090 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:42:44,533 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:42:44,545 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:42:44,559 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:42:44,612 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:42:44,613 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:45:58,586 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:45:58,598 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:45:58,612 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:45:58,659 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:45:58,661 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:48:11,922 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:48:11,933 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:48:11,946 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:48:11,998 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:48:11,999 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:48:58,026 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:48:58,038 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:48:58,051 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:48:58,118 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:48:58,136 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:50:53,339 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:50:53,355 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:50:53,370 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:50:53,428 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:50:53,431 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:57:24,948 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:57:24,965 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:57:24,982 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:57:25,048 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:57:25,050 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:58:07,915 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:58:07,930 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:58:07,945 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:58:08,001 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:58:08,004 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 17:58:58,678 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 17:58:58,693 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 17:58:58,705 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 17:58:58,755 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 17:58:58,757 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:02:35,629 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:02:35,645 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:02:35,662 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:02:35,712 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:02:35,713 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:03:25,018 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:03:25,034 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:03:25,049 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:03:25,098 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:03:25,100 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:04:46,207 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:04:46,222 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:04:46,239 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:04:46,317 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:04:46,335 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:06:41,264 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:06:41,277 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:06:41,291 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:06:41,338 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:06:41,340 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:07:32,607 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:07:32,621 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:07:32,635 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:07:32,689 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:07:32,690 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:08:32,157 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:08:32,169 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:08:32,182 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:08:32,230 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:08:32,232 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:08:43,315 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:08:43,327 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:08:43,341 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:08:43,392 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:08:43,393 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:10:22,817 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:10:22,831 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:10:22,845 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:10:22,897 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:10:22,898 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:13:03,393 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:13:03,409 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:13:03,425 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:13:03,475 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:13:03,477 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:13:54,445 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:13:54,457 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:13:54,470 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:13:54,522 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:13:54,524 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:15:40,194 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:15:40,206 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:15:40,219 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:15:40,267 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:15:40,268 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:16:18,941 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:16:18,957 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:16:18,978 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:16:19,030 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:16:19,032 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:17:37,937 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:17:37,951 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:17:37,967 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:17:38,015 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:17:38,017 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:19:27,624 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:19:27,639 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:19:27,655 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:19:27,708 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:19:27,709 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:20:02,758 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:20:02,773 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:20:02,788 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:20:02,842 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:20:02,844 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:20:31,461 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:20:31,475 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:20:31,489 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:20:31,536 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:20:31,538 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:21:18,207 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:21:18,219 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:21:18,232 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:21:18,280 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:21:18,282 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:25:06,482 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:25:06,497 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:25:06,514 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:25:06,564 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:25:06,566 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:29:49,568 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:29:49,582 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:29:49,596 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:29:49,645 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:29:49,646 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:34:32,756 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:34:32,775 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:34:32,794 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:34:32,843 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:34:32,845 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:35:17,268 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:35:17,286 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:35:17,301 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:35:17,344 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:35:17,346 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:39:44,594 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:39:44,609 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:39:44,635 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:39:44,685 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:39:44,687 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:44:10,285 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:44:10,301 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:44:10,317 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:44:10,367 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:44:10,369 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:49:50,861 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:49:50,879 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:49:50,899 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:49:50,949 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:49:50,950 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 18:55:01,070 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 18:55:01,087 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 18:55:01,102 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 18:55:01,162 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 18:55:01,164 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:00:28,120 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:00:28,137 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:00:28,153 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:00:28,203 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:00:28,204 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:07:07,603 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:07:07,618 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:07:07,635 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:07:07,685 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:07:07,686 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:14:40,169 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:14:40,185 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:14:40,205 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:14:40,254 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:14:40,256 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:15:17,825 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:15:17,839 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:15:17,853 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:15:17,913 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:15:17,914 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:20:39,378 - optuna_system.optimizers.optuna_model - INFO - lightgbm 優化完成! 最佳得分: 0.9604
+2025-10-07 19:20:39,378 - optuna_system.optimizers.optuna_model - INFO - lightgbm 最優參數: {'max_depth': 9, 'num_leaves': 216, 'boosting_type': 'dart', 'learning_rate': 0.13470626122958726, 'n_estimators': 816, 'reg_alpha': 4.967773397975534, 'reg_lambda': 0.7015566351141733, 'feature_fraction': 0.43159912439621356, 'bagging_fraction': 0.9926887980087324, 'bagging_freq': 1, 'min_child_samples': 13, 'min_child_weight': 4.369121892690657, 'n_cv_splits': 5, 'embargo_pct': 0.04975876880493576, 'purge_pct': 0.005277637346957952}
+2025-10-07 19:20:39,380 - optuna_system.optimizers.optuna_model - INFO - 開始訓練 lightgbm 並生成預測...
+2025-10-07 19:20:39,417 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:20:39,435 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:20:39,457 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:20:39,516 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:20:39,518 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:26:34,064 - optuna_system.optimizers.optuna_model - INFO - ✅ lightgbm 預測已保存: optuna_system\results\BTCUSDT_15m\lgb_predictions.parquet
+2025-10-07 19:26:34,065 - optuna_system.optimizers.optuna_model - INFO -    預測樣本數: 87605
+2025-10-07 19:26:34,082 - optuna_system.optimizers.optuna_model - INFO - 
+============================================================
+2025-10-07 19:26:34,082 - optuna_system.optimizers.optuna_model - INFO - 處理模型: XGBOOST
+2025-10-07 19:26:34,083 - optuna_system.optimizers.optuna_model - INFO - ============================================================
+2025-10-07 19:26:34,083 - optuna_system.optimizers.optuna_model - INFO - 開始優化 xgboost 模型...
+2025-10-07 19:26:34,124 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:26:34,142 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:26:34,160 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:26:34,203 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:26:34,205 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:31:18,616 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:31:18,633 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:31:18,653 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:31:18,702 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:31:18,704 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:32:48,980 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:32:48,995 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:32:49,011 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:32:49,059 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:32:49,061 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:34:42,069 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:34:42,081 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:34:42,096 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:34:42,145 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:34:42,147 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:35:32,937 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:35:32,951 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:35:32,966 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:35:33,023 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:35:33,025 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:41:40,476 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:41:40,489 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:41:40,506 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:41:40,558 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:41:40,561 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:45:27,716 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:45:27,731 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:45:27,748 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:45:27,797 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:45:27,799 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:47:45,393 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:47:45,405 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:47:45,422 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:47:45,471 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:47:45,472 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:48:01,551 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:48:01,561 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:48:01,577 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:48:01,625 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:48:01,627 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:48:12,083 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:48:12,095 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:48:12,109 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:48:12,158 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:48:12,160 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:48:36,975 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:48:36,986 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:48:37,001 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:48:37,052 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:48:37,053 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:49:14,064 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:49:14,077 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:49:14,092 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:49:14,142 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:49:14,144 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:53:02,701 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:53:02,714 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:53:02,729 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:53:02,780 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:53:02,782 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 19:59:20,725 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 19:59:20,738 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 19:59:20,752 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 19:59:20,804 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 19:59:20,805 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:03:25,316 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:03:25,333 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:03:25,356 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:03:25,421 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:03:25,423 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:08:04,756 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:08:04,768 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:08:04,783 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:08:04,829 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:08:04,831 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:11:51,456 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:11:51,468 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:11:51,481 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:11:51,531 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:11:51,533 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:17:17,954 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:17:17,969 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:17:17,988 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:17:18,040 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:17:18,041 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:20:55,960 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:20:55,973 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:20:55,987 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:20:56,041 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:20:56,043 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:21:26,769 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:21:26,786 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:21:26,805 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:21:26,872 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:21:26,875 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:22:40,756 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:22:40,770 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:22:40,785 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:22:40,837 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:22:40,838 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:23:11,385 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:23:11,396 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:23:11,412 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:23:11,466 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:23:11,468 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:23:41,875 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:23:41,886 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:23:41,899 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:23:41,950 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:23:41,952 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:24:04,065 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:24:04,078 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:24:04,090 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:24:04,143 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:24:04,144 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:24:56,535 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:24:56,547 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:24:56,560 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:24:56,606 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:24:56,608 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:29:36,907 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:29:36,918 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:29:36,933 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:29:36,983 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:29:36,985 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:33:45,850 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:33:45,861 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:33:45,875 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:33:45,928 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:33:45,930 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:34:11,003 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:34:11,013 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:34:11,025 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:34:11,075 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:34:11,077 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:34:40,136 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:34:40,146 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:34:40,163 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:34:40,221 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:34:40,223 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:34:56,901 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:34:56,911 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:34:56,923 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:34:56,968 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:34:56,970 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:35:33,514 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:35:33,531 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:35:33,546 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:35:33,594 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:35:33,596 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:35:58,214 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:35:58,234 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:35:58,252 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:35:58,313 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:35:58,315 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:36:35,433 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:36:35,449 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:36:35,468 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:36:35,537 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:36:35,539 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:37:06,715 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:37:06,728 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:37:06,745 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:37:06,803 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:37:06,805 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:37:33,754 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:37:33,768 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:37:33,784 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:37:33,833 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:37:33,835 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:38:02,507 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:38:02,520 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:38:02,535 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:38:02,593 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:38:02,595 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:38:18,262 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:38:18,275 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:38:18,289 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:38:18,346 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:38:18,349 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:38:31,406 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:38:31,418 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:38:31,431 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:38:31,481 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:38:31,483 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:38:51,861 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:38:51,873 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:38:51,884 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:38:51,933 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:38:51,935 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:39:18,497 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:39:18,508 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:39:18,521 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:39:18,574 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:39:18,575 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:39:51,516 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:39:51,528 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:39:51,539 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:39:51,590 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:39:51,591 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:40:01,750 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:40:01,760 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:40:01,773 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:40:01,824 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:40:01,826 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:40:13,354 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:40:13,366 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:40:13,381 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:40:13,480 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:40:13,482 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:40:24,239 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:40:24,255 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:40:24,270 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:40:24,325 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:40:24,326 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:40:33,508 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:40:33,525 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:40:33,543 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:40:33,596 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:40:33,598 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:40:43,213 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:40:43,224 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:40:43,238 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:40:43,289 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:40:43,291 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:40:57,355 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:40:57,369 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:40:57,390 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:40:57,446 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:40:57,447 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:41:10,743 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:41:10,755 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:41:10,768 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:41:10,830 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:41:10,832 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:41:21,724 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:41:21,735 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:41:21,747 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:41:21,800 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:41:21,802 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:41:28,043 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:41:28,054 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:41:28,065 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:41:28,118 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:41:28,120 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:41:39,007 - optuna_system.optimizers.optuna_model - INFO - xgboost 優化完成! 最佳得分: 0.9605
+2025-10-07 20:41:39,007 - optuna_system.optimizers.optuna_model - INFO - xgboost 最優參數: {'max_depth': 8, 'tree_method': 'hist', 'eta': 0.155783754400701, 'n_estimators': 1126, 'subsample': 0.9172523446278422, 'colsample_bytree': 0.736249601881338, 'lambda': 1.5795528782365604, 'alpha': 2.0774674953979138, 'min_child_weight': 3.2047718788460746, 'gamma': 3.2158243334000822, 'n_cv_splits': 3, 'embargo_pct': 0.04111067033649357, 'purge_pct': 0.016268291812992428}
+2025-10-07 20:41:39,009 - optuna_system.optimizers.optuna_model - INFO - 開始訓練 xgboost 並生成預測...
+2025-10-07 20:41:39,046 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:41:39,062 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:41:39,079 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:41:39,131 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:41:39,132 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:42:17,396 - optuna_system.optimizers.optuna_model - INFO - ✅ xgboost 預測已保存: optuna_system\results\BTCUSDT_15m\xgb_predictions.parquet
+2025-10-07 20:42:17,396 - optuna_system.optimizers.optuna_model - INFO -    預測樣本數: 87605
+2025-10-07 20:42:17,412 - optuna_system.optimizers.optuna_model - INFO - 
+============================================================
+2025-10-07 20:42:17,412 - optuna_system.optimizers.optuna_model - INFO - 處理模型: RANDOMFOREST
+2025-10-07 20:42:17,413 - optuna_system.optimizers.optuna_model - INFO - ============================================================
+2025-10-07 20:42:17,413 - optuna_system.optimizers.optuna_model - INFO - 開始優化 randomforest 模型...
+2025-10-07 20:42:17,450 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:42:17,469 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:42:17,489 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:42:17,540 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:42:17,542 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:43:06,403 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:43:06,420 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:43:06,444 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:43:06,503 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:43:06,504 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:43:34,953 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:43:34,970 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:43:34,987 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:43:35,037 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:43:35,039 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:44:19,833 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:44:19,849 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:44:19,868 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:44:19,923 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:44:19,925 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:44:46,117 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:44:46,130 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:44:46,145 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:44:46,226 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:44:46,228 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:45:13,412 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:45:13,425 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:45:13,440 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:45:13,495 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:45:13,496 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:45:54,729 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:45:54,741 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:45:54,755 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:45:54,810 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:45:54,812 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:46:22,043 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:46:22,057 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:46:22,074 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:46:22,136 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:46:22,138 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:46:52,877 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:46:52,889 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:46:52,904 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:46:52,945 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:46:52,946 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:47:41,770 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:47:41,788 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:47:41,810 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:47:41,877 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:47:41,879 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:48:27,483 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:48:27,495 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:48:27,510 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:48:27,553 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:48:27,555 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:48:53,368 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:48:53,380 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:48:53,394 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:48:53,433 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:48:53,435 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:49:15,399 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:49:15,410 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:49:15,423 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:49:15,462 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:49:15,463 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:49:48,109 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:49:48,120 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:49:48,136 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:49:48,193 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:49:48,195 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:50:38,950 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:50:38,963 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:50:38,979 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:50:39,030 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:50:39,033 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:51:17,120 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:51:17,133 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:51:17,148 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:51:17,194 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:51:17,196 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:51:41,385 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:51:41,396 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:51:41,410 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:51:41,464 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:51:41,465 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:52:27,344 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:52:27,358 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:52:27,375 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:52:27,431 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:52:27,433 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:53:10,023 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:53:10,034 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:53:10,049 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:53:10,090 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:53:10,091 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:53:45,312 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:53:45,324 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:53:45,339 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:53:45,394 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:53:45,396 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:54:28,921 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:54:28,932 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:54:28,946 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:54:29,002 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:54:29,003 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:54:48,885 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:54:48,897 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:54:48,909 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:54:48,955 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:54:48,956 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:55:14,116 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:55:14,128 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:55:14,140 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:55:14,189 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:55:14,191 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:55:37,446 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:55:37,459 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:55:37,475 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:55:37,518 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:55:37,520 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:56:09,536 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:56:09,548 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:56:09,562 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:56:09,622 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:56:09,624 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:56:39,557 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:56:39,569 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:56:39,583 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:56:39,632 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:56:39,633 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:57:08,250 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:57:08,260 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:57:08,274 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:57:08,313 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:57:08,315 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:57:40,888 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:57:40,899 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:57:40,914 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:57:40,967 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:57:40,969 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:58:17,892 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:58:17,910 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:58:17,932 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:58:17,989 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:58:17,991 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:58:42,429 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:58:42,445 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:58:42,463 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:58:42,508 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:58:42,509 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:58:58,585 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:58:58,602 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:58:58,621 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:58:58,683 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:58:58,685 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:59:27,942 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:59:27,956 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:59:27,972 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:59:28,016 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:59:28,017 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 20:59:58,589 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 20:59:58,604 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 20:59:58,621 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 20:59:58,677 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 20:59:58,679 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:00:34,111 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:00:34,123 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:00:34,139 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:00:34,184 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:00:34,186 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:01:07,661 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:01:07,675 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:01:07,691 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:01:07,740 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:01:07,742 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:01:47,489 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:01:47,503 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:01:47,520 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:01:47,583 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:01:47,584 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:02:27,306 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:02:27,320 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:02:27,335 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:02:27,388 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:02:27,390 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:03:19,457 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:03:19,470 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:03:19,490 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:03:19,553 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:03:19,556 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:04:25,650 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:04:25,662 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:04:25,678 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:04:25,719 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:04:25,720 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:04:57,840 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:04:57,853 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:04:57,869 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:04:57,925 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:04:57,927 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:05:41,197 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:05:41,209 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:05:41,229 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:05:41,290 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:05:41,293 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:06:25,034 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:06:25,051 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:06:25,069 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:06:25,138 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:06:25,139 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:07:15,717 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:07:15,731 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:07:15,748 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:07:15,804 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:07:15,806 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:08:05,061 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:08:05,077 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:08:05,097 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:08:05,166 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:08:05,168 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:08:52,291 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:08:52,313 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:08:52,332 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:08:52,384 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:08:52,386 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:09:32,975 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:09:32,987 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:09:33,006 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:09:33,055 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:09:33,057 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:10:39,748 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:10:39,762 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:10:39,777 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:10:39,828 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:10:39,829 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:11:07,627 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:11:07,639 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:11:07,655 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:11:07,701 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:11:07,702 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:11:16,097 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:11:16,109 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:11:16,123 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:11:16,169 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:11:16,170 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:12:34,531 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:12:34,546 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:12:34,565 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:12:34,637 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:12:34,639 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:13:31,269 - optuna_system.optimizers.optuna_model - INFO - randomforest 優化完成! 最佳得分: 0.9603
+2025-10-07 21:13:31,270 - optuna_system.optimizers.optuna_model - INFO - randomforest 最優參數: {'n_estimators': 326, 'max_depth': 16, 'min_samples_split': 2, 'min_samples_leaf': 2, 'max_features': 'sqrt', 'n_cv_splits': 4, 'embargo_pct': 0.031621815435459596, 'purge_pct': 0.01157751753540472}
+2025-10-07 21:13:31,271 - optuna_system.optimizers.optuna_model - INFO - 開始訓練 randomforest 並生成預測...
+2025-10-07 21:13:31,304 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:13:31,316 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:13:31,335 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:13:31,398 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:13:31,401 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:14:43,495 - optuna_system.optimizers.optuna_model - INFO - ✅ randomforest 預測已保存: optuna_system\results\BTCUSDT_15m\rf_predictions.parquet
+2025-10-07 21:14:43,495 - optuna_system.optimizers.optuna_model - INFO -    預測樣本數: 87605
+2025-10-07 21:14:43,535 - optuna_system.optimizers.optuna_model - INFO - 
+============================================================
+2025-10-07 21:14:43,535 - optuna_system.optimizers.optuna_model - INFO - 處理模型: EXTRATREES
+2025-10-07 21:14:43,536 - optuna_system.optimizers.optuna_model - INFO - ============================================================
+2025-10-07 21:14:43,537 - optuna_system.optimizers.optuna_model - INFO - 開始優化 extratrees 模型...
+2025-10-07 21:14:43,578 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:14:43,595 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:14:43,613 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:14:43,677 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:14:43,679 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:14:55,401 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:14:55,414 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:14:55,434 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:14:55,497 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:14:55,499 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:03,743 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:03,757 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:03,776 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:03,835 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:03,838 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:13,219 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:13,235 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:13,252 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:13,301 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:13,303 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:25,238 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:25,251 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:25,267 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:25,326 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:25,327 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:32,365 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:32,379 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:32,395 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:32,454 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:32,456 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:37,916 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:37,928 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:37,943 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:37,990 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:37,991 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:45,581 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:45,593 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:45,606 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:45,652 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:45,654 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:15:53,245 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:15:53,256 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:15:53,268 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:15:53,319 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:15:53,321 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:02,924 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:02,936 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:02,953 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:03,000 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:03,002 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:16,150 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:16,160 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:16,183 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:16,285 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:16,286 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:21,670 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:21,683 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:21,696 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:21,739 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:21,742 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:28,511 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:28,523 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:28,537 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:28,597 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:28,599 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:33,675 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:33,687 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:33,702 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:33,748 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:33,750 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:42,463 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:42,474 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:42,486 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:42,540 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:42,542 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:16:58,128 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:16:58,139 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:16:58,154 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:16:58,205 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:16:58,207 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:17:10,296 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:17:10,309 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:17:10,325 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:17:10,378 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:17:10,380 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:17:23,970 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:17:23,985 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:17:24,004 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:17:24,065 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:17:24,067 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:17:35,072 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:17:35,083 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:17:35,097 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:17:35,157 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:17:35,159 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:17:47,933 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:17:47,944 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:17:47,957 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:17:48,012 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:17:48,014 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:17:58,147 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:17:58,157 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:17:58,171 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:17:58,220 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:17:58,222 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:18:05,472 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:18:05,484 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:18:05,496 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:18:05,543 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:18:05,545 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:18:15,048 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:18:15,059 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:18:15,074 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:18:15,118 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:18:15,120 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:18:27,901 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:18:27,912 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:18:27,927 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:18:27,982 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:18:27,985 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:18:39,511 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:18:39,523 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:18:39,537 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:18:39,582 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:18:39,584 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:18:50,764 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:18:50,778 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:18:50,795 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:18:50,870 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:18:50,871 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:18:59,104 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:18:59,115 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:18:59,133 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:18:59,211 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:18:59,222 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:19:10,452 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:19:10,463 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:19:10,477 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:19:10,520 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:19:10,522 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:19:21,398 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:19:21,410 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:19:21,424 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:19:21,475 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:19:21,477 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:19:30,224 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:19:30,234 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:19:30,247 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:19:30,289 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:19:30,291 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:19:40,999 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:19:41,010 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:19:41,025 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:19:41,066 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:19:41,068 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:19:49,925 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:19:49,938 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:19:49,952 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:19:49,996 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:19:49,998 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:19:58,360 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:19:58,371 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:19:58,385 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:19:58,430 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:19:58,431 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:04,566 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:04,577 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:04,589 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:04,631 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:04,632 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:13,700 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:13,711 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:13,725 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:13,770 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:13,772 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:23,489 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:23,500 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:23,515 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:23,561 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:23,563 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:34,355 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:34,365 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:34,379 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:34,427 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:34,429 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:41,254 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:41,265 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:41,280 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:41,320 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:41,322 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:48,960 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:48,972 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:48,984 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:49,027 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:49,029 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:20:54,789 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:20:54,799 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:20:54,812 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:20:54,852 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:20:54,853 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:21:07,021 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:21:07,034 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:21:07,049 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:21:07,108 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:21:07,110 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:21:18,786 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:21:18,801 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:21:18,817 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:21:18,865 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:21:18,867 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:21:27,908 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:21:27,918 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:21:27,933 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:21:27,978 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:21:27,979 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:21:37,157 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:21:37,169 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:21:37,184 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:21:37,232 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:21:37,233 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:21:49,243 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:21:49,255 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:21:49,276 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:21:49,322 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:21:49,324 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:21:59,492 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:21:59,503 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:21:59,531 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:21:59,584 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:21:59,586 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:22:09,011 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:22:09,023 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:22:09,038 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:22:09,083 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:22:09,084 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:22:20,752 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:22:20,764 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:22:20,779 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:22:20,833 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:22:20,834 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:22:29,850 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:22:29,861 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:22:29,875 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:22:29,922 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:22:29,923 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:22:38,420 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:22:38,433 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:22:38,450 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:22:38,501 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:22:38,502 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:22:48,536 - optuna_system.optimizers.optuna_model - INFO - extratrees 優化完成! 最佳得分: 0.9603
+2025-10-07 21:22:48,537 - optuna_system.optimizers.optuna_model - INFO - extratrees 最優參數: {'n_estimators': 397, 'max_depth': 17, 'min_samples_split': 5, 'min_samples_leaf': 1, 'max_features': 'sqrt', 'n_cv_splits': 3, 'embargo_pct': 0.03977791153598674, 'purge_pct': 0.028398982026725316}
+2025-10-07 21:22:48,537 - optuna_system.optimizers.optuna_model - INFO - 開始訓練 extratrees 並生成預測...
+2025-10-07 21:22:48,566 - optuna_system.optimizers.optuna_model - INFO - 成功加載特徵文件: configs\selected_features_15m.parquet
+2025-10-07 21:22:48,580 - optuna_system.optimizers.optuna_model - INFO - 成功加載標籤文件: configs\labels_15m.parquet
+2025-10-07 21:22:48,596 - optuna_system.optimizers.optuna_model - INFO - 成功計算收益率
+2025-10-07 21:22:48,649 - optuna_system.optimizers.optuna_model - INFO - 數據加載完成: 105127 樣本, 33 特徵
+2025-10-07 21:22:48,651 - optuna_system.optimizers.optuna_model - INFO - 標籤分佈: {1: 52871, 0: 27867, 2: 24389}
+2025-10-07 21:23:09,072 - optuna_system.optimizers.optuna_model - INFO - ✅ extratrees 預測已保存: optuna_system\results\BTCUSDT_15m\et_predictions.parquet
+2025-10-07 21:23:09,073 - optuna_system.optimizers.optuna_model - INFO -    預測樣本數: 87605
+2025-10-07 21:23:09,108 - optuna_system.optimizers.optuna_model - INFO - 
+================================================================================
+2025-10-07 21:23:09,108 - optuna_system.optimizers.optuna_model - INFO - ✅ 多模型優化完成!
+2025-10-07 21:23:09,108 - optuna_system.optimizers.optuna_model - INFO - ✅ 結果已保存至: configs\model_params.json
+2025-10-07 21:23:09,109 - optuna_system.optimizers.optuna_model - INFO - ✅ 預測文件保存在: optuna_system\results\BTCUSDT_15m
+2025-10-07 21:23:09,109 - optuna_system.optimizers.optuna_model - INFO - ================================================================================
+2025-10-07 21:23:09,109 - __main__ - INFO - ================================================================================
+2025-10-07 21:23:09,110 - __main__ - INFO - 🎉 Layer3优化完成！
+2025-10-07 21:23:09,110 - __main__ - INFO - ================================================================================
+2025-10-07 21:23:09,111 - __main__ - INFO - ⏰ 结束时间: 2025-10-07 21:23:09
+2025-10-07 21:23:09,111 - __main__ - INFO - ⏱️ 总耗时: 247.3分钟 (14839秒)
+2025-10-07 21:23:09,112 - __main__ - INFO - 🏆 最佳模型: xgboost
+2025-10-07 21:23:09,112 - __main__ - INFO - 📊 最佳得分: 0.9605
+2025-10-07 21:23:09,112 - __main__ - INFO - 
+各模型性能:
+2025-10-07 21:23:09,113 - __main__ - INFO -   - lightgbm: 0.9604
+2025-10-07 21:23:09,113 - __main__ - INFO -   - xgboost: 0.9605
+2025-10-07 21:23:09,113 - __main__ - INFO -   - randomforest: 0.9603
+2025-10-07 21:23:09,114 - __main__ - INFO -   - extratrees: 0.9603
+2025-10-07 21:23:09,114 - __main__ - INFO - 
+生成的文件:
+2025-10-07 21:23:09,122 - __main__ - INFO -   ✅ et_predictions.parquet: 3272.2KB, 形状: (87605, 4)
+2025-10-07 21:23:09,131 - __main__ - INFO -   ✅ lgb_predictions.parquet: 3429.9KB, 形状: (87605, 4)
+2025-10-07 21:23:09,139 - __main__ - INFO -   ✅ rf_predictions.parquet: 3354.3KB, 形状: (87605, 4)
+2025-10-07 21:23:09,148 - __main__ - INFO -   ✅ xgb_predictions.parquet: 2089.8KB, 形状: (87605, 4)
+2025-10-07 21:23:09,149 - __main__ - INFO -   ✅ model_params.json: 2.0KB
+2025-10-07 21:23:09,149 - __main__ - INFO - 
+🎊 Layer3优化成功完成！可以继续执行Layer4-9。
+2025-10-07 21:23:09,150 - __main__ - INFO - 
+================================================================================
+2025-10-07 21:23:09,150 - __main__ - INFO - ✅ 所有步骤成功完成！
+2025-10-07 21:23:09,151 - __main__ - INFO - ================================================================================
+2025-10-07 21:23:09,151 - __main__ - INFO - 
+下一步:
+2025-10-07 21:23:09,151 - __main__ - INFO - 1. 查看日志文件了解详细信息
+2025-10-07 21:23:09,152 - __main__ - INFO - 2. 检查optuna_system/results/BTCUSDT_15m/目录下的预测文件
+2025-10-07 21:23:09,152 - __main__ - INFO - 3. 运行Layer6集成优化: python run_9layers_optimization.py
