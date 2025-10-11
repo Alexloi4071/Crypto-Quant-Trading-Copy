@@ -59,17 +59,27 @@ def main():
 
     print(f"✅ 找到特徵文件: {feature_file} (version={version})")
 
-    # 使用分層協調器進行特徵優化
+    # 從零生成流程：先 L0→L1，最後執行 L2
+    try:
+        n_trials = int(os.getenv("L2_TRIALS", "20"))
+    except Exception:
+        n_trials = 20
+
     coordinator = OptunaCoordinator(
         symbol="BTCUSDT",
         timeframe="15m",
         data_path="data",
-        version=version
     )
 
-    # 僅執行第2層特徵工程優化
-    print("📊 執行第2層：特徵工程參數優化...")
-    result = coordinator.run_layer2_feature_optimization(n_trials=20)
+    print("🔧 先執行 Layer0 數據清洗與物化…")
+    coordinator.run_layer0_data_cleaning(n_trials=max(10, 15))
+
+    print("🏷️ 接著執行 Layer1 標籤優化與物化…")
+    coordinator.run_layer1_label_optimization(n_trials=max(50, 75))
+
+    # 最後執行 L2 特徵優化（使用前兩層物化結果作為輸入）
+    print("📊 執行第2層：特徵工程參數優化…")
+    result = coordinator.run_layer2_feature_optimization(n_trials=n_trials)
 
     if 'error' in result:
         print(f"❌ 優化失敗: {result['error']}")
