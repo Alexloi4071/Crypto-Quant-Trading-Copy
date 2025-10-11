@@ -63,7 +63,7 @@ def main():
     coordinator = OptunaCoordinator(
         symbol="BTCUSDT",
         timeframe="15m",
-        data_path="data/processed",
+        data_path="data",
         version=version
     )
 
