@@ -39,7 +39,7 @@ jobs:
       - name: Install minimal dependencies for Layer2
         run: |
           pip install --upgrade pip wheel
-          pip install pandas numpy scipy scikit-learn optuna joblib pyyaml python-dotenv requests pyarrow fastparquet
+          pip install pandas numpy scipy scikit-learn optuna joblib pyyaml python-dotenv requests pyarrow fastparquet lightgbm xgboost
       
       - name: Verify LFS files present
         run: |
