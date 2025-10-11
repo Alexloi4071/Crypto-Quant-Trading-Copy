@@ -74,9 +74,8 @@ class TimeFrameScaler:
 
     def adjust_lag_range_with_meta(self, timeframe: str, base_range: Tuple[int, int], meta_vol: float) -> Tuple[int, int]:
         base_min, base_max = base_range
-        # meta_vol 越高，允許上限微調 +10%，但仍夾在 base_max + 5
-        extension = int(meta_vol * 50)
-        extended_max = min(base_max + 5, base_max + extension)
+        extension = int(meta_vol * 100)
+        extended_max = min(base_max + 10, base_max + extension)
         return base_min, max(base_min + 1, extended_max)
 
     def clip_lag(self, lag: int, timeframe: str, meta_vol: float = 0.02) -> int:
@@ -234,38 +233,57 @@ class MultiTimeframeCoordinator:
         
     def get_scaled_config_for_timeframe(self, timeframe: str) -> Dict:
         """為特定時間框架生成縮放配置"""
+        profile = self.scaler.get_profile(timeframe)
+
         # 轉換RTU參數為絕對參數
         absolute_params = RelativeTimeUnit.convert_to_absolute(self.base_config, timeframe)
- 
+
         # 添加時間框架自適應閾值
         adaptive_thresholds = RelativeTimeUnit.get_timeframe_adaptive_thresholds(timeframe)
         absolute_params.update(adaptive_thresholds)
- 
+
         scale_factor = self.scaler.get_scale_factor(timeframe)
         minutes = self.scaler.timeframe_minutes.get(timeframe, 60)
 
         meta_vol = self.meta_vol
-        profile = self.scaler.get_profile(timeframe)
-        base_range = self.scaler.get_base_lag_range(timeframe)
+        if profile and 'base_lag_range' in profile:
+            base_range = profile['base_lag_range']
+        else:
+            base_range = self.scaler.get_base_lag_range(timeframe)
         lag_min, lag_max = self.scaler.adjust_lag_range_with_meta(timeframe, base_range, meta_vol)
         absolute_params['label_lag_min'] = lag_min
         absolute_params['label_lag_max'] = lag_max
         absolute_params['label_lag'] = max(lag_min, min(absolute_params.get('label_lag', lag_min), lag_max))
 
-        feature_range = (max(1, lag_min // 2), max(lag_min // 2 + 1, lag_max * 2))
+        feature_range = (max(1, lag_min // 2), max(lag_min + 2, lag_max * 2))
         absolute_params['feature_lag_min'] = feature_range[0]
         absolute_params['feature_lag_max'] = feature_range[1]
 
         # Layer1/Layer2 分位數預設
-        absolute_params['feature_profit_q_min'] = max(0.55, absolute_params.get('pos_quantile', 0.85) - 0.20)
-        absolute_params['feature_profit_q_max'] = min(0.95, absolute_params.get('pos_quantile', 0.85) + 0.10)
-        absolute_params['feature_loss_q_min'] = max(0.05, absolute_params.get('loss_quantile', 0.15) - 0.10)
-        absolute_params['feature_loss_q_max'] = min(0.45, absolute_params.get('loss_quantile', 0.15) + 0.10)
+        if profile and 'buy_quantile_range' in profile:
+            buy_min, buy_max = profile['buy_quantile_range']
+        else:
+            buy_min, buy_max = 0.6, 0.9
+        if profile and 'sell_quantile_range' in profile:
+            sell_min, sell_max = profile['sell_quantile_range']
+        else:
+            sell_min, sell_max = 0.1, 0.35
+        absolute_params['feature_profit_q_min'] = buy_min
+        absolute_params['feature_profit_q_max'] = buy_max
+        absolute_params['feature_loss_q_min'] = sell_min
+        absolute_params['feature_loss_q_max'] = sell_max
+        absolute_params['label_buy_q_min'] = buy_min
+        absolute_params['label_buy_q_max'] = buy_max
+        absolute_params['label_sell_q_min'] = sell_min
+        absolute_params['label_sell_q_max'] = sell_max
 
         # lookback 窗口維持等效歷史長度（基準15m: 300-1000 bars）
-        base_lookback_min, base_lookback_max = 300, 1000
-        lookback_min = max(50, int(round(base_lookback_min / scale_factor)))
-        lookback_max = max(lookback_min + 50, int(round(base_lookback_max / scale_factor)))
+        if profile and 'lookback_range' in profile:
+            base_lookback_min, base_lookback_max = profile['lookback_range']
+        else:
+            base_lookback_min, base_lookback_max = 300, 1000
+        lookback_min = max(50, int(round(base_lookback_min / max(scale_factor, 1e-6))))
+        lookback_max = max(lookback_min + 50, int(round(base_lookback_max / max(scale_factor, 1e-6))))
         absolute_params['lookback_window_min'] = lookback_min
         absolute_params['lookback_window_max'] = lookback_max
 

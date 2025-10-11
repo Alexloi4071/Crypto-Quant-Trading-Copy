@@ -31,6 +31,8 @@ jobs:
         env:
           PYTHONUTF8: "1"
           PYTHONIOENCODING: "utf-8"
+          L1_TRIALS: "150"
+          L2_TRIALS: "250"
         run: |
           python run_core_layers_only.py
 

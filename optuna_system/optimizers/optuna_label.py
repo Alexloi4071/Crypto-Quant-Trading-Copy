@@ -728,20 +728,27 @@ class LabelOptimizer:
         """修復版Optuna目標函數 - 第1層：滾動窗口標籤參數優化"""
 
         # 🚀 修復版參數：包含滾動窗口大小
+        lag_min = self.scaled_config.get('label_lag_min', self.scaled_config.get('label_lag', 12) - 6)
+        lag_max = self.scaled_config.get('label_lag_max', self.scaled_config.get('label_lag', 12) + 24)
+        buy_q_min = self.scaled_config.get('label_buy_q_min', 0.68)
+        buy_q_max = self.scaled_config.get('label_buy_q_max', 0.88)
+        sell_q_min = self.scaled_config.get('label_sell_q_min', 0.12)
+        sell_q_max = self.scaled_config.get('label_sell_q_max', 0.32)
+        lookback_min = self.scaled_config.get('lookback_window_min', 400)
+        lookback_max = self.scaled_config.get('lookback_window_max', 900)
+
         params = {
             # 核心參數
-            'lag': trial.suggest_int('lag',
-                                     self.scaled_config.get('label_lag_min', self.scaled_config.get('label_lag', 12) - 2),
-                                     self.scaled_config.get('label_lag_max', self.scaled_config.get('label_lag', 12) + 4)),
+            'lag': trial.suggest_int('lag', lag_min, max(lag_min + 1, lag_max)),
             'threshold_method': trial.suggest_categorical('threshold_method',
                                                         ['quantile', 'fixed', 'adaptive', 'triple_barrier', 'stabilized']),
 
             # 🚀 新增：滾動窗口大小 (500-800)
-            'lookback_window': trial.suggest_int('lookback_window', 500, 800),
+            'lookback_window': trial.suggest_int('lookback_window', lookback_min, max(lookback_min + 50, lookback_max)),
 
             # ✅ 修復優化：基於學術文獻的分位數範圍（更保守，信號質量更高）
-            'buy_quantile': trial.suggest_float('buy_quantile', 0.70, 0.85),   # 學術推薦：70-85%分位
-            'sell_quantile': trial.suggest_float('sell_quantile', 0.15, 0.30), # 學術推薦：15-30%分位
+            'buy_quantile': trial.suggest_float('buy_quantile', buy_q_min, buy_q_max),   # 來自 timeframe profile 的範圍
+            'sell_quantile': trial.suggest_float('sell_quantile', sell_q_min, sell_q_max), # 來自 timeframe profile 的範圍
 
             # Fixed方法參數
             'profit_threshold': trial.suggest_float('profit_threshold', 0.005, 0.03),
@@ -903,9 +910,21 @@ class LabelOptimizer:
             actual_sell_ratio = label_counts.get(0, 0)  # 賣出比例
 
             # 🚧 硬性分佈約束：過度不平衡的方案直接淘汰，避免搜索陷入長期持有
-            if actual_hold_ratio > 0.70 or actual_buy_ratio < 0.10 or actual_sell_ratio < 0.10:
+            default_target_hold = self.scaled_config.get('target_hold_ratio', 0.50)
+            default_trade_ratio = max(0.15, min(0.35, (1 - default_target_hold) / 2))
+            min_buy_ratio = self.scaled_config.get('label_min_buy_ratio', default_trade_ratio)
+            min_sell_ratio = self.scaled_config.get('label_min_sell_ratio', default_trade_ratio)
+            max_hold_ratio = self.scaled_config.get('label_max_hold_ratio', 0.70)
+            target_distribution = params.get('target_distribution')
+            if target_distribution is None:
+                target_distribution = (
+                    self.scaled_config.get('target_sell_ratio', default_trade_ratio),
+                    params.get('target_hold_ratio', default_target_hold),
+                    self.scaled_config.get('target_buy_ratio', default_trade_ratio)
+                )
+            if actual_hold_ratio > max_hold_ratio or actual_buy_ratio < min_buy_ratio or actual_sell_ratio < min_sell_ratio:
                 self.logger.info(
-                    f"⛔ 分佈不合格(hold>{actual_hold_ratio:.2%} 或 買/賣<{min(actual_buy_ratio, actual_sell_ratio):.2%})，退回極低分"
+                    f"⛔ 分佈不合格(hold>{actual_hold_ratio:.2%} 或 買<{actual_buy_ratio:.2%} 或 賣<{actual_sell_ratio:.2%})，退回極低分"
                 )
                 return -999.0
             

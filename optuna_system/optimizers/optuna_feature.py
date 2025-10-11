@@ -518,9 +518,27 @@ class FeatureOptimizer:
                 best_trials = getattr(study, 'best_trials', [])
                 if not best_trials:
                     return 0.0
+                # 取第一個 Pareto trial 的 user_attrs，如果沒有則回退其 values
                 trial = best_trials[0]
-                metrics = trial.user_attrs.get('objective_metrics', {})
-                return self._weighted_objective_score(metrics)
+                metrics = trial.user_attrs.get('objective_metrics')
+                if metrics:
+                    return self._weighted_objective_score(metrics)
+                try:
+                    values = trial.values or []
+                    weighted = 0.0
+                    total_w = 0.0
+                    for name, weight in self.obj_weights.items():
+                        if name not in self.multiobjective_metrics:
+                            continue
+                        idx = self.multiobjective_metrics.index(name)
+                        if idx < len(values) and np.isfinite(values[idx]):
+                            weighted += weight * float(values[idx])
+                            total_w += weight
+                    if total_w > 0:
+                        return weighted / total_w
+                except Exception:
+                    pass
+                return 0.0
             return float(study.best_value)
         except Exception:
             return 0.0
@@ -3076,7 +3094,7 @@ class FeatureOptimizer:
             for trial_idx in range(n_trials):
                 try:
                     start_trial = time.perf_counter()
-                study.optimize(self.objective, n_trials=1, timeout=450, callbacks=[_relax_search_space_cb])
+                    study.optimize(self.objective, n_trials=1, timeout=450, callbacks=[_relax_search_space_cb])
                     duration = time.perf_counter() - start_trial
                     trial_durations.append(duration)
                     successful_trials += 1

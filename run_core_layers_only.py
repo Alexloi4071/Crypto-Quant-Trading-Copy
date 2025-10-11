@@ -56,6 +56,8 @@ coordinator = OptunaCoordinator(
 
 print('--- Layer0 ---')
 processed_cleaned_dir = DATA_PATH / 'processed' / 'cleaned' / 'BTCUSDT_15m'
+L1_TRIALS = int(os.getenv('L1_TRIALS', '150'))
+L2_TRIALS = int(os.getenv('L2_TRIALS', '250'))
 need_layer0 = True
 try:
     if processed_cleaned_dir.exists():
@@ -73,7 +75,7 @@ else:
     print(f"跳過 Layer0，已存在清洗檔: {processed_cleaned_dir}")
 
 print('--- Layer1 ---')
-layer1_result = coordinator.run_layer1_label_optimization(n_trials=150)
+layer1_result = coordinator.run_layer1_label_optimization(n_trials=L1_TRIALS)
 print(layer1_result)
 
 # ✅ Layer1結果驗證
@@ -87,5 +89,18 @@ if 'best_score' in layer1_result:
     metadata = layer1_result.get('metadata', {})
     if 'label_distribution' in metadata or 'data_columns' in metadata:
         print(f"  特徵信息: {metadata.get('data_shape', 'N/A')}")
+
+print('\n' + '='*60)
+
+print('--- Layer2 ---')
+layer2_result = coordinator.run_layer2_feature_optimization(n_trials=L2_TRIALS)
+print(layer2_result)
+
+if isinstance(layer2_result, dict) and 'best_score' in layer2_result:
+    print(f"\n📊 Layer2分析:")
+    print(f"  最佳分數: {layer2_result['best_score']:.4f}")
+    mat_path = layer2_result.get('materialized_path') or layer2_result.get('metadata', {}).get('materialized_path')
+    if mat_path:
+        print(f"  物化特徵檔案: {mat_path}")
 
 print('\n' + '='*60)
