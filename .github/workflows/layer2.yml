@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -37,7 +39,13 @@ jobs:
       - name: Install minimal dependencies for Layer2
         run: |
           pip install --upgrade pip wheel
-          pip install pandas numpy scipy scikit-learn optuna joblib pyyaml python-dotenv requests
+          pip install pandas numpy scipy scikit-learn optuna joblib pyyaml python-dotenv requests pyarrow fastparquet
+      
+      - name: Verify LFS files present
+        run: |
+          git lfs version
+          git lfs ls-files | wc -l || true
+          ls -alh data/processed/features/BTCUSDT_15m || true
           # 可選: 若使用特定特徵工程需附加套件，請於此處補充
 
       - name: Show environment
