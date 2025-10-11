@@ -61,7 +61,7 @@ def main():
 
     # 從零生成流程：先 L0→L1，最後執行 L2
     try:
-        n_trials = int(os.getenv("L2_TRIALS", "20"))
+        n_trials = int(os.getenv("L2_TRIALS", "250"))
     except Exception:
         n_trials = 250
     
