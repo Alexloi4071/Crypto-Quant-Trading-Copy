@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,6 +29,22 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # parquet engines required by pandas
+          pip install pyarrow fastparquet
+          # ensure tree-based libs available in case environment differs from requirements lock
+          pip install -U lightgbm xgboost || true
+
+      - name: Pull Git LFS content
+        run: |
+          git lfs version
+          git lfs pull || true
+
+      - name: List key data directories (debug)
+        run: |
+          ls -alh || true
+          ls -alh data || true
+          ls -alh data/raw || true
+          ls -alh data/raw/BTCUSDT || true
 
       - name: Run core layers pipeline
         env:

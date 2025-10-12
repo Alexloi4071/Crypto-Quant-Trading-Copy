@@ -479,3 +479,13 @@
 2025-10-10 15:38:42,196 | INFO | optuna_system.coordinator:938 | ✅ 保留策略特徵: 0個
 2025-10-10 15:38:42,196 | WARNING | optuna_system.coordinator:940 | ⚠️ 警告: 未選中任何策略特徵（Wyckoff/TD/Micro）
 2025-10-10 15:38:42,196 | INFO | optuna_system.coordinator:942 | ✅ Layer2特徵優化完成
+2025-10-12 03:36:44,523 | INFO | optuna_system.coordinator:122 | 🚀 修復版Layer0+9層優化系統協調器初始化完成
+2025-10-12 03:36:44,523 | INFO | optuna_system.coordinator:123 |    交易對: BTCUSDT
+2025-10-12 03:36:44,523 | INFO | optuna_system.coordinator:124 |    時間框: 15m
+2025-10-12 03:36:44,523 | INFO | optuna_system.coordinator:125 |    版本號: v31
+2025-10-12 03:36:44,539 | INFO | optuna_system.coordinator:168 | 15m 波動計算: std_mean=0.0023
+2025-10-12 03:36:44,546 | INFO | optuna_system.coordinator:168 | 1h 波動計算: std_mean=0.0047
+2025-10-12 03:36:44,551 | INFO | optuna_system.coordinator:168 | 4h 波動計算: std_mean=0.0095
+2025-10-12 03:36:44,556 | INFO | optuna_system.coordinator:168 | 1d 波動計算: std_mean=0.0250
+2025-10-12 03:36:44,556 | INFO | optuna_system.coordinator:203 | Meta 大腦準備完成: 平均波動=0.0104, 各時框={'15m': 0.0023, '1h': 0.0047, '4h': 0.0095, '1d': 0.025}
+2025-10-12 03:36:44,557 | INFO | optuna_system.coordinator:765 | 🎯 Layer1：標籤生成與物化...
