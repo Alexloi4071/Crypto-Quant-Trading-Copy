@@ -46,6 +46,8 @@ class FeatureOptimizer:
         self.config_path.mkdir(exist_ok=True)
         self.symbol = symbol
         self.timeframe = timeframe
+        # 時框縮放配置需在使用前初始化
+        self.scaled_config = scaled_config or {}
         # 使用集中日誌 (由上層/入口初始化)，避免重複 basicConfig
         self.logger = logging.getLogger(__name__)
         self.logger.info(f"FeatureOptimizer PATCH_ID={PATCH_ID}")
@@ -124,17 +126,16 @@ class FeatureOptimizer:
         self.logger.info(f"⚖️ Layer2 目標權重: {self.obj_weights}")
 
         self.multiobjective_metrics = [
-            'f1_macro',
             'sharpe',
-            'sortino',
             'calmar',
             'profit_factor',
             'win_rate',
-            'annual_return'
+            'total_return',
+            'annual_return',
+            'neg_max_drawdown'
         ]
 
 
-        self.scaled_config = scaled_config or {}
         self.scaler = TimeFrameScaler(self.logger)
         self.results_path = Path(self.config_path) / ".." / "results" / f"{self.symbol}_{self.timeframe}"
         self.results_path = self.results_path.resolve()
@@ -2036,20 +2037,23 @@ class FeatureOptimizer:
             penalties["max_drawdown"] = 1.0
         return penalties
 
-    def _kpis_to_multi_values(self, metrics: Dict[str, float]) -> List[float]:
-        return [
-            metrics.get("sharpe", 0.0),
-            metrics.get("calmar", metrics.get("sortino", 0.0)),
-            metrics.get("profit_factor", 0.0),
-            metrics.get("win_rate", 0.0),
-            metrics.get("total_return", 0.0),
-            metrics.get("annual_return", 0.0),
-            -metrics.get("max_drawdown", 1.0),
-        ]
+    def _kpis_to_multi_values(self, metrics: Dict[str, float]) -> Dict[str, float]:
+        calmar = metrics.get("calmar")
+        if calmar is None:
+            calmar = metrics.get("sortino", 0.0)
+        values = {
+            "sharpe": metrics.get("sharpe", 0.0),
+            "calmar": calmar,
+            "profit_factor": metrics.get("profit_factor", 0.0),
+            "win_rate": metrics.get("win_rate", 0.0),
+            "total_return": metrics.get("total_return", 0.0),
+            "annual_return": metrics.get("annual_return", 0.0),
+            "neg_max_drawdown": -metrics.get("max_drawdown", 1.0),
+        }
+        return values
 
     def objective(self, trial: optuna.Trial) -> float:
         """🚀 123.md建議：參數化標籤生成 + 性能約束的目標函數"""
-
         try:
             # Phase 4.1: 擴展空間
             selection_method = trial.suggest_categorical('feature_selection_method', ['stability', 'mutual_info'])
@@ -2535,28 +2539,15 @@ class FeatureOptimizer:
             trial.set_user_attr('objective_metrics', metrics)
             metrics_summary.setdefault('combined_metrics_full', metrics)
 
-        if self.multi_objective_mode:
-            penalized_metrics = self._soft_penalize_kpis(metrics)
-            values = self._kpis_to_multi_values(penalized_metrics)
-            trial.set_user_attr('objective_values', dict(zip(self.multiobjective_metrics, values)))
-            trial.set_user_attr('objective_metrics_penalized', penalized_metrics)
-            return values
-
-        if self.multi_objective_mode:
-                values: List[float] = []
-                for name in self.multiobjective_metrics:
-                    val = metrics.get(name)
-                    if val is None or not np.isfinite(val):
-                        values.append(0.0)
-                    else:
-                        if name in ('profit_factor', 'calmar', 'sharpe', 'sortino'):
-                            val = max(min(val, 5.0), -1.0)
-                        if name in ('annual_return', 'total_return'):
-                            val = max(min(val, 2.0), -1.0)
-                        values.append(float(val))
-                trial.set_user_attr('objective_values', dict(zip(self.multiobjective_metrics, values)))
-                self.logger.info(f"🎯 多目標評估: {dict(zip(self.multiobjective_metrics, values))}")
-                return values
+            # 多目標模式：在 try 內回傳
+            if self.multi_objective_mode:
+                penalized_metrics = self._soft_penalize_kpis(metrics)
+                values_dict = self._kpis_to_multi_values(penalized_metrics)
+                ordered_values = [values_dict.get(key, 0.0) for key in self.multiobjective_metrics]
+                trial.set_user_attr('objective_values', values_dict)
+                trial.set_user_attr('objective_metrics_penalized', penalized_metrics)
+                self.logger.info(f"🎯 多目標評估: {values_dict}")
+                return ordered_values
 
             weighted_score = self._weighted_objective_score(metrics)
             final_score = base_score * 0.4 + weighted_score * 0.6
@@ -2686,17 +2677,8 @@ class FeatureOptimizer:
 
             return final_score
 
-        except (ValueError, ZeroDivisionError, KeyError) as critical_error:
-            self.logger.error(f"❌ 關鍵錯誤 - Fail-Fast: {critical_error}")
-            raise critical_error
-
-        except (MemoryError, TimeoutError) as resource_error:
-            self.logger.error(f"❌ 資源限制錯誤: {resource_error}")
-            raise resource_error
-
-        except Exception as e:
-            self.logger.warning(f"⚠️ 試驗失敗，跳過此次: {e}")
-            return 0.0
+        finally:
+            pass
 
     def _generate_features(self, ohlcv_data: pd.DataFrame) -> pd.DataFrame:
         """修復版特徵生成（不依賴外部類）"""

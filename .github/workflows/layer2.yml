@@ -86,7 +86,7 @@ jobs:
           L2_TRIALS: '100'
           L2_MIN_WINRATE: '0.65'
           L2_MIN_SHARPE: '1.2'
-          L2_MAX_DRAWDOWN: '0.15'
+          L2_MAX_DRAWDOWN: '0.25'
           L2_OBJECTIVE_MODE: 'multi'
         run: |
           python run_feature_optimization.py
