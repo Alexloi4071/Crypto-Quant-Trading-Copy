@@ -50,6 +50,7 @@ class DataCleaningOptimizer:
         data = self.check_volume_anomalies(data, params)
         data = self.apply_missing_value_treatment(data, params)
         data = self.volume_void_detection(data, params)
+        # 補齊方法：波動/跳空/微結構占位，避免流程中斷
         data, stats_vol = self.detect_volatility_anomalies(data, params)
         data, stats_gap = self.detect_gaps_and_outliers(data, params)
         data, stats_micro = self.flag_microstructure_anomalies(data, params)
@@ -63,6 +64,52 @@ class DataCleaningOptimizer:
     def apply_transform(self, original_data: pd.DataFrame, **params: Any) -> pd.DataFrame:
         """物化介面別名，與其他層對齊。"""
         return self.apply_cleaning(original_data, **params)
+
+    # --- 佔位/安全版檢測：避免因缺失方法導致流程中斷 ---
+    def detect_volatility_anomalies(self, data: pd.DataFrame, params: Dict) -> Tuple[pd.DataFrame, Dict]:
+        cleaned = data.copy()
+        stats: Dict[str, Any] = {}
+        try:
+            if 'close' not in cleaned.columns or len(cleaned) < 10:
+                return cleaned, {'volatility_anomalies': 0}
+
+            r = cleaned['close'].pct_change()
+            window = int(params.get('rolling_outlier_window', 200))
+            minp = max(10, window // 5)
+            med = r.rolling(window, min_periods=minp).median()
+            mad = (r - med).abs().rolling(window, min_periods=minp).median()
+            mad = mad.replace(0, (mad[mad > 0].min() if (mad > 0).any() else 1e-6))
+            robust_z = 0.6745 * (r - med) / mad
+
+            thresh = float(params.get('zscore_threshold', 3.0))
+            mask = (robust_z.abs() > thresh)
+            stats['volatility_anomalies'] = int(mask.sum())
+
+            action = params.get('volatility_action', 'none')
+            if action == 'cap' and mask.any():
+                prev = cleaned['close'].shift(1)
+                max_ret = (med + mad * thresh).fillna(med.fillna(0) + (mad.fillna(1e-6) * thresh))
+                up = mask & (r > 0)
+                down = mask & (r < 0)
+                cleaned.loc[up, 'close'] = prev[up] * (1 + max_ret[up].abs())
+                cleaned.loc[down, 'close'] = prev[down] * (1 - max_ret[down].abs())
+        except Exception as _e:
+            self.logger.warning(f"detect_volatility_anomalies 失敗: {_e}")
+        return cleaned, stats
+
+    def detect_gaps_and_outliers(self, data: pd.DataFrame, params: Dict) -> Tuple[pd.DataFrame, Dict]:
+        try:
+            return data, {'gap_count': 0, 'outlier_flags': 0}
+        except Exception as _e:
+            self.logger.warning(f"detect_gaps_and_outliers 失敗: {_e}")
+            return data, {}
+
+    def flag_microstructure_anomalies(self, data: pd.DataFrame, params: Dict) -> Tuple[pd.DataFrame, Dict]:
+        try:
+            return data, {'microstructure_flags': 0}
+        except Exception as _e:
+            self.logger.warning(f"flag_microstructure_anomalies 失敗: {_e}")
+            return data, {}
 
     def load_raw_ohlcv_data(self, force_refresh: bool = False) -> pd.DataFrame:
         """加載原始 OHLCV 數據；若未找到則嘗試重採樣，最後找不到則報錯。"""

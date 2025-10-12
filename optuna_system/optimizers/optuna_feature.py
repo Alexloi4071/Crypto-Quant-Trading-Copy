@@ -2091,13 +2091,23 @@ class FeatureOptimizer:
                 if layer1_range_mode == 'wide':
                     profit_quantile_min = max(0.72, l1_buy_q - 0.04)
                     profit_quantile_max = min(0.78, l1_buy_q + 0.04)
-                    loss_quantile_min = max(0.22, l1_sell_q - 0.04)
-                    loss_quantile_max = min(0.28, l1_sell_q + 0.04)
+                    loss_quantile_min = max(0.05, min(0.28, l1_sell_q - 0.04))
+                    loss_quantile_max = min(0.45, max(0.06, l1_sell_q + 0.04))
                 else:
                     profit_quantile_min = max(0.73, l1_buy_q - 0.02)
                     profit_quantile_max = min(0.77, l1_buy_q + 0.02)
-                    loss_quantile_min = max(0.23, l1_sell_q - 0.02)
-                    loss_quantile_max = min(0.27, l1_sell_q + 0.02)
+                    loss_quantile_min = max(0.05, min(0.27, l1_sell_q - 0.02))
+                    loss_quantile_max = min(0.45, max(0.06, l1_sell_q + 0.02))
+
+                # 安全校正：避免低於高（Optuna 要求 low<=high）
+                if loss_quantile_min > loss_quantile_max:
+                    mid = float(l1_sell_q)
+                    span = 0.01
+                    loss_quantile_min, loss_quantile_max = max(0.03, mid - span), min(0.49, mid + span)
+                if profit_quantile_min > profit_quantile_max:
+                    mid = float(l1_buy_q)
+                    span = 0.01
+                    profit_quantile_min, profit_quantile_max = max(0.51, mid - span), min(0.97, mid + span)
                 
                 self.logger.info(f"🔗 Layer1聯動分位數: buy_q={l1_buy_q:.3f} → profit_q[{profit_quantile_min:.3f}, {profit_quantile_max:.3f}]")
                 self.logger.info(f"🔗 Layer1聯動分位數: sell_q={l1_sell_q:.3f} → loss_q[{loss_quantile_min:.3f}, {loss_quantile_max:.3f}]")
@@ -2111,8 +2121,14 @@ class FeatureOptimizer:
                     max_lag = min_lag
 
             lag = trial.suggest_int('lag', min_lag, max_lag)
-            profit_quantile = trial.suggest_float('profit_quantile', profit_quantile_min, profit_quantile_max)
-            loss_quantile = trial.suggest_float('loss_quantile', loss_quantile_min, loss_quantile_max)
+            # 最終防呆（再檢一次）
+            if loss_quantile_min > loss_quantile_max:
+                loss_quantile_min, loss_quantile_max = loss_quantile_max, loss_quantile_min
+            if profit_quantile_min > profit_quantile_max:
+                profit_quantile_min, profit_quantile_max = profit_quantile_max, profit_quantile_min
+
+            profit_quantile = trial.suggest_float('profit_quantile', float(profit_quantile_min), float(profit_quantile_max))
+            loss_quantile = trial.suggest_float('loss_quantile', float(loss_quantile_min), float(loss_quantile_max))
 
             lookback_window = trial.suggest_int('lookback_window', 450, 550)
 
