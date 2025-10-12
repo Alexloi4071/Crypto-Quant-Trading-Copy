@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ github.event.inputs.python-version || '3.9' }}
+          python-version: ${{ github.event.inputs.python-version || '3.10' }}
 
       - name: Install dependencies
         run: |
@@ -50,8 +50,14 @@ jobs:
         env:
           PYTHONUTF8: "1"
           PYTHONIOENCODING: "utf-8"
+          L0_TRIALS: "50"
           L1_TRIALS: "150"
           L2_TRIALS: "250"
+          OPTUNA_ENHANCED_L2: "1"
+          L2_OBJECTIVE_MODE: "multi"
+          L2_MIN_WINRATE: "0.65"
+          L2_MIN_SHARPE: "1.2"
+          L2_MAX_DRAWDOWN: "0.25"
         run: |
           python run_core_layers_only.py
 

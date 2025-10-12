@@ -2010,6 +2010,43 @@ class FeatureOptimizer:
             self.logger.error(f"❌ 多重验证失败: {e}")
             return True, f"⚠️ 验证异常但继续: {e}"  # 验证失败时不阻止优化
 
+    def _get_env_float(self, name: str, default: float) -> float:
+        try:
+            return float(os.getenv(name, str(default)))
+        except Exception:
+            return default
+
+    def _soft_penalize_kpis(self, metrics: Dict[str, float]) -> Dict[str, float]:
+        penalties = dict(metrics)
+        min_win = self._get_env_float("L2_MIN_WINRATE", 0.65)
+        min_sharpe = self._get_env_float("L2_MIN_SHARPE", 1.2)
+        max_dd = self._get_env_float("L2_MAX_DRAWDOWN", 0.25)
+
+        if penalties.get("sharpe", 0.0) < min_sharpe:
+            penalties["sharpe"] = 0.1
+        if penalties.get("win_rate", 0.0) < min_win:
+            penalties["win_rate"] = 0.01
+        if penalties.get("profit_factor", 0.0) < 1.0:
+            penalties["profit_factor"] = 0.9
+        if penalties.get("total_return", 0.0) <= 0:
+            penalties["total_return"] = -0.1
+        if penalties.get("annual_return", 0.0) <= 0:
+            penalties["annual_return"] = -0.1
+        if penalties.get("max_drawdown", 1.0) > max_dd:
+            penalties["max_drawdown"] = 1.0
+        return penalties
+
+    def _kpis_to_multi_values(self, metrics: Dict[str, float]) -> List[float]:
+        return [
+            metrics.get("sharpe", 0.0),
+            metrics.get("calmar", metrics.get("sortino", 0.0)),
+            metrics.get("profit_factor", 0.0),
+            metrics.get("win_rate", 0.0),
+            metrics.get("total_return", 0.0),
+            metrics.get("annual_return", 0.0),
+            -metrics.get("max_drawdown", 1.0),
+        ]
+
     def objective(self, trial: optuna.Trial) -> float:
         """🚀 123.md建議：參數化標籤生成 + 性能約束的目標函數"""
 
@@ -2078,12 +2115,11 @@ class FeatureOptimizer:
                 l1_lag = layer1_params.get('lag', 12)
                 feature_lag_min_default = lag_meta_min
                 feature_lag_max_default = lag_meta_max
-                # 與 Layer1 完全對齊滯後期
-                min_lag = max(feature_lag_min_default, int(l1_lag))
-                max_lag = min(feature_lag_max_default, int(l1_lag))
+                min_lag = max(feature_lag_min_default, int(l1_lag) - 4)
+                max_lag = min(feature_lag_max_default, int(l1_lag) + 4)
                 if min_lag > max_lag:
                     max_lag = min_lag
-                self.logger.info(f"🔗 Layer1聯動lag固定: {l1_lag} → 搜索範圍[{min_lag}, {max_lag}]")
+                self.logger.info(f"🔗 Layer1聯動lag鄰域: {l1_lag} ±4 → 搜索範圍[{min_lag}, {max_lag}]")
                 
                 l1_buy_q = layer1_params.get('buy_quantile', 0.75)
                 l1_sell_q = layer1_params.get('sell_quantile', 0.25)
@@ -2104,6 +2140,8 @@ class FeatureOptimizer:
                     mid = float(l1_sell_q)
                     span = 0.01
                     loss_quantile_min, loss_quantile_max = max(0.03, mid - span), min(0.49, mid + span)
+                if self.timeframe == "15m":
+                    loss_quantile_max = min(loss_quantile_max, 0.20)
                 if profit_quantile_min > profit_quantile_max:
                     mid = float(l1_buy_q)
                     span = 0.01
@@ -2497,15 +2535,14 @@ class FeatureOptimizer:
             trial.set_user_attr('objective_metrics', metrics)
             metrics_summary.setdefault('combined_metrics_full', metrics)
 
-            constraints_ok, constraint_reason = self._check_kpi_constraints(metrics)
-            if not constraints_ok:
-                self.logger.info(f"⛔ KPI 未達標 ({constraint_reason})，懲罰試驗")
-                if self.multi_objective_mode:
-                    trial.set_user_attr('kpi_constraint_reason', constraint_reason)
-                    return [-1.0 for _ in self.multiobjective_metrics]
-                return max(0.0, base_score * 0.1)
+        if self.multi_objective_mode:
+            penalized_metrics = self._soft_penalize_kpis(metrics)
+            values = self._kpis_to_multi_values(penalized_metrics)
+            trial.set_user_attr('objective_values', dict(zip(self.multiobjective_metrics, values)))
+            trial.set_user_attr('objective_metrics_penalized', penalized_metrics)
+            return values
 
-            if self.multi_objective_mode:
+        if self.multi_objective_mode:
                 values: List[float] = []
                 for name in self.multiobjective_metrics:
                     val = metrics.get(name)
