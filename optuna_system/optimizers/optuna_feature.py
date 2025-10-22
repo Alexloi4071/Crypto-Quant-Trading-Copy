@@ -1315,25 +1315,89 @@ class FeatureOptimizer:
         return aligned
 
     def build_features_for_materialization(self, ohlcv_data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
-        """重建與優化流程一致的特徵集，用於物化：
-        1) 盡量使用 src.features.FeatureEngineering 生成完整基礎特徵
-        2) 疊加本模組的技術指標與多時框門控特徵
-        3) 進行特徵質量過濾，確保一致性
+        """🔧 P1修復：重建與優化流程一致的特徵集，用於物化
+        
+        整合多種特徵類型：
+        1) 原生時間框架特徵（無滯後）
+        2) 多時框技術指標特徵
+        3) 策略特徵（Wyckoff/TD/Micro）
+        4) 進行特徵質量過濾，確保一致性
         """
         if ohlcv_data is None or ohlcv_data.empty:
             return pd.DataFrame()
+        
+        all_features_list = []
         base_features = pd.DataFrame(index=ohlcv_data.index)
-        # 統一使用內建技術/多時框特徵
+        all_features_list.append(base_features)
+        
+        # 🔧 P1修復1：添加原生時間框架特徵（優先級最高，無滯後）
+        try:
+            native_features = self._build_native_timeframe_features(ohlcv_data)
+            if not native_features.empty:
+                all_features_list.append(native_features)
+                self.logger.info(f"✅ 添加 {len(native_features.columns)} 個原生特徵")
+        except Exception as e:
+            self.logger.warning(f"⚠️ 原生特徵生成失敗: {e}")
+        
+        # 原有的多時框技術特徵
         try:
             tech_features = self.generate_technical_features(ohlcv_data, params)
+            if not tech_features.empty:
+                all_features_list.append(tech_features)
+                self.logger.info(f"✅ 添加 {len(tech_features.columns)} 個多時框技術特徵")
         except Exception as e:
-            self.logger.warning(f"無法生成技術特徵: {e}")
-            tech_features = pd.DataFrame(index=ohlcv_data.index)
-        X = self._safe_merge(base_features, tech_features)
+            self.logger.warning(f"⚠️ 多時框技術特徵生成失敗: {e}")
+        
+        # 🔧 P1修復2：添加策略特徵（Wyckoff/TD/Micro）
+        if self.flags.get('enable_strategy_features', True):
+            try:
+                # TD Sequential 特徵
+                if self.flags.get('enable_td', True):
+                    td_features = self._generate_td_features(ohlcv_data)
+                    if not td_features.empty:
+                        all_features_list.append(td_features)
+                        self.logger.info(f"✅ 添加 {len(td_features.columns)} 個 TD Sequential 特徵")
+            except Exception as e:
+                self.logger.warning(f"⚠️ TD特徵生成失敗: {e}")
+            
+            try:
+                # Wyckoff 特徵
+                if self.flags.get('enable_wyckoff', True):
+                    wyk_features = self._generate_wyckoff_features(ohlcv_data)
+                    if not wyk_features.empty:
+                        all_features_list.append(wyk_features)
+                        self.logger.info(f"✅ 添加 {len(wyk_features.columns)} 個 Wyckoff 特徵")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Wyckoff特徵生成失敗: {e}")
+            
+            try:
+                # Market Microstructure 特徵
+                if self.flags.get('enable_micro', True):
+                    micro_features = self._generate_micro_features_from_ohlcv(ohlcv_data)
+                    if not micro_features.empty:
+                        all_features_list.append(micro_features)
+                        self.logger.info(f"✅ 添加 {len(micro_features.columns)} 個 Microstructure 特徵")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Microstructure特徵生成失敗: {e}")
+        
+        # 合併所有特徵
+        X = pd.concat([f for f in all_features_list if not f.empty], axis=1)
+        
+        # 移除重複列
+        X = X.loc[:, ~X.columns.duplicated()]
+        
+        self.logger.info(
+            f"📊 特徵物化總計: {len(X.columns)} 個特徵 "
+            f"(原生 + 多時框 + 策略)"
+        )
+        
+        # 特徵質量過濾
         try:
             X = self._filter_low_quality_features(X)
-        except Exception:
-            pass
+            self.logger.info(f"✅ 質量過濾後保留: {len(X.columns)} 個特徵")
+        except Exception as e:
+            self.logger.warning(f"⚠️ 特徵質量過濾失敗: {e}")
+        
         return X
 
     def generate_technical_features(self, ohlcv_data: pd.DataFrame, params: Dict) -> pd.DataFrame:
@@ -1733,6 +1797,11 @@ class FeatureOptimizer:
         return features
 
     def _resample_ohlcv(self, ohlcv: pd.DataFrame, rule: str) -> pd.DataFrame:
+        """重採樣 OHLCV 到更高時間框架（🔧 P0修復：添加 shift(1) 防止 Look-Ahead Bias）
+        
+        重要：使用 shift(1) 確保只使用「已完成」的 bar，避免未來數據洩漏。
+        例如：15m 時間點只能看到上一個完成的 1h bar，而不是當前未完成的 1h bar。
+        """
         agg = {
             'open': 'first',
             'high': 'max',
@@ -1742,7 +1811,23 @@ class FeatureOptimizer:
         }
         try:
             resampled = ohlcv.resample(rule).agg(agg)
-            return resampled.dropna()
+            
+            # 🔧 P0修復：shift(1) 確保只使用已完成的 bar，防止 Look-Ahead Bias
+            # 未來數據洩漏示例：
+            #   錯誤：15m 09:45 使用 09:00-10:00 的 1h bar（未完成，包含未來數據）
+            #   正確：15m 09:45 使用 08:00-09:00 的 1h bar（已完成，無未來數據）
+            resampled_shifted = resampled.shift(1)
+            
+            # 記錄時間對齊信息（僅在調試模式）
+            if len(resampled_shifted) > 0 and self.flags.get('debug_resample', False):
+                self.logger.debug(
+                    f"Resample {rule}: 原始最後時間={ohlcv.index[-1]}, "
+                    f"重採樣最後時間={resampled_shifted.index[-1]}, "
+                    f"有效數據={len(resampled_shifted.dropna())} 行"
+                )
+            
+            return resampled_shifted.dropna()
+            
         except Exception as e:
             self.logger.warning(f"⚠️ 重採樣失敗 rule={rule}: {e}")
             return pd.DataFrame(columns=ohlcv.columns)
@@ -2534,14 +2619,121 @@ class FeatureOptimizer:
 
             self.logger.info(f"🎯 嵌套CV平均F1: {base_score:.4f} (±{np.std(cv_scores):.4f})")
 
-            metrics = self._compute_objective_metrics(trial, X, y, lag)
-            metrics['cv_base_score'] = float(base_score)
-            trial.set_user_attr('objective_metrics', metrics)
-            metrics_summary.setdefault('combined_metrics_full', metrics)
+            # 🔧 P0修復1: 添加時序分割的 Holdout 驗證（防止數據洩漏）
+            holdout_metrics = {}
+            overfitting_gap = 0.0
+            
+            try:
+                # 時序分割：前70%訓練，後30%作為獨立驗證集
+                split_idx = int(len(X) * 0.70)
+                X_train_full = X.iloc[:split_idx]
+                X_holdout = X.iloc[split_idx:]
+                y_train_full = y.iloc[:split_idx]
+                y_holdout = y.iloc[split_idx:]
+                
+                self.logger.info(f"📊 Holdout驗證: 訓練集={len(X_train_full)}, 驗證集={len(X_holdout)}")
+                
+                if len(X_holdout) > 50 and len(X_train_full) > 100:
+                    # 在訓練集上訓練最終模型
+                    from sklearn.ensemble import RandomForestClassifier
+                    holdout_model = RandomForestClassifier(
+                        n_estimators=100,
+                        max_depth=10,
+                        min_samples_split=5,
+                        min_samples_leaf=2,
+                        max_features='sqrt',
+                        random_state=42,
+                        n_jobs=-1
+                    )
+                    
+                    # 只在訓練集上擬合
+                    holdout_model.fit(X_train_full, y_train_full)
+                    
+                    # 在獨立驗證集上預測
+                    y_holdout_pred = holdout_model.predict(X_holdout)
+                    y_holdout_proba = holdout_model.predict_proba(X_holdout) if hasattr(holdout_model, 'predict_proba') else None
+                    
+                    # 計算驗證集指標
+                    from sklearn.metrics import (f1_score, precision_score, recall_score, 
+                                                 balanced_accuracy_score, roc_auc_score)
+                    
+                    holdout_f1_macro = float(f1_score(y_holdout, y_holdout_pred, average='macro', zero_division=0))
+                    holdout_f1_weighted = float(f1_score(y_holdout, y_holdout_pred, average='weighted', zero_division=0))
+                    
+                    holdout_metrics = {
+                        'f1_macro': holdout_f1_macro,
+                        'f1_weighted': holdout_f1_weighted,
+                        'precision_macro': float(precision_score(y_holdout, y_holdout_pred, average='macro', zero_division=0)),
+                        'recall_macro': float(recall_score(y_holdout, y_holdout_pred, average='macro', zero_division=0)),
+                        'balanced_accuracy': float(balanced_accuracy_score(y_holdout, y_holdout_pred)),
+                    }
+                    
+                    if y_holdout_proba is not None:
+                        try:
+                            holdout_metrics['auc_macro'] = float(
+                                roc_auc_score(y_holdout, y_holdout_proba, multi_class='ovr', average='macro')
+                            )
+                        except:
+                            holdout_metrics['auc_macro'] = 0.5
+                    else:
+                        holdout_metrics['auc_macro'] = 0.5
+                    
+                    # 計算過擬合程度
+                    overfitting_gap = base_score - holdout_f1_macro
+                    
+                    self.logger.info(
+                        f"✅ Holdout F1: {holdout_f1_macro:.4f}, "
+                        f"過擬合差距: {overfitting_gap:.4f}"
+                    )
+                    
+                    # 過擬合警告
+                    if overfitting_gap > 0.15:
+                        self.logger.warning(
+                            f"⚠️ 過擬合風險: CV={base_score:.4f}, Holdout={holdout_f1_macro:.4f}, "
+                            f"Gap={overfitting_gap:.4f} > 0.15"
+                        )
+                    
+            except Exception as holdout_error:
+                self.logger.warning(f"⚠️ Holdout驗證失敗: {holdout_error}")
+                holdout_metrics = {'error': str(holdout_error)}
+            
+            # 記錄 Holdout 結果到 trial
+            trial.set_user_attr('cv_base_score', float(base_score))
+            trial.set_user_attr('cv_scores', cv_scores)
+            trial.set_user_attr('cv_std', float(np.std(cv_scores)))
+            trial.set_user_attr('holdout_metrics', holdout_metrics)
+            trial.set_user_attr('overfitting_gap', float(overfitting_gap))
 
-            # 多目標模式：在 try 內回傳
+            # 🔧 P0修復2: 將 combined_metrics_full 降級為調試信息（標記為過擬合）
+            debug_train_metrics = None
+            if self.flags.get('compute_full_metrics_for_debug', False):
+                try:
+                    debug_train_metrics = self._compute_objective_metrics(trial, X, y, lag)
+                    debug_train_metrics['_WARNING'] = 'TRAINING_SET_ONLY_DO_NOT_USE_FOR_EVALUATION'
+                    debug_train_metrics['cv_base_score'] = float(base_score)
+                    trial.set_user_attr('debug_train_metrics', debug_train_metrics)
+                    self.logger.debug("📝 已計算調試用訓練集指標（不參與優化）")
+                except Exception as debug_error:
+                    self.logger.debug(f"調試指標計算失敗: {debug_error}")
+            
+            # 保留舊格式兼容性，但標記為不可信
+            if debug_train_metrics:
+                metrics_summary.setdefault('_debug_combined_metrics_full', debug_train_metrics)
+
+            # 多目標模式：基於 CV 分數而非過擬合指標
             if self.multi_objective_mode:
-                penalized_metrics = self._soft_penalize_kpis(metrics)
+                # 使用 CV 和 Holdout 的真實指標
+                real_metrics = {
+                    'f1_macro': base_score,
+                    'f1_weighted': metrics_summary.get('f1_weighted', base_score),
+                    'precision_macro': metrics_summary.get('precision_macro', base_score),
+                    'recall_macro': metrics_summary.get('recall_macro', base_score),
+                }
+                if holdout_metrics and 'f1_macro' in holdout_metrics:
+                    # 結合 Holdout 指標
+                    real_metrics['holdout_f1'] = holdout_metrics['f1_macro']
+                
+                penalized_metrics = self._soft_penalize_kpis(real_metrics)
                 values_dict = self._kpis_to_multi_values(penalized_metrics)
                 ordered_values = [values_dict.get(key, 0.0) for key in self.multiobjective_metrics]
                 trial.set_user_attr('objective_values', values_dict)
@@ -2549,9 +2741,30 @@ class FeatureOptimizer:
                 self.logger.info(f"🎯 多目標評估: {values_dict}")
                 return ordered_values
 
-            weighted_score = self._weighted_objective_score(metrics)
-            final_score = base_score * 0.4 + weighted_score * 0.6
-            trial.set_user_attr('objective_score', float(final_score))
+            # 🔧 P0修復3: 使用真實的 CV + Holdout 分數計算最終分數
+            if holdout_metrics and 'f1_macro' in holdout_metrics and overfitting_gap < 0.20:
+                # 方案：CV 60% + Holdout 40%
+                final_score = base_score * 0.60 + holdout_metrics['f1_macro'] * 0.40
+                
+                # 過擬合懲罰
+                if overfitting_gap > 0.10:
+                    penalty = (overfitting_gap - 0.10) * 0.5
+                    final_score -= penalty
+                    self.logger.info(f"📉 過擬合懲罰: -{penalty:.4f}")
+                
+                self.logger.info(
+                    f"✅ 最終分數: {final_score:.4f} "
+                    f"(CV:{base_score:.4f} * 0.6 + Holdout:{holdout_metrics['f1_macro']:.4f} * 0.4)"
+                )
+            else:
+                # Fallback：只用 CV 分數（但記錄警告）
+                final_score = base_score
+                if overfitting_gap >= 0.20:
+                    self.logger.warning(f"⚠️ 過擬合嚴重，只使用CV分數: {final_score:.4f}")
+                else:
+                    self.logger.info(f"✅ 使用CV分數: {final_score:.4f}")
+            
+            trial.set_user_attr('final_score', float(final_score))
 
             # 記錄 LGBM 的「no positive gain」跡象，供 callback 參考
             try:
@@ -3178,6 +3391,14 @@ class FeatureOptimizer:
             cv_metrics = best_trial.user_attrs.get('cv_metrics', {})
             cv_scores_attr = best_trial.user_attrs.get('cv_scores', [])
             confusion_matrix_attr = best_trial.user_attrs.get('confusion_matrix')
+            
+            # 🔧 P0修復：添加 Holdout 驗證結果
+            cv_base_score = best_trial.user_attrs.get('cv_base_score', best_score)
+            cv_std = best_trial.user_attrs.get('cv_std', 0.0)
+            holdout_metrics = best_trial.user_attrs.get('holdout_metrics', {})
+            overfitting_gap = best_trial.user_attrs.get('overfitting_gap', 0.0)
+            final_score = best_trial.user_attrs.get('final_score', best_score)
+            debug_train_metrics = best_trial.user_attrs.get('debug_train_metrics', {})
 
             best_params['selected_features'] = selected_features
             best_params['feature_phase'] = feature_phase
@@ -3209,16 +3430,22 @@ class FeatureOptimizer:
                 final_quality = {}
                 labeled_data = None
 
+            # 🔧 P0修復：記錄真實的驗證指標
             result = {
                 'timeframe': tf,
                 'best_params': best_params,
-                'best_score': best_score,
+                'best_score': best_score,  # 這是 final_score（CV + Holdout 組合）
                 'n_trials': n_trials,
                 'final_quality': final_quality,
                 'meta_vol': meta_vol,
                 'labeled_data': labeled_data,
                 'cv_metrics': cv_metrics,
                 'cv_scores': [float(x) for x in cv_scores_attr] if cv_scores_attr else [],
+                'cv_base_score': float(cv_base_score),
+                'cv_std': float(cv_std),
+                'holdout_metrics': holdout_metrics,  # 新增：獨立驗證集指標
+                'overfitting_gap': float(overfitting_gap),  # 新增：過擬合程度
+                'final_score': float(final_score),  # 新增：最終組合分數
                 'confusion_matrix': confusion_matrix_attr,
                 'optimization_history': [
                     {'trial': i, 'score': trial.value}
@@ -3226,6 +3453,23 @@ class FeatureOptimizer:
                     if trial.value is not None
                 ]
             }
+            
+            # 🔧 P0修復：如果有調試指標，標記為不可信
+            if debug_train_metrics and debug_train_metrics.get('_WARNING'):
+                result['_debug_train_metrics'] = debug_train_metrics
+                result['_WARNING'] = 'debug_train_metrics僅供調試，請勿用於評估模型性能'
+            
+            # 打印關鍵驗證指標
+            self.logger.info(f"📊 驗證結果摘要:")
+            self.logger.info(f"  CV Base F1: {cv_base_score:.4f} (±{cv_std:.4f})")
+            if holdout_metrics and 'f1_macro' in holdout_metrics:
+                self.logger.info(f"  Holdout F1: {holdout_metrics['f1_macro']:.4f}")
+                self.logger.info(f"  過擬合差距: {overfitting_gap:.4f}")
+                if overfitting_gap > 0.15:
+                    self.logger.warning(f"  ⚠️ 過擬合風險較高")
+                else:
+                    self.logger.info(f"  ✅ 過擬合控制良好")
+            self.logger.info(f"  最終分數: {final_score:.4f}")
 
             # 避免將 DataFrame 寫入 JSON（僅保存可序列化摘要）
             json_safe = {k: v for k, v in result.items() if k != 'labeled_data'}
@@ -3541,6 +3785,141 @@ class FeatureOptimizer:
         X = self._filter_low_quality_features(X)
         X = X.loc[:, ~X.columns.duplicated()]
         return X.astype('float32').fillna(0)
+
+    def _build_native_timeframe_features(self, ohlcv: pd.DataFrame) -> pd.DataFrame:
+        """🔧 P1修復：生成原生時間框架的技術指標特徵（無時序滯後）
+        
+        這些特徵使用當前時間框架的原生數據，不需要重採樣，避免信號滯後。
+        例如：15m 交易使用 15m 級別的技術指標，反應更及時。
+        
+        Args:
+            ohlcv: 原始 OHLCV 數據
+            
+        Returns:
+            原生特徵 DataFrame
+        """
+        features = pd.DataFrame(index=ohlcv.index)
+        close = ohlcv['close']
+        high = ohlcv['high']
+        low = ohlcv['low']
+        volume = ohlcv['volume']
+        open_ = ohlcv['open']
+        
+        prefix = f"{self.timeframe}_native_"
+        
+        try:
+            # 1. 價格動量特徵
+            for period in [5, 10, 20, 50]:
+                features[f'{prefix}roc_{period}'] = close.pct_change(period)
+                features[f'{prefix}momentum_{period}'] = close - close.shift(period)
+            
+            # 2. 移動平均特徵
+            for period in [5, 10, 20, 50, 100, 200]:
+                sma = close.rolling(period).mean()
+                features[f'{prefix}sma_{period}'] = sma
+                features[f'{prefix}price_sma_ratio_{period}'] = close / (sma + 1e-9)
+                
+                ema = close.ewm(span=period).mean()
+                features[f'{prefix}ema_{period}'] = ema
+                features[f'{prefix}price_ema_ratio_{period}'] = close / (ema + 1e-9)
+            
+            # 3. 波動率特徵（ATR）
+            for period in [5, 10, 20, 50]:
+                returns = close.pct_change()
+                features[f'{prefix}volatility_{period}'] = returns.rolling(period).std()
+                
+                # ATR (Average True Range)
+                tr1 = high - low
+                tr2 = (high - close.shift(1)).abs()
+                tr3 = (low - close.shift(1)).abs()
+                tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+                features[f'{prefix}atr_{period}'] = tr.rolling(period).mean()
+            
+            # 4. RSI 家族
+            for period in [7, 14, 21, 28]:
+                delta = close.diff()
+                gain = delta.where(delta > 0, 0).rolling(period).mean()
+                loss = -delta.where(delta < 0, 0).rolling(period).mean()
+                rs = gain / (loss + 1e-9)
+                features[f'{prefix}rsi_{period}'] = 100 - (100 / (1 + rs))
+            
+            # 5. MACD 家族
+            macd_configs = [(12, 26, 9), (5, 35, 5), (19, 39, 9)]
+            for fast, slow, signal in macd_configs:
+                ema_fast = close.ewm(span=fast).mean()
+                ema_slow = close.ewm(span=slow).mean()
+                macd = ema_fast - ema_slow
+                signal_line = macd.ewm(span=signal).mean()
+                histogram = macd - signal_line
+                
+                features[f'{prefix}macd_{fast}_{slow}'] = macd
+                features[f'{prefix}macd_signal_{fast}_{slow}_{signal}'] = signal_line
+                features[f'{prefix}macd_hist_{fast}_{slow}_{signal}'] = histogram
+            
+            # 6. 布林帶特徵
+            for period in [10, 20, 50]:
+                bb_middle = close.rolling(period).mean()
+                bb_std = close.rolling(period).std()
+                bb_upper = bb_middle + (2 * bb_std)
+                bb_lower = bb_middle - (2 * bb_std)
+                
+                features[f'{prefix}bb_position_{period}'] = (
+                    (close - bb_lower) / (bb_upper - bb_lower + 1e-9)
+                )
+                features[f'{prefix}bb_width_{period}'] = (
+                    (bb_upper - bb_lower) / (bb_middle + 1e-9)
+                )
+            
+            # 7. 成交量特徵
+            for period in [5, 10, 20, 50]:
+                vol_sma = volume.rolling(period).mean()
+                features[f'{prefix}volume_ratio_{period}'] = volume / (vol_sma + 1e-9)
+                features[f'{prefix}volume_std_{period}'] = volume.rolling(period).std()
+            
+            # 8. OBV (On-Balance Volume)
+            obv = (np.sign(close.diff()) * volume).cumsum()
+            features[f'{prefix}obv'] = obv
+            features[f'{prefix}obv_ema_20'] = obv.ewm(span=20).mean()
+            
+            # 9. 價格模式特徵
+            features[f'{prefix}high_low_ratio'] = high / (low + 1e-9)
+            features[f'{prefix}close_open_ratio'] = close / (open_ + 1e-9)
+            features[f'{prefix}body_ratio'] = abs(close - open_) / (high - low + 1e-9)
+            
+            # 10. Stochastic Oscillator
+            for period in [14, 21]:
+                lowest_low = low.rolling(period).min()
+                highest_high = high.rolling(period).max()
+                k = 100 * (close - lowest_low) / (highest_high - lowest_low + 1e-9)
+                d = k.rolling(3).mean()
+                features[f'{prefix}stoch_k_{period}'] = k
+                features[f'{prefix}stoch_d_{period}'] = d
+            
+            # 11. Williams %R
+            for period in [14, 21]:
+                highest_high = high.rolling(period).max()
+                lowest_low = low.rolling(period).min()
+                wr = -100 * (highest_high - close) / (highest_high - lowest_low + 1e-9)
+                features[f'{prefix}williams_r_{period}'] = wr
+            
+            # 12. CCI (Commodity Channel Index)
+            for period in [14, 20]:
+                tp = (high + low + close) / 3
+                sma_tp = tp.rolling(period).mean()
+                mad = (tp - sma_tp).abs().rolling(period).mean()
+                features[f'{prefix}cci_{period}'] = (tp - sma_tp) / (0.015 * mad + 1e-9)
+            
+            # 清理 NaN 和 Inf
+            features = features.replace([np.inf, -np.inf], np.nan)
+            features = features.fillna(method='ffill').fillna(method='bfill').fillna(0)
+            
+            self.logger.info(f"✅ 生成 {len(features.columns)} 個原生 {self.timeframe} 特徵")
+            
+        except Exception as e:
+            self.logger.error(f"❌ 原生特徵生成失敗: {e}")
+            features = pd.DataFrame(index=ohlcv.index)
+        
+        return features
 
 
 def main():

@@ -204,12 +204,24 @@ class DataCleaningOptimizer:
                 'volume': 'sum'
             }
             available_cols = [c for c in agg if c in df.columns]
-            resampled = df[available_cols].resample(rule_map[self.timeframe]).agg(agg).dropna()
+            
+            # 🔧 P0補充修復：添加 shift(1) 防止 Look-Ahead Bias
+            # 重採樣後的數據需要 shift(1) 確保只使用「已完成」的 bar
+            # 例如：15m 09:45 只能看到 08:00-09:00 的 1h bar（已完成）
+            #       而不是 09:00-10:00 的 1h bar（未完成，包含未來數據）
+            resampled = df[available_cols].resample(rule_map[self.timeframe]).agg(agg)
+            resampled_shifted = resampled.shift(1)  # 關鍵修正
+            resampled_shifted = resampled_shifted.dropna()
+            
             self._latest_raw_file = base_file
             self._latest_raw_mtime = base_file.stat().st_mtime
             self._latest_raw_md5 = compute_file_md5(base_file)
-            self.logger.info(f"✅ 已由 {base_timeframe} 重採樣為 {self.timeframe}: {resampled.shape}")
-            return resampled
+            
+            self.logger.info(
+                f"✅ 已由 {base_timeframe} 重採樣為 {self.timeframe} (已shift防洩漏): "
+                f"{resampled_shifted.shape} (原始: {resampled.shape})"
+            )
+            return resampled_shifted
         except Exception as e:
             self.logger.error(f"❌ 重採樣過程失敗: {e}")
             return None
