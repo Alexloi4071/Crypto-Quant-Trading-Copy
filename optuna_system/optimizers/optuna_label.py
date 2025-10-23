@@ -1005,6 +1005,69 @@ class LabelOptimizer:
             
             self.logger.info(f"📊 持有率传递: 目标={target_hold:.1%}, 实际={actual_hold_ratio:.1%}, 误差={hold_error:.3f}")
 
+            # 🔧 P1補充修復：添加 Holdout 驗證機制（防止標籤過擬合）
+            holdout_metrics = {}
+            overfitting_gap = 0.0
+            
+            try:
+                # 時序分割：前70%訓練，後30%驗證
+                split_idx = int(len(labels) * 0.70)
+                
+                if split_idx > 100 and (len(labels) - split_idx) > 50:
+                    labels_train = labels[:split_idx]
+                    labels_holdout = labels[split_idx:]
+                    
+                    # 在 Holdout Set 上重新計算策略指標
+                    holdout_returns = actual_returns[split_idx:]
+                    
+                    # 確保索引對齊
+                    common_idx = labels_holdout.index.intersection(holdout_returns.index)
+                    if len(common_idx) > 50:
+                        labels_holdout_aligned = labels_holdout.loc[common_idx]
+                        holdout_returns_aligned = holdout_returns.loc[common_idx]
+                        
+                        holdout_metrics = self._compute_strategy_metrics(
+                            labels_holdout_aligned, 
+                            holdout_returns_aligned, 
+                            params
+                        )
+                        
+                        # 計算過擬合程度（比較訓練集和驗證集的 Sharpe）
+                        train_sharpe = strategy_metrics.get('sharpe', 0)
+                        holdout_sharpe = holdout_metrics.get('sharpe', 0)
+                        overfitting_gap = train_sharpe - holdout_sharpe
+                        
+                        # 記錄 Holdout 指標
+                        trial.set_user_attr("holdout_sharpe", float(holdout_sharpe))
+                        trial.set_user_attr("holdout_win_rate", float(holdout_metrics.get('win_rate', 0)))
+                        trial.set_user_attr("holdout_trades_per_day", float(holdout_metrics.get('trades_per_day', 0)))
+                        trial.set_user_attr("overfitting_gap", float(overfitting_gap))
+                        
+                        self.logger.info(
+                            f"📊 Holdout驗證: Train Sharpe={train_sharpe:.2f}, "
+                            f"Holdout Sharpe={holdout_sharpe:.2f}, "
+                            f"Gap={overfitting_gap:.2f}"
+                        )
+                        
+                        # 過擬合警告
+                        if overfitting_gap > 1.0:
+                            self.logger.warning(
+                                f"⚠️ 標籤過擬合風險: Train={train_sharpe:.2f}, "
+                                f"Holdout={holdout_sharpe:.2f}, Gap={overfitting_gap:.2f}"
+                            )
+                        
+                        # 如果過擬合嚴重，對分數進行懲罰
+                        if overfitting_gap > 1.5:
+                            penalty = (overfitting_gap - 1.5) * 0.1
+                            final_score -= penalty
+                            self.logger.info(f"📉 過擬合懲罰: -{penalty:.4f}")
+                    
+            except Exception as holdout_error:
+                self.logger.debug(f"Holdout驗證失敗（不影響主流程）: {holdout_error}")
+            
+            # 記錄最終調整後的分數
+            trial.set_user_attr("final_score_with_holdout", float(final_score))
+
             return final_score
 
         except Exception as e:
