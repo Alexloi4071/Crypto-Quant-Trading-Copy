@@ -1070,12 +1070,12 @@ class LabelOptimizer:
             actual_buy_ratio = label_counts.get(2, 0)   # 買入比例  
             actual_sell_ratio = label_counts.get(0, 0)  # 賣出比例
 
-            # 🚧 硬性分佈約束：過度不平衡的方案直接淘汰，避免搜索陷入長期持有
+            # 🔧 緊急修復：將硬性約束改為軟性懲罰，避免過度拒絕
             default_target_hold = self.scaled_config.get('target_hold_ratio', 0.50)
-            default_trade_ratio = max(0.15, min(0.35, (1 - default_target_hold) / 2))
-            min_buy_ratio = self.scaled_config.get('label_min_buy_ratio', default_trade_ratio)
-            min_sell_ratio = self.scaled_config.get('label_min_sell_ratio', default_trade_ratio)
-            max_hold_ratio = self.scaled_config.get('label_max_hold_ratio', 0.70)
+            default_trade_ratio = max(0.10, min(0.35, (1 - default_target_hold) / 2))  # 降低下限至10%
+            min_buy_ratio = self.scaled_config.get('label_min_buy_ratio', max(0.10, default_trade_ratio))
+            min_sell_ratio = self.scaled_config.get('label_min_sell_ratio', max(0.10, default_trade_ratio))
+            max_hold_ratio = self.scaled_config.get('label_max_hold_ratio', 0.80)  # 放寬至80%
             target_distribution = params.get('target_distribution')
             if target_distribution is None:
                 target_distribution = (
@@ -1083,9 +1083,33 @@ class LabelOptimizer:
                     params.get('target_hold_ratio', default_target_hold),
                     self.scaled_config.get('target_buy_ratio', default_trade_ratio)
                 )
-            if actual_hold_ratio > max_hold_ratio or actual_buy_ratio < min_buy_ratio or actual_sell_ratio < min_sell_ratio:
-                self.logger.info(
-                    f"⛔ 分佈不合格(hold>{actual_hold_ratio:.2%} 或 買<{actual_buy_ratio:.2%} 或 賣<{actual_sell_ratio:.2%})，退回極低分"
+            
+            # 改為軟性懲罰而非直接拒絕
+            severe_imbalance_penalty = 0.0
+            if actual_hold_ratio > max_hold_ratio:
+                severe_imbalance_penalty += (actual_hold_ratio - max_hold_ratio) * 2.0
+                self.logger.warning(
+                    f"⚠️ 持有比例過高: {actual_hold_ratio:.2%} > {max_hold_ratio:.2%}，"
+                    f"懲罰={severe_imbalance_penalty:.3f}"
+                )
+            if actual_buy_ratio < min_buy_ratio:
+                severe_imbalance_penalty += (min_buy_ratio - actual_buy_ratio) * 2.0
+                self.logger.warning(
+                    f"⚠️ 買入比例過低: {actual_buy_ratio:.2%} < {min_buy_ratio:.2%}，"
+                    f"懲罰={severe_imbalance_penalty:.3f}"
+                )
+            if actual_sell_ratio < min_sell_ratio:
+                severe_imbalance_penalty += (min_sell_ratio - actual_sell_ratio) * 2.0
+                self.logger.warning(
+                    f"⚠️ 賣出比例過低: {actual_sell_ratio:.2%} < {min_sell_ratio:.2%}，"
+                    f"懲罰={severe_imbalance_penalty:.3f}"
+                )
+            
+            # 只有極端不平衡（如某類完全缺失）才直接拒絕
+            if actual_buy_ratio < 0.05 or actual_sell_ratio < 0.05:
+                self.logger.error(
+                    f"❌ 極端不平衡：買={actual_buy_ratio:.2%}, 賣={actual_sell_ratio:.2%}，"
+                    f"某類幾乎缺失"
                 )
                 return -999.0
             
@@ -1125,14 +1149,17 @@ class LabelOptimizer:
             self.logger.info(f"⚖️ 最终权重: balance={balance_weight:.3f}, stability={stability_weight:.3f}, f1={f1_weight:.3f}")
             self.logger.info(f"📊 分布惩罚: 持有偏差={hold_deviation:.3f}, 买卖惩罚={buy_sell_penalty:.3f}, 总惩罚={distribution_penalty:.4f}")
             
-            # 多目標加權總分：標籤品質 + KPI
+            # 多目標加權總分：標籤品質 + KPI - 懲罰
             label_component = (balance_score * balance_weight +
                                stability_score * stability_weight +
                                f1_score * f1_weight)
             kpi_component = (sharpe_norm * sharpe_weight +
                              win_rate * win_weight +
                              trade_freq_norm * trade_weight)
-            final_score = label_component * label_weight + kpi_component - distribution_penalty
+            final_score = (label_component * label_weight + 
+                          kpi_component - 
+                          distribution_penalty - 
+                          severe_imbalance_penalty)
             
             # 記錄分布信息
             self.logger.info(f"📊 標籤分布: 賣出={actual_sell_ratio:.1%}, 持有={actual_hold_ratio:.1%}, 買入={actual_buy_ratio:.1%}")
