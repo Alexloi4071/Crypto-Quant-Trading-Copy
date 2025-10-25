@@ -1084,22 +1084,22 @@ class LabelOptimizer:
                     self.scaled_config.get('target_buy_ratio', default_trade_ratio)
                 )
             
-            # 改為軟性懲罰而非直接拒絕
+            # 改為軟性懲罰而非直接拒絕（降低懲罰係數避免負分）
             severe_imbalance_penalty = 0.0
             if actual_hold_ratio > max_hold_ratio:
-                severe_imbalance_penalty += (actual_hold_ratio - max_hold_ratio) * 2.0
+                severe_imbalance_penalty += (actual_hold_ratio - max_hold_ratio) * 0.5  # 降低至0.5
                 self.logger.warning(
                     f"⚠️ 持有比例過高: {actual_hold_ratio:.2%} > {max_hold_ratio:.2%}，"
                     f"懲罰={severe_imbalance_penalty:.3f}"
                 )
             if actual_buy_ratio < min_buy_ratio:
-                severe_imbalance_penalty += (min_buy_ratio - actual_buy_ratio) * 2.0
+                severe_imbalance_penalty += (min_buy_ratio - actual_buy_ratio) * 0.5  # 降低至0.5
                 self.logger.warning(
                     f"⚠️ 買入比例過低: {actual_buy_ratio:.2%} < {min_buy_ratio:.2%}，"
                     f"懲罰={severe_imbalance_penalty:.3f}"
                 )
             if actual_sell_ratio < min_sell_ratio:
-                severe_imbalance_penalty += (min_sell_ratio - actual_sell_ratio) * 2.0
+                severe_imbalance_penalty += (min_sell_ratio - actual_sell_ratio) * 0.5  # 降低至0.5
                 self.logger.warning(
                     f"⚠️ 賣出比例過低: {actual_sell_ratio:.2%} < {min_sell_ratio:.2%}，"
                     f"懲罰={severe_imbalance_penalty:.3f}"

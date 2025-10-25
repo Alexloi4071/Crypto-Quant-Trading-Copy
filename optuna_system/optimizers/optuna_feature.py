@@ -4085,9 +4085,21 @@ class FeatureOptimizer:
         }
         
         # ========== 優先級1：原生15m特徵（最及時，無延遲） ==========
+        # 🔍 強制診斷日誌
+        self.logger.info(f"🔍 DEBUG: 開始生成原生{self.timeframe}特徵...")
+        self.logger.info(f"🔍 DEBUG: OHLCV shape={ohlcv.shape}, columns={list(ohlcv.columns)}")
+        
         try:
             native_features = self._build_native_timeframe_features(ohlcv)
+            
+            # 🔍 詳細診斷
+            self.logger.info(f"🔍 DEBUG: _build_native_timeframe_features 返回")
+            self.logger.info(f"🔍 DEBUG: 返回shape={native_features.shape}")
+            self.logger.info(f"🔍 DEBUG: 是否為空={native_features.empty}")
+            self.logger.info(f"🔍 DEBUG: 列數={len(native_features.columns)}")
+            
             if not native_features.empty:
+                self.logger.info(f"🔍 DEBUG: 前5個特徵名: {list(native_features.columns[:5])}")
                 X = self._safe_merge(X, native_features, prefix='')
                 feature_stats['native_15m'] = len(native_features.columns)
                 self.logger.info(
@@ -4095,12 +4107,12 @@ class FeatureOptimizer:
                     f"(RSI, MACD, BB, ATR, Stoch等)"
                 )
             else:
-                self.logger.warning(
-                    f"⚠️ 原生{self.timeframe}特徵生成為空！"
-                    f"檢查_build_native_timeframe_features方法"
+                self.logger.error(
+                    f"❌ 原生{self.timeframe}特徵生成為空！"
+                    f"檢查_build_native_timeframe_features方法實現"
                 )
         except Exception as e:
-            self.logger.error(f"❌ 原生{self.timeframe}特徵生成失敗: {e}")
+            self.logger.error(f"❌ 原生{self.timeframe}特徵生成失敗（異常）: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
         
