@@ -4361,7 +4361,7 @@ class FeatureOptimizer:
             
             # 清理 NaN 和 Inf
             features = features.replace([np.inf, -np.inf], np.nan)
-            features = features.fillna(method='ffill').fillna(method='bfill').fillna(0)
+            features = features.ffill().bfill().fillna(0)  # 修復：使用新版pandas語法
             
             self.logger.info(f"✅ 生成 {len(features.columns)} 個原生 {self.timeframe} 特徵")
             
