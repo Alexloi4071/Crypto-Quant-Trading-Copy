@@ -27,6 +27,28 @@ except ImportError:
     HAS_SURVIVORSHIP_CORRECTION = False
     print("⚠️ survivorship_bias模块不可用，生存者偏差校正将跳过")
 
+# 🆕 阶段7：系统性偏差+可解释性（可选）
+try:
+    from optuna_system.utils.adversarial_validation import quick_adversarial_check
+    HAS_ADVERSARIAL_VALIDATION = True
+except ImportError:
+    HAS_ADVERSARIAL_VALIDATION = False
+    print("ℹ️ adversarial_validation模块未导入")
+
+try:
+    from optuna_system.utils.random_benchmark import RandomBenchmarkTester
+    HAS_RANDOM_BENCHMARK = True
+except ImportError:
+    HAS_RANDOM_BENCHMARK = False
+    print("ℹ️ random_benchmark模块未导入")
+
+try:
+    from optuna_system.utils.model_interpretability import ModelInterpreter
+    HAS_MODEL_INTERPRETABILITY = True
+except ImportError:
+    HAS_MODEL_INTERPRETABILITY = False
+    print("ℹ️ model_interpretability模块未导入")
+
 # 添加當前目錄到Python路徑
 current_dir = Path(__file__).parent
 project_root = current_dir.parent  # 项目根目录
@@ -1415,6 +1437,115 @@ class OptunaCoordinator:
             fixes[tf] = {'original_issues': detail}
 
         return fixes
+    
+    # ============================================================
+    # 阶段6+7：生存者偏差+系统性偏差集成方法
+    # ============================================================
+    
+    def apply_survivorship_correction_to_results(self, results: Dict) -> Dict:
+        """
+        应用生存者偏差校正到优化结果（阶段6集成）
+        
+        使用方法：
+        results = coordinator.run_complete_layered_optimization()
+        results = coordinator.apply_survivorship_correction_to_results(results)
+        
+        Args:
+            results: 优化结果字典
+            
+        Returns:
+            添加了生存者偏差校正的结果字典
+        """
+        if not HAS_SURVIVORSHIP_CORRECTION:
+            self.logger.info("ℹ️ 生存者偏差模块不可用，跳过校正")
+            return results
+        
+        self.logger.info("=" * 60)
+        self.logger.info("🔧 应用生存者偏差校正...")
+        
+        try:
+            # 从layer_results中提取收益率序列
+            layer_results = results.get('layer_results', {})
+            
+            # 尝试从不同层级提取收益率
+            returns_series = None
+            for layer_name in ['layer3_model', 'layer2_features', 'layer1_labels']:
+                layer_data = layer_results.get(layer_name, {})
+                if 'returns_series' in layer_data:
+                    returns_series = layer_data['returns_series']
+                    break
+            
+            if returns_series is None or (isinstance(returns_series, pd.Series) and returns_series.empty):
+                self.logger.warning("⚠️ 未找到收益率序列，跳过生存者偏差校正")
+                return results
+            
+            # 应用校正
+            correction_result = apply_survivorship_correction(
+                returns=returns_series,
+                symbol=self.pair,
+                timeframe=self.timeframe
+            )
+            
+            # 添加校正结果
+            results['survivorship_bias_correction'] = {
+                'raw_sharpe': correction_result['raw_sharpe'],
+                'corrected_sharpe': correction_result['corrected_sharpe'],
+                'bias_estimate': correction_result['bias_estimate'],
+                'confidence_interval_95': correction_result['confidence_interval'],
+                'bootstrap_iterations': correction_result['n_iterations'],
+                'failure_events_used': correction_result['n_failure_events']
+            }
+            
+            self.logger.info("✅ 生存者偏差校正完成")
+            self.logger.info(f"   原始Sharpe: {correction_result['raw_sharpe']:.4f}")
+            self.logger.info(f"   校正后Sharpe: {correction_result['corrected_sharpe']:.4f}")
+            self.logger.info(f"   偏差估计: {correction_result['bias_estimate']:.4f}")
+            
+        except Exception as e:
+            self.logger.error(f"❌ 生存者偏差校正失败: {e}")
+            self.logger.debug(traceback.format_exc())
+        
+        return results
+    
+    def check_distribution_shift_optional(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        """
+        检查训练/测试分布偏移（阶段7集成 - 可选）
+        
+        使用对抗性验证检测数据分布差异。
+        
+        使用方法（在Layer0数据清洗后）：
+        coordinator.check_distribution_shift_optional(train_features, test_features)
+        
+        Args:
+            train_data: 训练集特征
+            test_data: 测试集特征
+        """
+        if not HAS_ADVERSARIAL_VALIDATION:
+            self.logger.debug("ℹ️ 对抗性验证模块不可用")
+            return None
+        
+        self.logger.info("🔍 执行对抗性验证检查...")
+        
+        try:
+            result = quick_adversarial_check(train_data, test_data)
+            
+            auc = result['cv_auc_mean']
+            shift = result['distribution_shift']
+            
+            self.logger.info(f"   AUC: {auc:.4f}, 分布偏移: {shift}")
+            
+            if auc > 0.70:
+                self.logger.warning("⚠️ 检测到显著的分布偏移，建议检查数据划分")
+            elif auc > 0.60:
+                self.logger.info("ℹ️ 检测到轻度分布偏移")
+            else:
+                self.logger.info("✅ 训练/测试分布相似")
+            
+            return result
+            
+        except Exception as e:
+            self.logger.warning(f"⚠️ 对抗性验证失败: {e}")
+            return None
 
 
 def main():
