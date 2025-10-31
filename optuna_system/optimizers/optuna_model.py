@@ -2,6 +2,11 @@
 """
 模型超參數優化器 (第3層) - 多模型集成版本
 分別優化LightGBM、XGBoost、CatBoost並保存所有預測結果
+
+阶段A修复：集成Financial-First目标函数
+- 从ML主导(90%)转向金融主导(98%)
+- Sharpe从8%提升到40%
+- F1从40%降低到2%
 """
 import json
 import logging
@@ -17,6 +22,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.model_selection import TimeSeriesSplit
 
 from optuna_system.utils.io_utils import read_dataframe
+from optuna_system.utils.financial_objectives import FinancialFirstObjective
 
 try:
     import xgboost as xgb
@@ -142,10 +148,17 @@ class ModelOptimizer:
             return pd.DataFrame(), pd.Series(), None
 
     def suggest_model_params(self, trial: optuna.Trial, model_type: str) -> Dict:
-        """為指定模型類型生成超參數"""
+        """
+        為指定模型類型生成超參數
+        
+        阶段B修复：扩展参数搜索范围（针对15分钟crypto交易优化）
+        - max_depth: 3-10 → 6-15 (更深的树捕捉复杂模式)
+        - learning_rate: 0.03-0.1 → 0.01-0.15 (更大的探索空间)
+        """
 
         if model_type == 'lightgbm':
-            max_depth = trial.suggest_int('max_depth', 3, 10)
+            # 阶段B：扩展max_depth范围（3-10 → 6-15）
+            max_depth = trial.suggest_int('max_depth', 6, 15)
             # 動態計算 num_leaves 的上下界，避免 low > high 的無效區間
             upper_num_leaves = min((2 ** max_depth) - 1, 256)
             lower_num_leaves = 16 if upper_num_leaves >= 16 else max(2, upper_num_leaves)
@@ -161,12 +174,14 @@ class ModelOptimizer:
                     'seed': 42,
                     'num_leaves': num_leaves,
                     'max_depth': max_depth,
-                    'learning_rate': trial.suggest_float('learning_rate', 0.03, 0.1),
-                    'n_estimators': trial.suggest_int('n_estimators', 400, 1000),
+                    # 阶段B：扩展learning_rate范围（0.03-0.1 → 0.01-0.15）
+                    'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.15, log=True),
+                    'n_estimators': trial.suggest_int('n_estimators', 400, 1200),  # 阶段B：扩展上限
                     'reg_alpha': trial.suggest_float('reg_alpha', 0.0, 5.0),
                     'reg_lambda': trial.suggest_float('reg_lambda', 0.0, 5.0),
                     'feature_fraction': trial.suggest_float('feature_fraction', 0.4, 1.0),
-                    'bagging_fraction': trial.suggest_float('bagging_fraction', 0.6, 0.9),
+                    # 阶段B：crypto 24/7交易，数据充足，扩展bagging_fraction范围
+                    'bagging_fraction': trial.suggest_float('bagging_fraction', 0.7, 1.0),
                     'bagging_freq': trial.suggest_int('bagging_freq', 1, 7),
                     'min_child_samples': trial.suggest_int('min_child_samples', 10, 120),
                     'min_child_weight': trial.suggest_float('min_child_weight', 0.001, 5.0),
@@ -177,7 +192,8 @@ class ModelOptimizer:
             }
 
         elif model_type == 'xgboost' and xgb is not None:
-            max_depth = trial.suggest_int('max_depth', 3, 10)
+            # 阶段B：扩展max_depth范围（3-10 → 6-15）
+            max_depth = trial.suggest_int('max_depth', 6, 15)
             return {
                 'type': 'xgboost',
                 'params': {
@@ -186,10 +202,12 @@ class ModelOptimizer:
                     'eval_metric': 'mlogloss',
                     'tree_method': trial.suggest_categorical('tree_method', ['hist', 'approx']),
                     'max_depth': max_depth,
-                    'eta': trial.suggest_float('eta', 0.03, 0.1),
-                    'n_estimators': trial.suggest_int('n_estimators', 400, 1000),
-                    'subsample': trial.suggest_float('subsample', 0.5, 1.0),
-                    'colsample_bytree': trial.suggest_float('colsample_bytree', 0.5, 1.0),
+                    # 阶段B：扩展eta范围（0.03-0.1 → 0.01-0.15）
+                    'eta': trial.suggest_float('eta', 0.01, 0.15, log=True),
+                    'n_estimators': trial.suggest_int('n_estimators', 400, 1200),  # 阶段B：扩展上限
+                    # 阶段B：crypto 24/7交易，扩展subsample范围
+                    'subsample': trial.suggest_float('subsample', 0.7, 1.0),
+                    'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
                     'lambda': trial.suggest_float('lambda', 0.0, 5.0),
                     'alpha': trial.suggest_float('alpha', 0.0, 5.0),
                     'min_child_weight': trial.suggest_float('min_child_weight', 1, 10),
@@ -199,14 +217,16 @@ class ModelOptimizer:
             }
 
         elif model_type == 'catboost' and CatBoostClassifier is not None:
-            depth = trial.suggest_int('depth', 4, 10)
+            # 阶段B：扩展depth范围（4-10 → 6-12）
+            depth = trial.suggest_int('depth', 6, 12)
             return {
                 'type': 'catboost',
                 'params': {
                     'loss_function': 'MultiClass',
                     'eval_metric': 'TotalF1',
                     'iterations': trial.suggest_int('iterations', 500, 1500),
-                    'learning_rate': trial.suggest_float('learning_rate', 0.02, 0.3),
+                    # 阶段B：扩展learning_rate范围（0.02-0.3 → 0.01-0.3）
+                    'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
                     'depth': depth,
                     'l2_leaf_reg': trial.suggest_float('l2_leaf_reg', 1.0, 6.0),
                     'bagging_temperature': trial.suggest_float('bagging_temperature', 0.0, 5.0),
@@ -374,34 +394,45 @@ class ModelOptimizer:
         summary.update({f'{k}_std': np.std(v) if v else 0 for k, v in metrics.items()})
         summary['folds'] = len(metrics['f1_weighted'])
         
-        # Sharpe比率归一化到0-1区间
-        def normalize_sharpe(sharpe, min_val=-2.0, max_val=5.0):
-            """将Sharpe比率归一化到0-1区间"""
-            if sharpe is None or (isinstance(sharpe, float) and sharpe != sharpe):  # None或NaN
-                return 0.0
-            return max(0.0, min(1.0, (sharpe - min_val) / (max_val - min_val)))
+        # ==============================
+        # 阶段A修复：使用Financial-First目标函数（完整替代）
+        # ✅ 按MD文件计划：删除旧的ML主导(90% ML)，使用新的金融主导(98% 金融)
+        # 参考：OPTUNA_4_STAGE_FIX_PLAN.md 第62-86行
+        # ==============================
         
-        sharpe_mean = summary.get('sharpe_mean', 0)
-        normalized_sharpe = normalize_sharpe(sharpe_mean)
+        # 创建Financial-First目标函数（金融指标98%，ML指标2%）
+        objective = FinancialFirstObjective(risk_free_rate=0.02)
         
-        # 修改后的composite_score（使用归一化的Sharpe，范围0-1）
-        summary['composite_score'] = (
-            summary['f1_weighted_mean'] * 0.40 +      # 提高F1权重
-            summary['f1_macro_mean'] * 0.25 +         # 均衡性
-            summary['accuracy_mean'] * 0.10 +         # 整体准确性
-            summary['auc_macro_mean'] * 0.15 +        # 排序能力
-            normalized_sharpe * 0.08 +                # 归一化Sharpe
-            summary['win_rate_mean'] * 0.02           # 胜率
-        )
+        # 提取收益率序列和ML指标
+        returns = summary.get('returns_series', pd.Series())
+        ml_metrics = {
+            'f1_macro': summary.get('f1_macro_mean', 0),
+            'accuracy': summary.get('accuracy_mean', 0),
+            'auc_macro': summary.get('auc_macro_mean', 0)
+        }
         
-        # 保存原始和归一化的Sharpe供参考
-        summary['sharpe_raw'] = sharpe_mean
-        summary['sharpe_normalized'] = normalized_sharpe
+        # 计算Financial-First综合得分（金融主导）
+        summary['composite_score'] = objective.calculate_score(returns, ml_metrics)
+        
+        # 可选：记录组件得分（用于调试）
+        if self.logger.isEnabledFor(logging.DEBUG):
+            components = objective.get_component_scores(returns, ml_metrics)
+            self.logger.debug(f"Financial-First组件得分:")
+            self.logger.debug(f"  Sharpe组件: {components['sharpe_component']:.4f} (权重40%)")
+            self.logger.debug(f"  MaxDD组件: {components['maxdd_component']:.4f} (权重20%)")
+            self.logger.debug(f"  Calmar组件: {components['calmar_component']:.4f} (权重15%)")
+            self.logger.debug(f"  F1组件: {components['f1_component']:.4f} (权重2%)")
+            self.logger.debug(f"  金融贡献: {components['financial_contribution']:.4f} (98%)")
+            self.logger.debug(f"  ML贡献: {components['ml_contribution']:.4f} (2%)")
         
         return summary
 
     def objective(self, trial: optuna.Trial, model_type: str) -> float:
-        """Optuna目標函數 - 針對指定模型類型"""
+        """
+        Optuna目標函數 - 針對指定模型類型
+        
+        阶段C修复：动态CV参数调整（基于数据量和理论要求）
+        """
 
         try:
             # 加載數據
@@ -410,14 +441,51 @@ class ModelOptimizer:
             if len(features_df) == 0 or len(labels) == 0:
                 return -999.0
 
+            # ==============================
+            # 阶段C：动态计算CV参数范围
+            # 基于López de Prado理论和数据量
+            # ==============================
+            total_samples = len(features_df)
+            
+            # 假设label lag=17（15分钟数据的典型值）
+            # 可以根据实际配置调整
+            assumed_label_lag = 17
+            
+            # 理论最小值（以周期数计算）
+            min_embargo_periods = max(int(assumed_label_lag * 1.5), 12)
+            min_purge_periods = max(int(assumed_label_lag * 2.0), 24)
+            
+            # 转换为百分比
+            min_embargo_pct = min_embargo_periods / total_samples
+            min_purge_pct = min_purge_periods / total_samples
+            
+            # 动态范围（允许exploration，但不低于理论最小值）
+            embargo_range = (
+                max(0.01, min_embargo_pct),
+                min(0.12, min_embargo_pct * 2.5)
+            )
+            purge_range = (
+                max(0.005, min_purge_pct),
+                min(0.10, min_purge_pct * 2.0)
+            )
+            
+            # n_splits根据样本量调整
+            if total_samples < 5000:
+                n_splits_range = (3, 5)
+            elif total_samples < 10000:
+                n_splits_range = (4, 6)
+            else:
+                n_splits_range = (5, 7)
+            
             model_info = self.suggest_model_params(trial, model_type)
             cv_results = self.purged_walk_forward_cv(
                 features_df,
                 labels,
                 model_info,
-                n_splits=trial.suggest_int('n_cv_splits', 3, 5),
-                embargo_pct=trial.suggest_float('embargo_pct', 0.01, 0.05),
-                purge_pct=trial.suggest_float('purge_pct', 0.005, 0.03),
+                # 阶段C：使用动态范围
+                n_splits=trial.suggest_int('n_cv_splits', *n_splits_range),
+                embargo_pct=trial.suggest_float('embargo_pct', *embargo_range),
+                purge_pct=trial.suggest_float('purge_pct', *purge_range),
                 returns=returns_series
             )
 

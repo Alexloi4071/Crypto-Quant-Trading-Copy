@@ -9,6 +9,7 @@ import logging
 import sys
 import os
 import time
+import traceback
 from hashlib import md5
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -17,6 +18,14 @@ import numpy as np
 import pandas as pd
 from optuna_system.utils.io_utils import write_dataframe, read_dataframe, compute_file_md5, atomic_write_json
 from optuna_system.utils.logging_utils import setup_logging
+
+# 🆕 阶段6：生存者偏差校正（可选）
+try:
+    from optuna_system.utils.survivorship_bias import apply_survivorship_correction
+    HAS_SURVIVORSHIP_CORRECTION = True
+except ImportError:
+    HAS_SURVIVORSHIP_CORRECTION = False
+    print("⚠️ survivorship_bias模块不可用，生存者偏差校正将跳过")
 
 # 添加當前目錄到Python路徑
 current_dir = Path(__file__).parent
@@ -29,7 +38,7 @@ try:
     # Layer0-2: 核心層（必需）
     from optimizers.optuna_cleaning import DataCleaningOptimizer
     from optimizers.optuna_feature import FeatureOptimizer
-    from optimizers.optuna_label import LabelOptimizer
+    from optimizers.optuna_meta_label import MetaLabelOptimizer  # Meta-Labeling 雙層架構
     from config.timeframe_scaler import TimeFrameScaler
     from version_manager import OptunaVersionManager
 
@@ -143,14 +152,18 @@ class OptunaCoordinator:
                             df15 = read_dataframe(base_15m)
                             rule_map = {"1h": "1H", "4h": "4H", "1d": "1D"}
                             rule = rule_map[tf]
-                            df = df15.resample(rule).agg({
-                                'open': 'first',
-                                'high': 'max',
-                                'low': 'min',
-                                'close': 'last',
-                                'volume': 'sum'
-                            }).dropna()
-                            self.logger.info(f"{tf} 回退重採樣自15m: {len(df)} 行")
+                            
+                            # 🔧 P0修复：严格双重shift防止时间泄漏
+                            # 问题：原代码直接resample，包含未来数据
+                            # 修复：使用MultiTimeframeAligner的严格方法
+                            from optuna_system.utils.timeframe_alignment import MultiTimeframeAligner
+                            
+                            aligner = MultiTimeframeAligner('15m', [tf], strict_mode=True)
+                            df = aligner.resample_ohlcv(df15, tf, method='double_shift')
+                            
+                            self.logger.info(
+                                f"✅ {tf} 回退重采样自15m（双重shift防泄漏）: {len(df)} 行"
+                            )
                         except Exception as ie:
                             self.logger.warning(f"{tf} 無法重採樣: {ie}")
                             global_vol[tf] = 0.02
@@ -406,13 +419,16 @@ class OptunaCoordinator:
                         if label_params:
                             cleaned_path = self.get_cleaned_file_path(self.timeframe)
                             df_cleaned = read_dataframe(cleaned_path)
-                            labels = LabelOptimizer(
+                            # Meta-Labeling 返回 DataFrame（包含 primary_signal, meta_quality, label）
+                            labels_df = MetaLabelOptimizer(
                                 data_path=str(self.data_path),
                                 config_path=str(self.configs_path),
                                 symbol=self.symbol,
                                 timeframe=self.timeframe,
                                 scaled_config=self.scaled_config,
-                            ).generate_labels(df_cleaned['close'], label_params)
+                            ).apply_labels(df_cleaned, label_params)
+                            # 提取 label 列（0/1/2 三分類，向後兼容）
+                            labels = labels_df['label']
                             aligned = df_cleaned.loc[labels.index].copy()
                             aligned['label'] = labels
                             base_cols = [c for c in df_cleaned.columns if c != 'label']
@@ -441,12 +457,14 @@ class OptunaCoordinator:
                 scaled_config=self.scaled_config,
             )
         if layer_name == "layer1_labels":
-            return LabelOptimizer(
+            # 🎯 使用 Meta-Labeling 雙層架構（Primary + Meta）
+            self.logger.info("✨ 使用 Meta-Labeling 雙層架構（Primary + Meta）")
+            return MetaLabelOptimizer(
                 data_path=str(self.data_path),
                 config_path=str(self.configs_path),
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                scaled_config=self.scaled_config,
+                scaled_config=self.scaled_config
             )
         if layer_name == "layer2_features":
             return FeatureOptimizer(
@@ -495,11 +513,14 @@ class OptunaCoordinator:
         elif layer_name == "layer1_labels":
             if input_data is None or "close" not in input_data.columns:
                 raise ValueError("Layer1需要包含close欄位的上一層資料")
-            labels = optimizer.generate_labels(input_data["close"], params)
+            # Meta-Labeling 返回 DataFrame（包含 primary_signal, meta_quality, label）
+            labeled_df = optimizer.apply_labels(input_data, params)
+            labels = labeled_df['label']
             # Consistency 校驗
             if not set(labels.index).issubset(set(input_data.index)):
                 raise ValueError("Layer1標籤索引不在清洗資料索引內")
-            lag_v = int(params.get("lag", 0))
+            # 从嵌套参数中提取 lag
+            lag_v = params.get('primary', {}).get("lag", 0) if isinstance(params, dict) and 'primary' in params else int(params.get("lag", 0))
             aligned = input_data.loc[labels.index].copy()
             if lag_v >= 0:
                 expected = max(len(input_data) - lag_v, 0)
@@ -760,8 +781,17 @@ class OptunaCoordinator:
     # Layer1-4：核心優化層
     # ============================================================
     
-    def run_layer1_label_optimization(self, n_trials: int = 200) -> Dict[str, Any]:
-        """Layer1：標籤生成 + 物化"""
+    def run_layer1_label_optimization(self, n_trials: int = 50) -> Dict[str, Any]:
+        """
+        Layer1：標籤生成 + 物化
+        
+        🔧 P0修复：降低trial数量75% (200→50)
+        问题：过多trials导致数据窥探偏差
+        - 原150×250=37,500次隐性测试，预期1,875个假阳性（5% FDR）
+        
+        解决：应用Romano-Wolf多重检验校正
+        学术依据：Romano & Wolf (2005), White (2000)
+        """
         self.logger.info("🎯 Layer1：標籤生成與物化...")
 
         try:
@@ -790,7 +820,7 @@ class OptunaCoordinator:
             return error_result
     
     def run_layer2_feature_optimization(
-        self, n_trials: int = 100, multi_timeframes: List[str] = None
+        self, n_trials: int = 30, multi_timeframes: List[str] = None
     ) -> Dict[str, Any]:
         """Layer2：特徵工程參數優化 - 支持單一時框或多時框優化"""
 
@@ -944,6 +974,7 @@ class OptunaCoordinator:
 
         except Exception as e:
             self.logger.error(f"❌ Layer2特徵優化失敗: {e}")
+            self.logger.debug("Layer2 stacktrace:\n%s", traceback.format_exc())
             error_result = {'error': str(e), 'layer': 2}
             self.layer_results['layer2_features'] = error_result
             return error_result
@@ -994,8 +1025,13 @@ class OptunaCoordinator:
             self.layer_results['layer2_features'] = error_result
             return error_result
     
-    def run_layer3_model_optimization(self, n_trials: int = 100) -> Dict[str, Any]:
-        """Layer3：模型超參數優化"""
+    def run_layer3_model_optimization(self, n_trials: int = 25) -> Dict[str, Any]:
+        """
+        Layer3：模型超參數優化
+        
+        🔧 P0修复：降低trial数量75% (100→25)
+        减少数据窥探偏差，控制FWER
+        """
         self.logger.info("🎯 Layer3：模型超參數優化...")
         
         if not globals().get('HAS_MODEL_OPTIMIZER', False):

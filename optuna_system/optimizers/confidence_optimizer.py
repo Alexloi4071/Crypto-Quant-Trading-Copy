@@ -23,8 +23,7 @@ class ConfidenceOptimizer:
         self.config_path = Path(config_path)
         self.config_path.mkdir(exist_ok=True)
 
-        # 設置日誌
-        logging.basicConfig(level=logging.INFO)
+        # 使用集中日誌 (由上層/入口初始化)，避免重複 basicConfig
         self.logger = logging.getLogger(__name__)
 
     def calculate_rolling_volatility(self, prices: pd.Series, window: int = 20) -> pd.Series:

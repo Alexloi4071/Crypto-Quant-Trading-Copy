@@ -1,1 +1,0 @@
-2025-09-22 11:06:13 | [31mERROR[0m | src.optimization.btcusdt_15m_optuna_optimizer:plot_optimization_history:642 | 繪製優化歷史失敗: plot_optimization_history() got an unexpected keyword argument 'ax'

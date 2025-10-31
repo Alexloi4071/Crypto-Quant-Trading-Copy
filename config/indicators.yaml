@@ -386,3 +386,67 @@ optimization:
   
   optimization_metric: "sharpe_ratio"  # sharpe_ratio, max_drawdown, total_return
   lookback_period: 252  # 優化用的歷史數據天數
+
+# ==================== 🔧 P1新增：多時框策略配置 ====================
+# 基於「15m交易，1h參考」設計理念
+multi_timeframe_strategy:
+  enabled: true
+  use_reference_only: true  # 高時框僅作為參考（不生成完整技術指標）
+  
+  timeframes:
+    15m:  # 當前時框 = 主要交易信號
+      type: main
+      role: "PRIMARY_TRADING_SIGNALS"
+      target_feature_ratio: 0.80  # 目標80%的最終選擇特徵
+      features:
+        - full_technical_indicators  # 完整技術指標集
+        - rsi
+        - macd
+        - bollinger_bands
+        - atr
+        - volume_indicators
+        - stochastic
+        - momentum
+        - price_action
+      max_features: 200  # 允許生成的最大特徵數
+      
+    1h:  # 高時框 = 大環境參考
+      type: reference
+      role: "MACRO_ENVIRONMENT_REFERENCE"
+      target_feature_ratio: 0.15  # 目標10-15%的最終選擇特徵
+      features:
+        - trend_direction  # 僅趨勢方向
+        - ema_20
+        - ema_50
+        - support_resistance
+        - price_ema_ratio
+      max_features: 10  # 嚴格限制特徵數量
+      prohibited_features:  # 禁止生成的指標（太滯後）
+        - rsi
+        - macd
+        - bollinger_bands
+        - stochastic
+        - momentum_oscillators
+        
+    4h:  # 超高時框 = 超大趨勢（可選）
+      type: reference
+      role: "SUPER_TREND_OPTIONAL"
+      target_feature_ratio: 0.05  # 目標<5%的最終選擇特徵
+      features:
+        - trend_direction  # 僅趨勢方向
+      max_features: 5
+      prohibited_features:
+        - all_technical_indicators  # 禁止所有技術指標
+  
+  # 特徵選擇約束
+  feature_selection_constraints:
+    min_native_ratio: 0.50  # Layer2粗選階段：至少50%來自原生15m
+    final_native_ratio: 0.80  # Layer2最終：至少80%來自原生15m
+    max_reference_ratio: 0.20  # 參考時框最多佔20%
+    
+  # 對齊策略（防止時間洩漏）
+  alignment_strategy:
+    use_strict_shift: true  # 使用嚴格shift防護
+    double_shift: true  # 雙重shift（resample + align）
+    purged_cv: true  # 使用Purged CV
+    embargo_pct: 0.02  # 2% embargo

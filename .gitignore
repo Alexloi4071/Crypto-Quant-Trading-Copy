@@ -1,2 +1,39 @@
 __pycache__/
 *.md
+
+# 数据文件
+data/processed/
+data/*.parquet
+data/*.csv
+
+# 日志文件
+*.log
+logs/
+
+# 运行时配置（这些是优化过程生成的，不应提交）
+optuna_system/configs/*.json
+optuna_system/configs/*.parquet
+optuna_system/configs/*.backup
+
+# 优化结果（不应提交，太大且经常变）
+optuna_system/results/
+results/
+
+# 临时测试文件
+test_*.py
+quick_test.py
+*_output.log
+*_output.txt
+
+# Python
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

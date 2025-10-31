@@ -35,6 +35,16 @@ class EnsembleOptimizer:
         # 支持的模型類型（完整5模型方案）
         self.supported_models = ['lgb', 'xgb', 'catboost', 'rf', 'et']
         self.weight_update_freq = 252  # 1 week for 15m
+        
+        # 添加版本管理
+        latest_file = Path("optuna_system/results/latest.txt")
+        if latest_file.exists():
+            try:
+                self.version = latest_file.read_text(encoding='utf-8').strip()
+            except Exception:
+                self.version = "v1"
+        else:
+            self.version = "v1"
 
     def load_real_predictions(self):
         """Load real model predictions from Layer3"""

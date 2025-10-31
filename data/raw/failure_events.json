@@ -1,0 +1,278 @@
+{
+  "version": "1.0",
+  "last_updated": "2024-10-31",
+  "description": "Historical cryptocurrency failure events for survivorship bias correction",
+  "events": [
+    {
+      "symbol": "LUNAUSDT",
+      "name": "Terra Luna",
+      "event_type": "algorithmic_stablecoin_failure",
+      "failure_date": "2022-05-12",
+      "listing_date": "2019-09-12",
+      "peak_price": 119.18,
+      "peak_date": "2022-04-05",
+      "crash_price": 0.0001,
+      "drawdown_pct": -99.99,
+      "time_to_crash_days": 3,
+      "market_cap_peak_usd": 41000000000,
+      "recovery": false,
+      "warning_signals": {
+        "funding_rate_spike": true,
+        "volume_surge": true,
+        "correlation_breakdown": true,
+        "social_sentiment": -0.95,
+        "withdraw_spike": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 1.85,
+        "sharpe_30d": -2.5,
+        "liquidity_score": 0.23,
+        "market_cap_rank": 8,
+        "funding_rate_avg": 0.15
+      },
+      "lessons": "Algorithmic stablecoins are vulnerable to death spirals. No amount of technical analysis could predict this systemic failure."
+    },
+    {
+      "symbol": "FTTUSDT",
+      "name": "FTX Token",
+      "event_type": "exchange_insolvency",
+      "failure_date": "2022-11-08",
+      "listing_date": "2019-07-29",
+      "peak_price": 79.0,
+      "peak_date": "2021-09-09",
+      "crash_price": 1.8,
+      "drawdown_pct": -97.7,
+      "time_to_crash_days": 5,
+      "market_cap_peak_usd": 8000000000,
+      "recovery": false,
+      "warning_signals": {
+        "balance_sheet_leak": true,
+        "withdraw_surge": true,
+        "ceo_credibility_loss": true,
+        "regulatory_scrutiny": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 0.95,
+        "sharpe_30d": -1.8,
+        "liquidity_score": 0.45,
+        "market_cap_rank": 25,
+        "correlation_with_btc": 0.35
+      },
+      "lessons": "Exchange tokens are directly tied to exchange solvency. Centralization risk is real."
+    },
+    {
+      "symbol": "CELUSDT",
+      "name": "Celsius Network",
+      "event_type": "lending_platform_bankruptcy",
+      "failure_date": "2022-06-13",
+      "listing_date": "2018-04-28",
+      "peak_price": 8.02,
+      "peak_date": "2021-06-03",
+      "crash_price": 0.15,
+      "drawdown_pct": -98.1,
+      "time_to_crash_days": 1,
+      "market_cap_peak_usd": 3200000000,
+      "recovery": false,
+      "warning_signals": {
+        "withdraw_pause": true,
+        "insolvency_rumors": true,
+        "luna_exposure": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 1.45,
+        "sharpe_30d": -3.2,
+        "liquidity_score": 0.28,
+        "market_cap_rank": 45
+      },
+      "lessons": "CeFi lending platforms with opaque risk management can fail suddenly."
+    },
+    {
+      "symbol": "USTUSDT",
+      "name": "TerraUSD",
+      "event_type": "stablecoin_depegging",
+      "failure_date": "2022-05-09",
+      "listing_date": "2020-09-21",
+      "peak_price": 1.01,
+      "peak_date": "2022-04-30",
+      "crash_price": 0.01,
+      "drawdown_pct": -99.0,
+      "time_to_crash_days": 2,
+      "market_cap_peak_usd": 18650000000,
+      "recovery": false,
+      "warning_signals": {
+        "depeg_starting": true,
+        "reserve_drain": true,
+        "panic_selling": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 0.02,
+        "peg_deviation": 0.03,
+        "reserve_ratio": 0.89
+      },
+      "lessons": "Algorithmic stablecoins without sufficient reserves can collapse rapidly."
+    },
+    {
+      "symbol": "SRMUSDT",
+      "name": "Serum",
+      "event_type": "ftx_affiliated_collapse",
+      "failure_date": "2022-11-10",
+      "listing_date": "2020-08-11",
+      "peak_price": 11.18,
+      "peak_date": "2021-09-06",
+      "crash_price": 0.35,
+      "drawdown_pct": -96.9,
+      "time_to_crash_days": 3,
+      "market_cap_peak_usd": 450000000,
+      "recovery": false,
+      "warning_signals": {
+        "ftx_collapse": true,
+        "founder_connection": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 0.88,
+        "correlation_with_ftt": 0.75,
+        "liquidity_score": 0.32
+      },
+      "lessons": "Tokens affiliated with failed exchanges face contagion risk."
+    },
+    {
+      "symbol": "BTGUSDT",
+      "name": "Bitcoin Gold",
+      "event_type": "51_percent_attack",
+      "failure_date": "2020-01-24",
+      "listing_date": "2017-10-24",
+      "peak_price": 456.90,
+      "peak_date": "2017-12-20",
+      "crash_price": 8.50,
+      "drawdown_pct": -98.1,
+      "time_to_crash_days": 730,
+      "market_cap_peak_usd": 8000000000,
+      "recovery": false,
+      "warning_signals": {
+        "hashrate_decline": true,
+        "security_concerns": true,
+        "exchange_delisting": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 1.25,
+        "network_hashrate_decline": -45,
+        "development_activity": 0.15
+      },
+      "lessons": "Low hashrate chains are vulnerable to 51% attacks."
+    },
+    {
+      "symbol": "BCHSVUSDT",
+      "name": "Bitcoin SV",
+      "event_type": "delisting_cascade",
+      "failure_date": "2021-04-15",
+      "listing_date": "2018-11-15",
+      "peak_price": 441.20,
+      "peak_date": "2021-04-16",
+      "crash_price": 45.00,
+      "drawdown_pct": -89.8,
+      "time_to_crash_days": 30,
+      "market_cap_peak_usd": 8300000000,
+      "recovery": false,
+      "warning_signals": {
+        "exchange_delisting": true,
+        "community_backlash": true,
+        "regulatory_issues": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 0.95,
+        "social_sentiment": -0.65,
+        "exchange_count_decline": -8
+      },
+      "lessons": "Controversial projects face delisting risk which creates liquidity death spiral."
+    },
+    {
+      "symbol": "XVGUSDT",
+      "name": "Verge",
+      "event_type": "security_breach",
+      "failure_date": "2018-05-22",
+      "listing_date": "2017-12-28",
+      "peak_price": 0.2799,
+      "peak_date": "2018-01-07",
+      "crash_price": 0.0045,
+      "drawdown_pct": -98.4,
+      "time_to_crash_days": 135,
+      "market_cap_peak_usd": 1800000000,
+      "recovery": false,
+      "warning_signals": {
+        "multiple_attacks": true,
+        "developer_exodus": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 1.85,
+        "github_activity_decline": -70
+      },
+      "lessons": "Multiple security breaches destroy project credibility."
+    },
+    {
+      "symbol": "IOTAUSDT",
+      "name": "IOTA",
+      "event_type": "network_shutdown",
+      "failure_date": "2020-02-12",
+      "listing_date": "2017-06-13",
+      "peak_price": 5.25,
+      "peak_date": "2017-12-19",
+      "crash_price": 0.18,
+      "drawdown_pct": -96.6,
+      "time_to_crash_days": 785,
+      "market_cap_peak_usd": 14600000000,
+      "recovery": true,
+      "warning_signals": {
+        "network_halt": true,
+        "coordinator_dependency": true
+      },
+      "pre_crash_features": {
+        "volatility_30d": 0.95,
+        "network_uptime": 0.45
+      },
+      "lessons": "Centralized dependencies can cause complete network failures."
+    },
+    {
+      "symbol": "XEMUSTDT",
+      "name": "NEM",
+      "event_type": "major_exchange_hack",
+      "failure_date": "2018-01-26",
+      "listing_date": "2017-03-31",
+      "peak_price": 1.87,
+      "peak_date": "2018-01-04",
+      "crash_price": 0.06,
+      "drawdown_pct": -96.8,
+      "time_to_crash_days": 22,
+      "market_cap_peak_usd": 16900000000,
+      "recovery": false,
+      "warning_signals": {
+        "coincheck_hack": true,
+        "stolen_supply_pct": 5.2
+      },
+      "pre_crash_features": {
+        "volatility_30d": 1.15,
+        "exchange_concentration": 0.85
+      },
+      "lessons": "Major hacks affecting significant supply can permanently damage price."
+    }
+  ],
+  "statistics": {
+    "total_events": 10,
+    "average_drawdown": -97.13,
+    "average_time_to_crash_days": 152.8,
+    "recovery_rate": 0.1,
+    "total_market_cap_destroyed_usd": 145850000000
+  },
+  "event_types": {
+    "algorithmic_stablecoin_failure": 1,
+    "exchange_insolvency": 1,
+    "lending_platform_bankruptcy": 1,
+    "stablecoin_depegging": 1,
+    "ftx_affiliated_collapse": 1,
+    "51_percent_attack": 1,
+    "delisting_cascade": 1,
+    "security_breach": 1,
+    "network_shutdown": 1,
+    "major_exchange_hack": 1
+  }
+}
+

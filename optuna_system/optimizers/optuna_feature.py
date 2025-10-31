@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import time
+import traceback
 import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -35,6 +36,11 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from config.timeframe_scaler import TimeFrameScaler
 from optuna_system.utils.io_utils import write_dataframe, read_dataframe
+from optuna_system.utils.time_integrity import (
+    EnhancedPurgedKFold, 
+    TimeLeakageDetector, 
+    validate_lag_alignment
+)
 
 warnings.filterwarnings('ignore')
 
@@ -153,6 +159,10 @@ class FeatureOptimizer:
         self.flags = self._validate_flags(self._load_feature_flags())
         self.phase_config: Dict[str, Any] = {}
         self.selection_params: Dict[str, Any] = {}
+        
+        # 🔧 Purged CV配置（防止時間洩漏）
+        self.enable_purged_cv = self.scaled_config.get('enable_purged_cv', True)
+        self.embargo_pct = self.scaled_config.get('embargo_pct', 0.02)  # 2% embargo
 
         # 🚀 修復版：完整數據預加載與缓存（支援 lazy/full 模式）
         self.logger.info("🚀 預加載與缓存OHLCV、特徵、價格序列...")
@@ -392,11 +402,14 @@ class FeatureOptimizer:
 
         idx = X.index
         price_series = self.close_prices.reindex(idx).ffill()
-        returns = price_series.pct_change().shift(-1)
+        # 🔧 FIX: Remove shift(-1) to avoid using future returns
+        # Use current period returns (already known at decision time)
+        returns = price_series.pct_change()
         returns = returns.reindex(idx).fillna(0.0)
 
         positions = pd.Series(preds - 1, index=idx)
-        strategy_returns = (positions * returns).astype(float)
+        # Strategy returns aligned properly: position决定时已知的收益
+        strategy_returns = (positions.shift(1) * returns).astype(float)
         strategy_returns = strategy_returns.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
         periods_per_year = self._periods_per_year()
@@ -595,13 +608,13 @@ class FeatureOptimizer:
             if analysis.get('pass', True):
                 return None
             self.logger.info("觸發Layer1重新優化（自動）...")
-            from optuna_system.optimizers.optuna_label import LabelOptimizer  # lazy import
-            opt = LabelOptimizer(
+            from optuna_system.optimizers.optuna_meta_label import MetaLabelOptimizer  # lazy import
+            opt = MetaLabelOptimizer(
                 data_path=str(self.data_path),
                 config_path=str(self.config_path),
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                scaled_config=self.scaled_config,
+                scaled_config=self.scaled_config or {},
             )
             # 適度提高 trials
             result = opt.optimize(n_trials=200)
@@ -631,18 +644,30 @@ class FeatureOptimizer:
         return mapping.get(tf, [])
 
     def _safe_merge(self, base: pd.DataFrame, extra: Optional[pd.DataFrame], prefix: str = "") -> pd.DataFrame:
+        """
+        🔧 P0修復：嚴格對齊，防止時間洩漏
+        
+        修復邏輯：
+        1. extra可能來自更高時框，先shift(1)
+        2. 再resample和reindex對齊
+        3. 只用ffill，禁用bfill
+        """
         if extra is None or extra.empty:
             return base
         # 嚴格對齊：先將輔助特徵 resample 至基準索引頻率，再對齊到基準索引
         extra_prefixed = extra.add_prefix(prefix)
         try:
             extra_resampled = self._resample_like(base.index, extra_prefixed)
-            extra_aligned = extra_resampled.reindex(base.index).ffill()
+            # 🔧 關鍵修復：shift(1)防止洩漏
+            extra_shifted = extra_resampled.shift(1)
+            extra_aligned = extra_shifted.reindex(base.index, method='ffill')
         except Exception:
             # 如果轉頻/對齊異常，退化為簡單對齊以確保不中斷
-            extra_aligned = extra_prefixed.reindex(base.index).ffill()
+            # 🔧 關鍵修復：shift(1)防止洩漏
+            extra_shifted = extra_prefixed.shift(1)
+            extra_aligned = extra_shifted.reindex(base.index, method='ffill')
         merged = pd.concat([base, extra_aligned], axis=1)
-        # Remove backward fill to avoid any backward-looking leakage
+        # 禁用bfill，只用ffill+fillna(0)
         return merged.replace([np.inf, -np.inf], np.nan).ffill().fillna(0)
 
     def _infer_rule_from_index(self, idx: pd.DatetimeIndex) -> str:
@@ -1250,6 +1275,305 @@ class FeatureOptimizer:
             self.logger.error(f"數據加載失敗: {e}")
             raise  # 🚀 Fail-Fast: 關鍵錯誤直接拋出
 
+    # ============================================================
+    # 多時框趨勢對齊功能（方法2: reindex + ffill）
+    # ============================================================
+    
+    def _load_higher_timeframe_data(self, higher_timeframe: str = '1h') -> Optional[pd.DataFrame]:
+        """
+        載入更高時框的 OHLCV 數據（用於多時框趨勢對齊）
+        
+        Args:
+            higher_timeframe: 更高的時間框架（如 '1h', '4h'）
+            
+        Returns:
+            更高時框的 OHLCV DataFrame，如果載入失敗則返回 None
+        """
+        try:
+            # 1. 優先從 processed/cleaned 載入
+            processed_dir = self.data_path / "processed" / "cleaned" / f"{self.symbol}_{higher_timeframe}"
+            if processed_dir.exists():
+                candidates = list(processed_dir.glob("cleaned_ohlcv*.parquet")) + \
+                             list(processed_dir.glob("cleaned_ohlcv*.pkl"))
+                if candidates:
+                    latest = max(candidates, key=lambda p: p.stat().st_mtime)
+                    self.logger.info(f"🔍 載入 {higher_timeframe} 清洗數據: {latest.name}")
+                    return read_dataframe(latest)
+            
+            # 2. 回退到 raw 數據
+            raw_file = self.data_path / "raw" / self.symbol / f"{self.symbol}_{higher_timeframe}_ohlcv.parquet"
+            if raw_file.exists():
+                self.logger.info(f"🔍 載入 {higher_timeframe} 原始數據: {raw_file.name}")
+                return read_dataframe(raw_file)
+            
+            self.logger.warning(f"⚠️ 未找到 {higher_timeframe} 數據")
+            return None
+            
+        except Exception as e:
+            self.logger.warning(f"❌ 載入 {higher_timeframe} 數據失敗: {e}")
+            return None
+
+    def _calculate_higher_timeframe_trend(self, df_higher: pd.DataFrame) -> pd.Series:
+        """
+        計算更高時框的趨勢方向
+        
+        使用多個指標綜合判斷趨勢：
+        - EMA 20/50 交叉
+        - MACD 方向
+        
+        Args:
+            df_higher: 更高時框的 OHLCV DataFrame
+            
+        Returns:
+            趨勢信號 Series (1=買入趨勢, 0=中性, -1=賣出趨勢)
+        """
+        try:
+            # 計算 EMA
+            ema_20 = df_higher['close'].ewm(span=20, adjust=False).mean()
+            ema_50 = df_higher['close'].ewm(span=50, adjust=False).mean()
+            
+            # 計算 MACD
+            ema_12 = df_higher['close'].ewm(span=12, adjust=False).mean()
+            ema_26 = df_higher['close'].ewm(span=26, adjust=False).mean()
+            macd = ema_12 - ema_26
+            signal = macd.ewm(span=9, adjust=False).mean()
+            
+            # 初始化趨勢信號
+            trend = pd.Series(0, index=df_higher.index)
+            
+            # 買入趨勢條件：EMA20 > EMA50 AND MACD > Signal
+            buy_condition = (ema_20 > ema_50) & (macd > signal)
+            trend[buy_condition] = 1
+            
+            # 賣出趨勢條件：EMA20 < EMA50 AND MACD < Signal
+            sell_condition = (ema_20 < ema_50) & (macd < signal)
+            trend[sell_condition] = -1
+            
+            buy_pct = sum(trend == 1) / len(trend) * 100
+            neutral_pct = sum(trend == 0) / len(trend) * 100
+            sell_pct = sum(trend == -1) / len(trend) * 100
+            
+            self.logger.info(
+                f"✅ 趨勢分佈: 買入={buy_pct:.1f}%, 中性={neutral_pct:.1f}%, 賣出={sell_pct:.1f}%"
+            )
+            
+            return trend
+            
+        except Exception as e:
+            self.logger.warning(f"❌ 計算趨勢失敗: {e}")
+            return pd.Series(0, index=df_higher.index)
+
+    def _align_higher_timeframe_to_current(
+        self, 
+        current_index: pd.DatetimeIndex,
+        higher_tf_series: pd.Series
+    ) -> pd.Series:
+        """
+        🔧 P0修復：嚴格前向對齊，防止未完成bar的數據洩漏
+        
+        修復邏輯：
+        1. 先shift(1) higher_tf數據 → 只用已完成的大bar
+        2. 再reindex+ffill到當前時框
+        3. 禁用backward fill
+        
+        示例（15m使用1h數據，當前時間09:45）：
+        錯誤: 使用09:00-10:00的1h bar（未完成）❌
+        正確: 使用08:00-09:00的1h bar（已完成）✅
+        
+        Args:
+            current_index: 當前時框的時間索引（如 15m）
+            higher_tf_series: 更高時框的數據 Series（如 1h 趨勢）
+            
+        Returns:
+            對齊到當前時框的 Series
+        """
+        try:
+            # 🔧 關鍵修復：額外shift(1)確保只用已完成的bar
+            higher_tf_shifted = higher_tf_series.shift(1)
+            
+            # 使用 reindex + ffill 對齊
+            aligned = higher_tf_shifted.reindex(current_index, method='ffill')
+            
+            # 處理開頭的 NaN（用0填充，不用bfill避免反向洩漏）
+            aligned = aligned.fillna(0)
+            
+            self.logger.info(
+                f"✅ 嚴格前向對齊: {len(higher_tf_series)} → {len(aligned)} "
+                f"(已shift防洩漏)"
+            )
+            
+            return aligned
+            
+        except Exception as e:
+            self.logger.warning(f"❌ 時框對齊失敗: {e}")
+            return pd.Series(0, index=current_index)
+
+    def _build_reference_timeframe_features(
+        self, 
+        ohlcv_data: pd.DataFrame,
+        higher_tf: str = '1h'
+    ) -> pd.DataFrame:
+        """
+        🔧 P1新增：生成參考時框特徵（僅趨勢相關，不含細節技術指標）
+        
+        設計理念：
+        - 15m交易時，1h只作為"大環境參考"
+        - 只生成趨勢、均線、突破等宏觀信號
+        - 不生成RSI、MACD等細節指標
+        
+        Args:
+            ohlcv_data: 當前15m的OHLCV數據
+            higher_tf: 參考時框（默認1h）
+        
+        Returns:
+            DataFrame: 僅包含趨勢參考特徵（<10個）
+        """
+        features = pd.DataFrame(index=ohlcv_data.index)
+        
+        try:
+            # 1. 載入1h數據
+            df_higher = self._load_higher_timeframe_data(higher_tf)
+            if df_higher is None or df_higher.empty:
+                self.logger.warning(f"⏭️ {higher_tf}數據不可用，跳過參考特徵")
+                return features
+            
+            # 2. 只生成趨勢相關特徵（不是完整技術指標）
+            close_higher = df_higher['close']
+            high_higher = df_higher['high']
+            low_higher = df_higher['low']
+            
+            # 2.1 均線（趨勢判斷）
+            ema_20 = close_higher.ewm(span=20, adjust=False).mean()
+            ema_50 = close_higher.ewm(span=50, adjust=False).mean()
+            
+            # 2.2 趨勢方向（簡化版）
+            trend = pd.Series(0, index=df_higher.index)
+            trend[ema_20 > ema_50] = 1  # 上升趨勢
+            trend[ema_20 < ema_50] = -1  # 下降趨勢
+            
+            # 2.3 價格相對均線位置（判斷超買超賣）
+            price_ema20_ratio = close_higher / (ema_20 + 1e-9)
+            price_ema50_ratio = close_higher / (ema_50 + 1e-9)
+            
+            # 2.4 支撐阻力
+            resistance = high_higher.rolling(20).max()
+            support = low_higher.rolling(20).min()
+            
+            # 3. 對齊到15m（嚴格shift防洩漏）
+            features[f'{higher_tf}_trend'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, trend
+            )
+            features[f'{higher_tf}_ema20'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, ema_20
+            )
+            features[f'{higher_tf}_ema50'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, ema_50
+            )
+            features[f'{higher_tf}_price_ema20_ratio'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, price_ema20_ratio
+            )
+            features[f'{higher_tf}_price_ema50_ratio'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, price_ema50_ratio
+            )
+            features[f'{higher_tf}_resistance'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, resistance
+            )
+            features[f'{higher_tf}_support'] = self._align_higher_timeframe_to_current(
+                ohlcv_data.index, support
+            )
+            
+            self.logger.info(
+                f"✅ {higher_tf}參考特徵: {len(features.columns)}個 "
+                f"(僅趨勢相關，無細節指標)"
+            )
+            
+            return features
+            
+        except Exception as e:
+            self.logger.warning(f"❌ {higher_tf}參考特徵生成失敗: {e}")
+            return features
+
+    def _add_multi_timeframe_trend_features(
+        self, 
+        ohlcv_data: pd.DataFrame,
+        higher_timeframes: List[str] = None
+    ) -> pd.DataFrame:
+        """
+        添加多時框趨勢特徵到當前時框
+        
+        Args:
+            ohlcv_data: 當前時框的 OHLCV 數據
+            higher_timeframes: 要添加的更高時框列表（默認 ['1h', '4h']）
+            
+        Returns:
+            包含多時框趨勢特徵的 DataFrame
+        """
+        if higher_timeframes is None:
+            # 根據當前時框智能選擇
+            if self.timeframe in ['15m', '15']:
+                higher_timeframes = ['1h', '4h']
+            elif self.timeframe in ['1h', '1H']:
+                higher_timeframes = ['4h', '1d']
+            else:
+                higher_timeframes = ['1h']
+        
+        trend_features = pd.DataFrame(index=ohlcv_data.index)
+        
+        for htf in higher_timeframes:
+            try:
+                # 1. 載入更高時框數據
+                df_higher = self._load_higher_timeframe_data(htf)
+                if df_higher is None or df_higher.empty:
+                    self.logger.warning(f"⏭️ 跳過 {htf} 趨勢特徵（數據不可用）")
+                    continue
+                
+                # 2. 計算趨勢方向
+                trend = self._calculate_higher_timeframe_trend(df_higher)
+                
+                # 3. 對齊到當前時框（使用 reindex + ffill）
+                trend.name = f'trend_{htf}'
+                aligned_trend = self._align_higher_timeframe_to_current(
+                    ohlcv_data.index,
+                    trend
+                )
+                
+                # 4. 添加到特徵集
+                trend_features[f'trend_{htf}'] = aligned_trend
+                
+                # 5. 可選：添加更多高時框特徵（如 EMA 等）
+                try:
+                    ema_20 = df_higher['close'].ewm(span=20).mean()
+                    ema_50 = df_higher['close'].ewm(span=50).mean()
+                    
+                    trend_features[f'{htf}_ema_20'] = self._align_higher_timeframe_to_current(
+                        ohlcv_data.index, ema_20
+                    )
+                    trend_features[f'{htf}_ema_50'] = self._align_higher_timeframe_to_current(
+                        ohlcv_data.index, ema_50
+                    )
+                    
+                    self.logger.info(f"✅ 已添加 {htf} 額外特徵: EMA20, EMA50")
+                    
+                except Exception as e:
+                    self.logger.warning(f"⚠️ 添加 {htf} 額外特徵失敗: {e}")
+                
+                self.logger.info(f"🎯 成功添加 {htf} 趨勢特徵組")
+                
+            except Exception as e:
+                self.logger.warning(f"❌ 處理 {htf} 特徵失敗: {e}")
+                continue
+        
+        if not trend_features.empty:
+            self.logger.info(f"✅ 多時框趨勢特徵總計: {len(trend_features.columns)} 個")
+        else:
+            self.logger.warning("⚠️ 未能添加任何多時框趨勢特徵")
+        
+        return trend_features
+
+    # ============================================================
+    # 原有方法
+    # ============================================================
+
     def _generate_mock_data(self) -> pd.DataFrame:
         """生成模擬OHLCV數據"""
         np.random.seed(42)
@@ -1433,6 +1757,23 @@ class FeatureOptimizer:
             except Exception as e:
                 self.logger.warning(f"⚠️ Microstructure特徵生成失敗: {e}")
         
+        # 🎯 新增：多時框趨勢對齊特徵（實現多時框一致性交易邏輯）
+        try:
+            if self.flags.get('enable_mtf_trend', True):  # 默認啟用
+                mtf_trend_features = self._add_multi_timeframe_trend_features(ohlcv_data)
+                if not mtf_trend_features.empty:
+                    all_features_list.append(mtf_trend_features)
+                    self.logger.info(
+                        f"🎯 添加 {len(mtf_trend_features.columns)} 個多時框趨勢特徵 "
+                        f"(實現 1h+15m 趨勢一致性過濾)"
+                    )
+                else:
+                    self.logger.warning("⚠️ 多時框趨勢特徵生成為空")
+            else:
+                self.logger.info("⏭️ 多時框趨勢特徵已禁用（enable_mtf_trend=False）")
+        except Exception as e:
+            self.logger.warning(f"⚠️ 多時框趨勢特徵生成失敗: {e}")
+        
         # 合併所有特徵
         X = pd.concat([f for f in all_features_list if not f.empty], axis=1)
         
@@ -1521,14 +1862,26 @@ class FeatureOptimizer:
                 }
                 freq_str = str(freq).lower()
                 freq = freq_map.get(freq_str, freq)
-                resampled = self._resample_ohlcv(ohlcv_data, freq)
-                if resampled.empty:
+                
+                # 🔧 P1修復：區分當前時框（完整指標）vs 參考時框（僅趨勢）
+                if tf_key in ['1h', '4h']:
+                    # 高時框 = 參考用途（僅生成趨勢特徵）
+                    tf_features = self._build_reference_timeframe_features(ohlcv_data, tf_key)
+                    self.logger.info(f"🎯 {tf_key} 作為參考時框（僅趨勢特徵）")
+                else:
+                    # 當前時框 = 主要交易信號（生成完整技術指標）
+                    resampled = self._resample_ohlcv(ohlcv_data, freq)
+                    if resampled.empty:
+                        continue
+                    tf_override = rule if isinstance(rule, dict) else {}
+                    tf_features = self._calc_base_indicators(resampled, tf_key, flags_tech, base_index=None, tf_overrides_override=tf_override)
+                    # 🔧 P0修復：resampled已經通過_resample_ohlcv雙重shift，這裡不需要額外shift
+                    # tf_features = tf_features.shift(1).ffill()  # ❌ 刪除（避免第三重shift）
+                    tf_features = tf_features.reindex(ohlcv_data.index, method='ffill').fillna(0)
+                    self.logger.info(f"🎯 {tf_key} 作為主要時框（完整技術指標）")
+                
+                if tf_features.empty:
                     continue
-                tf_override = rule if isinstance(rule, dict) else {}
-                tf_features = self._calc_base_indicators(resampled, tf_key, flags_tech, base_index=None, tf_overrides_override=tf_override)
-                # align slow features strictly forward-only
-                tf_features = tf_features.shift(1).ffill()
-                tf_features = tf_features.reindex(ohlcv_data.index).ffill().fillna(0)
                 base_cols = list(tf_features.columns)
                 gating_signal = None
                 if base_cols:
@@ -1850,10 +2203,22 @@ class FeatureOptimizer:
         return features
 
     def _resample_ohlcv(self, ohlcv: pd.DataFrame, rule: str) -> pd.DataFrame:
-        """重採樣 OHLCV 到更高時間框架（🔧 P0修復：添加 shift(1) 防止 Look-Ahead Bias）
+        """
+        重採樣 OHLCV 到更高時間框架（🔧 P0修復：雙重shift防止時間洩漏）
         
-        重要：使用 shift(1) 確保只使用「已完成」的 bar，避免未來數據洩漏。
-        例如：15m 時間點只能看到上一個完成的 1h bar，而不是當前未完成的 1h bar。
+        🚨 關鍵修復：雙重shift策略
+        1. 第一重：原始數據shift(1) - 確保只用過去的價格
+        2. 第二重：重採樣後shift(1) - 確保只用已完成的大bar
+        
+        為什麼需要雙重shift？
+        - 單次shift不夠：技術指標（如RSI, MACD）在計算時已經"吸收"了當期數據
+        - 雙重shift：徹底防止任何形式的未來數據洩漏
+        
+        示例（15m使用1h數據）：
+        時間: 09:45
+        錯誤: 使用09:00-10:00的1h bar（包含09:45之後的數據）❌
+        單shift: 使用08:00-09:00的1h bar（但RSI等指標可能用了09:00的close）⚠️
+        雙shift: 使用07:00-08:00的1h bar（完全隔離未來）✅
         """
         agg = {
             'open': 'first',
@@ -1863,27 +2228,114 @@ class FeatureOptimizer:
             'volume': 'sum'
         }
         try:
-            resampled = ohlcv.resample(rule).agg(agg)
+            # 🔧 第一重shift：原始數據向前偏移
+            ohlcv_shifted = ohlcv.shift(1)
             
-            # 🔧 P0修復：shift(1) 確保只使用已完成的 bar，防止 Look-Ahead Bias
-            # 未來數據洩漏示例：
-            #   錯誤：15m 09:45 使用 09:00-10:00 的 1h bar（未完成，包含未來數據）
-            #   正確：15m 09:45 使用 08:00-09:00 的 1h bar（已完成，無未來數據）
-            resampled_shifted = resampled.shift(1)
+            # 重採樣
+            resampled = ohlcv_shifted.resample(rule).agg(agg)
+            
+            # 🔧 第二重shift：重採樣結果再次向前偏移
+            resampled_double_shifted = resampled.shift(1)
             
             # 記錄時間對齊信息（僅在調試模式）
-            if len(resampled_shifted) > 0 and self.flags.get('debug_resample', False):
+            if len(resampled_double_shifted) > 0 and self.flags.get('debug_resample', False):
                 self.logger.debug(
-                    f"Resample {rule}: 原始最後時間={ohlcv.index[-1]}, "
-                    f"重採樣最後時間={resampled_shifted.index[-1]}, "
-                    f"有效數據={len(resampled_shifted.dropna())} 行"
+                    f"Resample {rule}: 雙重shift防洩漏 - "
+                    f"原始={len(ohlcv)} → 單shift={len(ohlcv_shifted)} → "
+                    f"重採樣={len(resampled)} → 最終={len(resampled_double_shifted.dropna())}"
                 )
             
-            return resampled_shifted.dropna()
+            final_data = resampled_double_shifted.dropna()
+            
+            if len(final_data) > 0:
+                self.logger.info(
+                    f"✅ {rule} 重採樣完成（雙重shift）: "
+                    f"{len(final_data)} 個有效bar，嚴格防止時間洩漏"
+                )
+            
+            return final_data
             
         except Exception as e:
             self.logger.warning(f"⚠️ 重採樣失敗 rule={rule}: {e}")
             return pd.DataFrame(columns=ohlcv.columns)
+
+    def _get_purged_cv_splits(self, n_samples: int, n_splits: int = 5) -> List[Tuple]:
+        """
+        🔧 P0新增：帶Purge和Embargo的時間序列CV分割
+        
+        基於《Advances in Financial ML》(Lopez de Prado) 的Purged K-Fold CV
+        
+        為什麼需要Purge？
+        - 標籤依賴未來數據（如lag=17，樣本i的標籤依賴t+17）
+        - 訓練集最後的樣本可能與測試集開頭的樣本在時間上重疊
+        - 導致信息洩漏，過度樂觀的CV分數
+        
+        為什麼需要Embargo？
+        - 防止同一時期的市場信息在train和test中共享
+        - 特別是高頻交易中，相鄰時間點高度相關
+        
+        Args:
+            n_samples: 總樣本數
+            n_splits: CV折數
+        
+        Returns:
+            [(train_idx, test_idx), ...] 列表
+        """
+        if not self.enable_purged_cv:
+            # 如果未啟用，使用標準TimeSeriesSplit
+            from sklearn.model_selection import TimeSeriesSplit
+            tscv = TimeSeriesSplit(n_splits=n_splits)
+            return list(tscv.split(range(n_samples)))
+        
+        from sklearn.model_selection import TimeSeriesSplit
+        
+        # 基礎時間序列分割
+        tscv = TimeSeriesSplit(n_splits=n_splits)
+        splits = []
+        
+        # 獲取lag參數（從配置或使用默認值）
+        lag = getattr(self, '_current_lag', self.scaled_config.get('label_lag', 17))
+        # 🔧 FIX: Enhanced embargo = max(embargo_pct, lag×2)
+        # Reference: Lopez de Prado (2018), embargo should be at least 2×lag
+        embargo_from_pct = int(n_samples * self.embargo_pct)
+        embargo_from_lag = lag * 2  # At least 2× lag
+        embargo_samples = max(embargo_from_pct, embargo_from_lag, 1)
+        
+        for train_idx, test_idx in tscv.split(range(n_samples)):
+            # 1. Purge: 移除train末尾可能與test重疊的樣本
+            #    如果train的樣本i的標籤依賴t+lag，而t+lag落入test範圍
+            #    則應該從train中移除
+            purge_start = test_idx[0] - lag
+            purge_mask = train_idx < purge_start
+            train_idx_purged = train_idx[purge_mask]
+            
+            # 2. Embargo: 移除test開頭的部分樣本
+            #    防止訓練集信息通過相鄰時間點洩漏到測試集
+            test_idx_embargoed = test_idx[embargo_samples:]
+            
+            # 驗證分割有效性
+            if len(train_idx_purged) > 100 and len(test_idx_embargoed) > 20:
+                splits.append((train_idx_purged, test_idx_embargoed))
+                self.logger.debug(
+                    f"✅ Purged CV Split: "
+                    f"Train={len(train_idx_purged)} (purged {len(train_idx)-len(train_idx_purged)}), "
+                    f"Test={len(test_idx_embargoed)} (embargoed {embargo_samples})"
+                )
+            else:
+                self.logger.warning(
+                    f"⚠️ Split太小，跳過: Train={len(train_idx_purged)}, "
+                    f"Test={len(test_idx_embargoed)}"
+                )
+        
+        if len(splits) == 0:
+            self.logger.warning("⚠️ Purged CV無有效分割，回退到標準TimeSeriesSplit")
+            return list(tscv.split(range(n_samples)))
+        
+        self.logger.info(
+            f"🔒 Purged CV: {len(splits)} 個有效splits (lag={lag}, embargo={embargo_samples})"
+        )
+        
+        return splits
 
     def calculate_comprehensive_metrics(self, y_true, y_pred, y_pred_proba=None, returns=None):
         metrics = {}
@@ -1908,7 +2360,9 @@ class FeatureOptimizer:
 
         if returns is not None:
             positions = y_pred - 1  # Simplified
-            strategy_returns = positions * returns.shift(-1)
+            # 🔧 FIX: Remove shift(-1), use proper alignment
+            # Position taken at t based on signal, realized at t+1
+            strategy_returns = pd.Series(positions).shift(1) * returns
             metrics['strategy_return'] = np.sum(strategy_returns.dropna())
             std = np.std(strategy_returns.dropna())
             metrics['sharpe'] = np.mean(strategy_returns.dropna()) / std * np.sqrt(252) if std > 0 else 0
@@ -1929,11 +2383,12 @@ class FeatureOptimizer:
 
             # 計算交易收益 - 修復numpy數組索引問題
             positions = pd.Series((predictions - 1), index=y.index)  # 轉換為 {-1, 0, 1} Series
-            returns = prices.pct_change().shift(-1)  # 下一期收益
+            # 🔧 FIX: Remove shift(-1) - use current period returns
+            returns = prices.pct_change()  # 當期收益（已知）
 
-            # 對齊數據
+            # 對齊數據 - position在t時決定，在t+1時實現
             common_idx = positions.index.intersection(returns.index)
-            positions_aligned = positions.reindex(common_idx)
+            positions_aligned = positions.shift(1).reindex(common_idx)
             returns_aligned = returns.reindex(common_idx)
 
             # 計算策略收益
@@ -2194,7 +2649,9 @@ class FeatureOptimizer:
         """🚀 123.md建議：參數化標籤生成 + 性能約束的目標函數"""
         try:
             # Phase 4.1: 擴展空間
-            selection_method = trial.suggest_categorical('feature_selection_method', ['stability', 'mutual_info'])
+            # 阶段D：扩展特征选择方法（从2种→5种）
+            selection_method = trial.suggest_categorical('feature_selection_method', 
+                ['stability', 'mutual_info', 'rfe', 'lasso', 'tree_based'])
             noise_reduction = trial.suggest_categorical('noise_reduction', [True, False])
             feature_interaction = trial.suggest_categorical('feature_interaction', [False, True])
             # 🚀 Fail-Fast檢查預加載數據
@@ -2372,8 +2829,10 @@ class FeatureOptimizer:
 
             current_splits = self.flags.get('cv_splits', 5)
 
-            # 🚀 使用自定義 CV 切分策略（多階段可調整 n_splits）
-            outer_cv = list(self._make_cv_splits(X, n_splits=current_splits))
+            # 🚀 P0修復：使用Purged CV（防止時間洩漏）
+            # 保存當前lag供purge使用
+            self._current_lag = lag
+            outer_cv = self._get_purged_cv_splits(n_samples=len(X), n_splits=current_splits)
             cv_scores = []
             # initialize feature aggregation to avoid NameError
             phase = 'full'
@@ -2453,18 +2912,113 @@ class FeatureOptimizer:
                             cv_scores.append(0.0)
                             continue
 
-                    cols_var_tuple = tuple(cols_var)
-                    coarse_key = (current_splits, fold_idx, tuple(X_train_var.columns), fold_coarse_k)
-                    if coarse_key in coarse_cache:
-                        cols_coarse = coarse_cache[coarse_key]
+                    # ========== 🔧 核心修复：15m特征优先选择（解决1h特征过多问题） ==========
+                    # 强制至少50%的粗选特征来自原生15m时间框架
+                    min_native_ratio = self.scaled_config.get('min_native_feature_ratio', 0.50)
+                    
+                    # 识别15m原生特征
+                    native_15m_features = [col for col in X_train_var.columns 
+                                         if col.startswith('15m_native_')]
+                    non_native_features = [col for col in X_train_var.columns 
+                                          if not col.startswith('15m_native_')]
+                    
+                    target_native_count = int(fold_coarse_k * min_native_ratio)
+                    target_native_count = min(target_native_count, len(native_15m_features))
+                    
+                    if len(native_15m_features) > 0 and target_native_count > 0:
+                        # 从15m特征中强制选择一部分
+                        from sklearn.feature_selection import SelectKBest, mutual_info_classif
+                        
+                        native_15m_k = min(target_native_count, len(native_15m_features))
+                        native_selector = SelectKBest(mutual_info_classif, k=native_15m_k)
+                        
+                        try:
+                            X_train_native = X_train_var[native_15m_features]
+                            native_selector.fit(X_train_native, y_train)
+                            forced_native_cols = X_train_native.columns[
+                                native_selector.get_support(indices=True)
+                            ].tolist()
+                            
+                            # 剩余配额从非15m特征中选择
+                            remaining_k = fold_coarse_k - len(forced_native_cols)
+                            
+                            if remaining_k > 0 and len(non_native_features) > 0:
+                                X_train_nonnative = X_train_var[non_native_features]
+                                nonnative_k = min(remaining_k, len(non_native_features))
+                                nonnative_selector = SelectKBest(mutual_info_classif, k=nonnative_k)
+                                nonnative_selector.fit(X_train_nonnative, y_train)
+                                selected_nonnative_cols = X_train_nonnative.columns[
+                                    nonnative_selector.get_support(indices=True)
+                                ].tolist()
+                                
+                                cols_coarse = forced_native_cols + selected_nonnative_cols
+                            else:
+                                cols_coarse = forced_native_cols
+                            
+                            native_ratio = len(forced_native_cols) / max(len(cols_coarse), 1)
+                            self.logger.info(
+                                f"  🎯 Fold {fold_idx+1}: 15m特征优先 - "
+                                f"15m={len(forced_native_cols)}/{len(cols_coarse)} "
+                                f"({native_ratio:.1%}), 目标≥{min_native_ratio:.0%}"
+                            )
+                        except Exception as e:
+                            self.logger.warning(f"  15m特征优先选择失败，回退到标准选择: {e}")
+                            # 回退到标准选择
+                            cols_coarse = None
                     else:
-                        coarse_selector = SelectKBest(
-                            f_classif if selection_method == 'stability' else mutual_info_classif,
-                            k=fold_coarse_k
-                        )
-                        coarse_selector.fit(X_train_var, y_train)
-                        cols_coarse = X_train_var.columns[coarse_selector.get_support(indices=True)].tolist()
-                        coarse_cache[coarse_key] = cols_coarse
+                        cols_coarse = None
+                    
+                    # 如果15m优先选择失败，使用标准选择
+                    if cols_coarse is None:
+                        cols_var_tuple = tuple(cols_var)
+                        coarse_key = (current_splits, fold_idx, tuple(X_train_var.columns), fold_coarse_k)
+                        if coarse_key in coarse_cache:
+                            cols_coarse = coarse_cache[coarse_key]
+                        else:
+                            # 阶段D：根据selection_method选择不同的特征选择器
+                            if selection_method == 'stability':
+                                score_func = f_classif
+                            elif selection_method == 'mutual_info':
+                                score_func = mutual_info_classif
+                            elif selection_method == 'rfe':
+                                # RFE (Recursive Feature Elimination)
+                                from sklearn.feature_selection import RFE
+                                from sklearn.ensemble import GradientBoostingClassifier
+                                estimator = GradientBoostingClassifier(n_estimators=50, max_depth=3, random_state=42)
+                                rfe_selector = RFE(estimator=estimator, n_features_to_select=fold_coarse_k, step=0.1)
+                                rfe_selector.fit(X_train_var, y_train)
+                                cols_coarse = X_train_var.columns[rfe_selector.get_support(indices=True)].tolist()
+                                coarse_cache[coarse_key] = cols_coarse
+                                score_func = None  # RFE已处理，跳过SelectKBest
+                            elif selection_method == 'lasso':
+                                # LASSO-based selection
+                                from sklearn.feature_selection import SelectFromModel
+                                from sklearn.linear_model import LassoCV
+                                lasso = LassoCV(cv=3, random_state=42, max_iter=500)
+                                lasso_selector = SelectFromModel(lasso, max_features=fold_coarse_k, threshold=-np.inf)
+                                lasso_selector.fit(X_train_var, y_train)
+                                cols_coarse = X_train_var.columns[lasso_selector.get_support(indices=True)].tolist()
+                                coarse_cache[coarse_key] = cols_coarse
+                                score_func = None  # LASSO已处理
+                            elif selection_method == 'tree_based':
+                                # Tree-based feature importance
+                                from sklearn.ensemble import RandomForestClassifier
+                                rf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42, n_jobs=-1)
+                                rf.fit(X_train_var, y_train)
+                                importances = rf.feature_importances_
+                                top_indices = np.argsort(importances)[::-1][:fold_coarse_k]
+                                cols_coarse = X_train_var.columns[top_indices].tolist()
+                                coarse_cache[coarse_key] = cols_coarse
+                                score_func = None  # Tree-based已处理
+                            else:
+                                score_func = f_classif  # 默认
+                            
+                            # 如果使用SelectKBest（stability或mutual_info）
+                            if score_func is not None:
+                                coarse_selector = SelectKBest(score_func, k=fold_coarse_k)
+                                coarse_selector.fit(X_train_var, y_train)
+                                cols_coarse = X_train_var.columns[coarse_selector.get_support(indices=True)].tolist()
+                                coarse_cache[coarse_key] = cols_coarse
 
                     if len(cols_coarse) == 0:
                         cv_scores.append(0.0)
@@ -3515,17 +4069,19 @@ class FeatureOptimizer:
                         )
 
                 except Exception as e:
+                    self.logger.error("Layer2 Trial %s 未處理的例外: %s", trial_idx, e)
+                    self.logger.debug("Trial %s stacktrace:\n%s", trial_idx, traceback.format_exc())
                     duration = time.perf_counter() - start_trial
                     trial_durations.append(duration)
                     failed_trials += 1
                     consecutive_failures += 1
-                    self.logger.warning(f"⚠️ Trial {trial_idx} 失败: {e}")
 
-                    if consecutive_failures >= 10:
-                        self.logger.error(f"❌ 连续{consecutive_failures}次失败，停止优化")
+                    if consecutive_failures >= self.scaled_config.get('l2_consecutive_fail_limit', 2):
+                        self.logger.error("❌ 連續 %s 次失敗，中止 Layer2 trials", consecutive_failures)
                         break
-                    if failed_trials > n_trials * 0.5:
-                        self.logger.error(f"❌ 失败率过高 ({failed_trials}/{trial_idx+1})，停止优化")
+                    fail_rate_limit = self.scaled_config.get('l2_fail_rate_limit', 0.3)
+                    if failed_trials > n_trials * fail_rate_limit:
+                        self.logger.error("❌ Layer2 Trial 失敗率過高（%s/%s），請檢查日誌排查根因", failed_trials, trial_idx + 1)
                         break
                     continue
 
@@ -4083,6 +4639,26 @@ class FeatureOptimizer:
             'derivatives': 0,
             'total': 0
         }
+        
+        # ========================================================================
+        # 🔧 P1文檔：特徵優先級層次（基於「15m交易，1h參考」設計理念）
+        # ========================================================================
+        # 優先級1：原生15m特徵（PRIMARY TRADING SIGNALS）
+        #   目標：80%+ 的最終選擇特徵
+        #   包含：RSI, MACD, BB, ATR, Volume, Stochastic, Momentum等
+        #   特點：最及時，無延遲，直接反應15m市場變化
+        #
+        # 優先級2：1h參考特徵（MACRO ENVIRONMENT REFERENCE）
+        #   目標：10-15% 的最終選擇特徵
+        #   包含：趨勢方向, EMAs, 支撐/阻力
+        #   特點：不含細節技術指標（無RSI/MACD等），僅提供大環境判斷
+        #   實現：通過_build_reference_timeframe_features生成
+        #
+        # 優先級3：4h超大趨勢（OPTIONAL SUPER-TREND）
+        #   目標：<5% 的最終選擇特徵
+        #   包含：趨勢方向
+        #   特點：可選，提供超長期視角
+        # ========================================================================
         
         # ========== 優先級1：原生15m特徵（最及時，無延遲） ==========
         # 🔍 強制診斷日誌

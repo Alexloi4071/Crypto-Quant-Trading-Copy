@@ -1,4 +1,0 @@
-2025-09-22 11:02:39 | [32mINFO[0m | src.optimization.btcusdt_15m_optuna_optimizer:__init__:74 | BTCUSDT 15m Optuna優化器初始化完成
-2025-09-22 11:02:39 | [32mINFO[0m | src.optimization.btcusdt_15m_optuna_optimizer:run_optimization:544 | 開始BTCUSDT 15m參數優化 - 50 trials
-2025-09-22 11:06:10 | [32mINFO[0m | src.optimization.btcusdt_15m_optuna_optimizer:run_optimization:583 | 優化完成 - 最佳分數: -999.0000
-2025-09-22 11:06:13 | [31mERROR[0m | src.optimization.btcusdt_15m_optuna_optimizer:plot_optimization_history:642 | 繪製優化歷史失敗: plot_optimization_history() got an unexpected keyword argument 'ax'

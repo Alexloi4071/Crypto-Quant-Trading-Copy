@@ -32,9 +32,9 @@ except ImportError:
     DataCleaningOptimizer = None
 
 try:
-    from .optuna_label import LabelOptimizer
+    from .optuna_meta_label import MetaLabelOptimizer  # Meta-Labeling 雙層架構
 except ImportError:
-    LabelOptimizer = None
+    MetaLabelOptimizer = None
 
 try:
     from .optuna_feature import FeatureOptimizer
@@ -76,7 +76,7 @@ except ImportError:
 __all__ = [
     # 核心层优化器
     'DataCleaningOptimizer',  # Layer0
-    'LabelOptimizer',         # Layer1
+    'MetaLabelOptimizer',     # Layer1 (Meta-Labeling 雙層架構)
     'FeatureOptimizer',       # Layer2
     'ModelOptimizer',         # Layer3
     'CVRiskOptimizer',        # Layer4
