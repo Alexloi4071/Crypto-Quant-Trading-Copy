@@ -340,6 +340,15 @@ class PrimaryLabelOptimizer:
                     current_win_streak = 0
                     max_consecutive_losses = max(max_consecutive_losses, current_loss_streak)
             
+            # 計算Sharpe Ratio（基於交易收益序列）
+            all_pnls = [t['pnl'] for t in all_trades]
+            if len(all_pnls) > 1:
+                pnl_std = np.std(all_pnls)
+                pnl_mean = np.mean(all_pnls)
+                sharpe = (pnl_mean / pnl_std * np.sqrt(252)) if pnl_std > 0 else 0.0
+            else:
+                sharpe = 0.0
+            
             # 返回完整指標
             return {
                 # 做多指標
@@ -348,6 +357,7 @@ class PrimaryLabelOptimizer:
                 'long_avg_loss': float(long_avg_loss),
                 'long_profit_factor': float(min(long_profit_factor, 10.0)),  # 上限10
                 'long_total_trades': len(long_trades),
+                'long_trades': len(long_trades),  # 向后兼容
                 
                 # 做空指標
                 'short_win_rate': float(short_win_rate),
@@ -355,6 +365,7 @@ class PrimaryLabelOptimizer:
                 'short_avg_loss': float(short_avg_loss),
                 'short_profit_factor': float(min(short_profit_factor, 10.0)),  # 上限10
                 'short_total_trades': len(short_trades),
+                'short_trades': len(short_trades),  # 向后兼容
                 
                 # 整體指標
                 'overall_win_rate': float(overall_win_rate),
@@ -366,6 +377,8 @@ class PrimaryLabelOptimizer:
                 'total_profit': float(overall_total_profit),
                 'total_loss': float(overall_total_loss),
                 'net_profit': float(overall_total_profit - overall_total_loss),
+                'total_pnl': float(overall_total_profit - overall_total_loss),  # 向后兼容
+                'sharpe': float(min(max(sharpe, -10), 10)),  # Sharpe限制在[-10, 10]
                 
                 # 連續指標
                 'max_consecutive_wins': max_consecutive_wins,
@@ -379,13 +392,14 @@ class PrimaryLabelOptimizer:
             # 返回默認值
             return {
                 'long_win_rate': 0.0, 'long_avg_win': 0.0, 'long_avg_loss': 0.0,
-                'long_profit_factor': 0.0, 'long_total_trades': 0,
+                'long_profit_factor': 0.0, 'long_total_trades': 0, 'long_trades': 0,
                 'short_win_rate': 0.0, 'short_avg_win': 0.0, 'short_avg_loss': 0.0,
-                'short_profit_factor': 0.0, 'short_total_trades': 0,
+                'short_profit_factor': 0.0, 'short_total_trades': 0, 'short_trades': 0,
                 'overall_win_rate': 0.0, 'overall_profit_factor': 0.0,
                 'risk_reward_ratio': 0.0, 'avg_win': 0.0, 'avg_loss': 0.0,
                 'total_trades': 0, 'total_profit': 0.0, 'total_loss': 0.0,
-                'net_profit': 0.0, 'max_consecutive_wins': 0, 'max_consecutive_losses': 0
+                'net_profit': 0.0, 'total_pnl': 0.0, 'sharpe': 0.0,
+                'max_consecutive_wins': 0, 'max_consecutive_losses': 0
             }
     
     def calculate_atr(self, high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:

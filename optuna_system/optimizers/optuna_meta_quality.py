@@ -343,6 +343,7 @@ class MetaQualityOptimizer:
                     'avg_win': 0.0,
                     'avg_loss': 0.0,
                     'total_trades': 0,
+                    'total_pnl': 0.0,
                     'execution_ratio': execution_ratio,
                     'sharpe': 0.0
                 }
@@ -368,6 +369,7 @@ class MetaQualityOptimizer:
                     'avg_win': 0.0,
                     'avg_loss': 0.0,
                     'total_trades': 0,
+                    'total_pnl': 0.0,
                     'execution_ratio': execution_ratio,
                     'sharpe': 0.0
                 }
@@ -393,12 +395,16 @@ class MetaQualityOptimizer:
             sharpe = (trade_returns.mean() / (trade_returns.std() + 1e-6)) * np.sqrt(252)
             sharpe = max(min(sharpe, 10.0), -10.0)  # 限制在[-10, 10]
             
+            # 計算總盈虧
+            total_pnl = trade_returns.sum()
+            
             return {
                 'win_rate': float(win_rate),
                 'profit_factor': float(profit_factor),
                 'avg_win': float(avg_win),
                 'avg_loss': float(avg_loss),
                 'total_trades': len(trade_returns),
+                'total_pnl': float(total_pnl),
                 'execution_ratio': float(execution_ratio),
                 'sharpe': float(sharpe)
             }
@@ -413,6 +419,7 @@ class MetaQualityOptimizer:
                 'avg_win': 0.0,
                 'avg_loss': 0.0,
                 'total_trades': 0,
+                'total_pnl': 0.0,
                 'execution_ratio': 0.0,
                 'sharpe': 0.0
             }
