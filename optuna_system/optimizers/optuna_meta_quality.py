@@ -630,7 +630,7 @@ class MetaQualityOptimizer:
             trial.set_user_attr("f1_score", f1)
             trial.set_user_attr("precision", precision)
             trial.set_user_attr("recall", recall)
-            trial.set_user_attr("sharpe", sharpe)
+            trial.set_user_attr("sharpe", filtered_metrics['sharpe'])  # ✅ 修复：使用filtered_metrics
             trial.set_user_attr("execution_ratio", execution_ratio)
             trial.set_user_attr("label_deviation", max_deviation)
             trial.set_user_attr("buy_pct", label_dist[2])

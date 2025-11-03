@@ -51,9 +51,17 @@ DATA_PATH = PROJECT_ROOT / "data"
 #   2. 标准测试: L1=50,  L2=100 (30-40分钟，充分验证) ✅ 推荐
 #   3. 完整优化: L1=600, L2=250 (2-4小时，生产环境)
 # 
-# 当前配置: 完整优化模式
-TEST_MODE = False  # 改为 True 使用标准测试模式
-if TEST_MODE:
+# 🔧 当前配置: BUG检查模式（v67修复验证）
+TEST_MODE = "BUG_CHECK"  # "BUG_CHECK" | "STANDARD" | False
+if TEST_MODE == "BUG_CHECK":
+    # 🐛 BUG检查模式：快速验证v67修复
+    DEFAULT_L1_TRIALS = 5    # 快速验证Primary数据泄漏修复
+    DEFAULT_L2_TRIALS = 5    # 快速验证Layer2 CV+过拟合修复
+    print("🐛 BUG检查模式: L1=5 trials, L2=5 trials")
+    print("   预计时间: 5-10分钟")
+    print("   目标: 验证v67三大问题修复")
+    print("   检查点: Primary Acc 70-85%, Layer2 CV非0, 无-999")
+elif TEST_MODE == "STANDARD":
     # 🎯 标准测试模式：充分验证所有修复
     DEFAULT_L1_TRIALS = 50   # Primary最优(from 10) + Meta NSGA-II(40, pop=30)
     DEFAULT_L2_TRIALS = 100  # 5种特征方法 × 20 trials = 充分探索
@@ -87,7 +95,8 @@ coordinator = OptunaCoordinator(
     symbol='BTCUSDT',
     timeframe='15m',
     data_path=str(DATA_PATH),
-    scaled_config=scaled_config
+    scaled_config=scaled_config,
+    version='v68'  # ✅ 新版本：v67三大问题修复后的版本
 )
 
 print('--- Layer0 ---')

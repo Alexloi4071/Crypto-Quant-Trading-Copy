@@ -7,7 +7,6 @@ import json
 import logging
 import os
 import time
-import traceback
 import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -20,15 +19,7 @@ from optuna.trial import TrialState
 import pandas as pd
 from sklearn.ensemble import ExtraTreesClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif, mutual_info_classif
-from sklearn.metrics import (
-    accuracy_score, 
-    f1_score as compute_f1_score,  # 使用別名避免與變量名衝突
-    precision_score, 
-    recall_score, 
-    roc_auc_score, 
-    balanced_accuracy_score, 
-    confusion_matrix
-)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, balanced_accuracy_score, confusion_matrix
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -36,11 +27,6 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from config.timeframe_scaler import TimeFrameScaler
 from optuna_system.utils.io_utils import write_dataframe, read_dataframe
-from optuna_system.utils.time_integrity import (
-    EnhancedPurgedKFold, 
-    TimeLeakageDetector, 
-    validate_lag_alignment
-)
 
 warnings.filterwarnings('ignore')
 
@@ -96,61 +82,43 @@ class FeatureOptimizer:
                 return int(default)
 
         # KPI 約束門檻（可依時框差異調整）
-        # ✅ KPI約束（優化目標重構 - Phase 3）
-        # ✅ 修改：放宽Sharpe/Calmar，严格化Win Rate/Profit Factor，新增Risk:Reward
         self.kpi_constraints = {
-            # 風險調整收益（放宽）
-            'min_sharpe': _env_float('L2_MIN_SHARPE', 0.8),  # ✅ 從1.0/1.2降低到0.8（更現實）
-            'min_sortino': 0.0,  # ✅ 刪除約束（從1.0/1.2降低到0）
-            'min_calmar': _env_float('L2_MIN_CALMAR', 0.6),  # ✅ 從0.75/1.2降低到0.6（放宽）
-            
-            # 交易質量指標（嚴格化）
-            'min_win_rate': _env_float('L2_MIN_WINRATE', 0.50),  # ✅ 從0.6降低到0.50（更現實）
-            'min_profit_factor': _env_float('L2_MIN_PROFIT_FACTOR', 1.5),  # ✅ 統一提高到1.5（從1.3/1.5）
-            
-            # ✅ 新增：最小盈虧比約束（與Primary Model一致）
-            'min_risk_reward': _env_float('L2_MIN_RISK_REWARD', 2.0),
-            
-            # 回撤與收益（保持）
+            'min_sharpe': _env_float('L2_MIN_SHARPE', 1.0 if self.timeframe.lower() in ('15m', '15') else 1.2),
+            'min_sortino': _env_float('L2_MIN_SORTINO', 1.2 if self.timeframe.lower() in ('1h', '4h') else 1.0),
+            'min_calmar': _env_float('L2_MIN_CALMAR', 0.75 if self.timeframe.lower() in ('15m', '15') else 1.2),
+            'min_win_rate': _env_float('L2_MIN_WINRATE', 0.6),
+            'min_profit_factor': _env_float('L2_MIN_PROFIT_FACTOR', 1.3 if self.timeframe.lower() in ('15m', '15') else 1.5),
             'max_drawdown': _env_float('L2_MAX_DRAWDOWN', 0.2 if self.timeframe.lower() in ('15m', '15') else 0.15),
             'min_total_return': _env_float('L2_MIN_TOTAL_RETURN', 0.02),
-            'min_annual_return': 0.0  # ✅ 刪除約束（太嚴格）
+            'min_annual_return': _env_float('L2_MIN_ANNUAL_RETURN', 0.15)
         }
         self.logger.info(f"🔒 Layer2 KPI Constraints: {self.kpi_constraints}")
 
-        # ✅ 多目標加權（優化目標重構 - Phase 3）
-        # ✅ 修改：交易指標從10%提高到55%，ML指標從40%降低到15%
+        # 多目標加權（單目標模式使用）
         self.obj_weights = {
-            # ML指標（15% - 從40%降低）
-            'f1_macro': _env_float('L2_WEIGHT_F1_MACRO', 0.10),     # ✅ 從0.2降低到0.10
-            'f1_weighted': _env_float('L2_WEIGHT_F1_WEIGHTED', 0.05),  # ✅ 從0.2降低到0.05
-            
-            # 交易質量指標（55% - 從10%提高）
-            'profit_factor': _env_float('L2_WEIGHT_PROFIT_FACTOR', 0.30),  # ✅ 從0.1提高到0.30 (+200%)
-            'win_rate': _env_float('L2_WEIGHT_WIN_RATE', 0.25),           # ✅ 從0.05提高到0.25 (+400%)
-            
-            # 風險調整收益指標（30%）
-            'sharpe': _env_float('L2_WEIGHT_SHARPE', 0.20),           # ✅ 從0.2保持0.20
-            'calmar': _env_float('L2_WEIGHT_CALMAR', 0.10),           # ✅ 從0.1保持0.10
-            
-            # 輔助指標（刪除sortino, total_return, annual_return）
-            'sortino': 0.0,  # ✅ 刪除（從0.1降低到0）
-            'total_return': 0.0,  # ✅ 刪除（從0.025降低到0）
-            'annual_return': 0.0   # ✅ 刪除（從0.025降低到0）
+            'f1_macro': _env_float('L2_WEIGHT_F1_MACRO', 0.2),
+            'f1_weighted': _env_float('L2_WEIGHT_F1_WEIGHTED', 0.2),
+            'sharpe': _env_float('L2_WEIGHT_SHARPE', 0.2),
+            'sortino': _env_float('L2_WEIGHT_SORTINO', 0.1),
+            'calmar': _env_float('L2_WEIGHT_CALMAR', 0.1),
+            'profit_factor': _env_float('L2_WEIGHT_PROFIT_FACTOR', 0.1),
+            'win_rate': _env_float('L2_WEIGHT_WIN_RATE', 0.05),
+            'total_return': _env_float('L2_WEIGHT_TOTAL_RETURN', 0.025),
+            'annual_return': _env_float('L2_WEIGHT_ANNUAL_RETURN', 0.025)
         }
         weight_sum = sum(self.obj_weights.values())
         if weight_sum <= 0:
-            # ✅ fallback weights（同樣調整）
+            # fallback weights
             self.obj_weights = {
-                'f1_macro': 0.10,
-                'f1_weighted': 0.05,
-                'profit_factor': 0.30,
-                'win_rate': 0.25,
-                'sharpe': 0.20,
-                'calmar': 0.10,
-                'sortino': 0.0,
-                'total_return': 0.0,
-                'annual_return': 0.0
+                'f1_macro': 0.25,
+                'f1_weighted': 0.25,
+                'sharpe': 0.2,
+                'sortino': 0.1,
+                'calmar': 0.05,
+                'profit_factor': 0.05,
+                'win_rate': 0.05,
+                'total_return': 0.03,
+                'annual_return': 0.02
             }
         else:
             for k in self.obj_weights:
@@ -177,10 +145,6 @@ class FeatureOptimizer:
         self.flags = self._validate_flags(self._load_feature_flags())
         self.phase_config: Dict[str, Any] = {}
         self.selection_params: Dict[str, Any] = {}
-        
-        # 🔧 Purged CV配置（防止時間洩漏）
-        self.enable_purged_cv = self.scaled_config.get('enable_purged_cv', True)
-        self.embargo_pct = self.scaled_config.get('embargo_pct', 0.02)  # 2% embargo
 
         # 🚀 修復版：完整數據預加載與缓存（支援 lazy/full 模式）
         self.logger.info("🚀 預加載與缓存OHLCV、特徵、價格序列...")
@@ -420,14 +384,11 @@ class FeatureOptimizer:
 
         idx = X.index
         price_series = self.close_prices.reindex(idx).ffill()
-        # 🔧 FIX: Remove shift(-1) to avoid using future returns
-        # Use current period returns (already known at decision time)
-        returns = price_series.pct_change()
+        returns = price_series.pct_change().shift(-1)
         returns = returns.reindex(idx).fillna(0.0)
 
         positions = pd.Series(preds - 1, index=idx)
-        # Strategy returns aligned properly: position决定时已知的收益
-        strategy_returns = (positions.shift(1) * returns).astype(float)
+        strategy_returns = (positions * returns).astype(float)
         strategy_returns = strategy_returns.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
         periods_per_year = self._periods_per_year()
@@ -473,8 +434,8 @@ class FeatureOptimizer:
 
         win_rate = float((strategy_returns > 0).mean()) if len(strategy_returns) > 0 else 0.0
 
-        metrics['f1_macro'] = float(compute_f1_score(y, preds, average='macro', zero_division=0))
-        metrics['f1_weighted'] = float(compute_f1_score(y, preds, average='weighted', zero_division=0))
+        metrics['f1_macro'] = float(f1_score(y, preds, average='macro', zero_division=0))
+        metrics['f1_weighted'] = float(f1_score(y, preds, average='weighted', zero_division=0))
         metrics['precision_macro'] = float(precision_score(y, preds, average='macro', zero_division=0))
         metrics['recall_macro'] = float(recall_score(y, preds, average='macro', zero_division=0))
         metrics['balanced_accuracy'] = float(balanced_accuracy_score(y, preds))
@@ -626,13 +587,13 @@ class FeatureOptimizer:
             if analysis.get('pass', True):
                 return None
             self.logger.info("觸發Layer1重新優化（自動）...")
-            from optuna_system.optimizers.optuna_meta_label import MetaLabelOptimizer  # lazy import
-            opt = MetaLabelOptimizer(
+            from optuna_system.optimizers.optuna_label import LabelOptimizer  # lazy import
+            opt = LabelOptimizer(
                 data_path=str(self.data_path),
                 config_path=str(self.config_path),
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                scaled_config=self.scaled_config or {},
+                scaled_config=self.scaled_config,
             )
             # 適度提高 trials
             result = opt.optimize(n_trials=200)
@@ -662,30 +623,18 @@ class FeatureOptimizer:
         return mapping.get(tf, [])
 
     def _safe_merge(self, base: pd.DataFrame, extra: Optional[pd.DataFrame], prefix: str = "") -> pd.DataFrame:
-        """
-        🔧 P0修復：嚴格對齊，防止時間洩漏
-        
-        修復邏輯：
-        1. extra可能來自更高時框，先shift(1)
-        2. 再resample和reindex對齊
-        3. 只用ffill，禁用bfill
-        """
         if extra is None or extra.empty:
             return base
         # 嚴格對齊：先將輔助特徵 resample 至基準索引頻率，再對齊到基準索引
         extra_prefixed = extra.add_prefix(prefix)
         try:
             extra_resampled = self._resample_like(base.index, extra_prefixed)
-            # 🔧 關鍵修復：shift(1)防止洩漏
-            extra_shifted = extra_resampled.shift(1)
-            extra_aligned = extra_shifted.reindex(base.index, method='ffill')
+            extra_aligned = extra_resampled.reindex(base.index).ffill()
         except Exception:
             # 如果轉頻/對齊異常，退化為簡單對齊以確保不中斷
-            # 🔧 關鍵修復：shift(1)防止洩漏
-            extra_shifted = extra_prefixed.shift(1)
-            extra_aligned = extra_shifted.reindex(base.index, method='ffill')
+            extra_aligned = extra_prefixed.reindex(base.index).ffill()
         merged = pd.concat([base, extra_aligned], axis=1)
-        # 禁用bfill，只用ffill+fillna(0)
+        # Remove backward fill to avoid any backward-looking leakage
         return merged.replace([np.inf, -np.inf], np.nan).ffill().fillna(0)
 
     def _infer_rule_from_index(self, idx: pd.DatetimeIndex) -> str:
@@ -798,9 +747,8 @@ class FeatureOptimizer:
                     min_split_gain=trial.suggest_float('lgb_min_split_gain', 0.0, 0.05 if relax else 0.1),
                     min_child_samples=trial.suggest_int('lgb_min_child_samples', 2 if relax else 5, 60 if relax else 50),
                     min_child_weight=trial.suggest_float('lgb_min_child_weight', 1e-4 if relax else 1e-3, 5.0),
-                    # ✅ P1修復：增加正则化，减少过拟合（v67 gap=22.6%）
-                    reg_alpha=trial.suggest_float('lgb_reg_alpha', 0.5, 2.5 if relax else 3.5),  # 从0.0-2.0提高到0.5-3.5
-                    reg_lambda=trial.suggest_float('lgb_reg_lambda', 1.0, 5.0 if relax else 6.0),  # 从0.0-4.0提高到1.0-6.0
+                    reg_alpha=trial.suggest_float('lgb_reg_alpha', 0.0, 1.5 if relax else 2.0),
+                    reg_lambda=trial.suggest_float('lgb_reg_lambda', 0.0, 3.0 if relax else 4.0),
                     class_weight='balanced',
                     random_state=42,
                     n_jobs=-1,
@@ -988,75 +936,29 @@ class FeatureOptimizer:
             return list(X.columns)
 
     def optimize_feature_selection_params(self, trial: optuna.Trial, n_features: int, layer1_params: Optional[Dict]) -> Dict[str, float]:
-        """🚀 P7修復：優化版特徵選擇參數 - 提升覆蓋面與穩定性（Task 3.2）
-        
-        改進點：
-        1. 提高粗選比例（0.55-0.75）：擴大特徵覆蓋面
-        2. 靈活精選比例（0.45-0.75）：平衡性能與維度
-        3. 動態穩定性閾值（0.40-0.70）：適應不同數據質量
-        4. 考慮Layer1信號質量動態調整
-        
-        預期效果：
-        - 粗選特徵數: 40 → 50-70個
-        - 精選特徵數: 20 → 25-40個
-        - 特徵穩定性提升
-        """
-        # 基礎範圍（經過優化）
-        coarse_ratio_low, coarse_ratio_high = (0.55, 0.75)  # 提高下限
-        stability_threshold_cap = 0.70  # 提高上限
-        
-        # 根據Layer1質量動態調整
+        """動態特徵選擇參數配置，考慮Layer1表現."""
+        coarse_ratio_low, coarse_ratio_high = (0.5, 0.7)  # 從(0.3, 0.6)優化
+        stability_threshold_cap = 0.65
+
         if layer1_params:
-            # 估算Layer1信號質量（基於分數和分佈）
-            layer1_score = layer1_params.get('best_score', 0.0) if isinstance(layer1_params, dict) else 0.0
-            
-            # 也可以從trial.user_attrs讀取signal_quality
-            signal_quality = layer1_params.get('signal_quality', 0.6)
-            
-            # 高質量標籤（>0.70）：可以更積極地選擇特徵
-            if signal_quality > 0.70 or layer1_score > 1.0:
-                coarse_ratio_low, coarse_ratio_high = (0.60, 0.80)
+            if layer1_params.get('signal_quality', 0.6) > 0.65:
+                coarse_ratio_low, coarse_ratio_high = (0.55, 0.75)  # 從(0.35, 0.68)優化
                 stability_threshold_cap = 0.75
-                self.logger.debug(f"  高質量Layer1({signal_quality:.2f})，擴大特徵搜索空間")
-            
-            # 低質量標籤（<0.50）：需要更保守的特徵選擇
-            elif signal_quality < 0.50 or layer1_score < 0.90:
-                coarse_ratio_low, coarse_ratio_high = (0.50, 0.70)
-                stability_threshold_cap = 0.65
-                self.logger.debug(f"  低質量Layer1({signal_quality:.2f})，縮小特徵搜索空間")
-        
-        # ✅ P1修復：降低特征数量，减少过拟合（v67 CV-Holdout gap=22.6%）
-        # 计算實際K值（降低30-40%以减少过拟合）
-        coarse_k_min = max(30, int(n_features * coarse_ratio_low * 0.7))  # 从50降到30，乘0.7
-        coarse_k_max = min(
-            max(coarse_k_min + 10, int(n_features * coarse_ratio_high * 0.8)),  # 乘0.8降低上限
-            n_features - 1
-        )
-        
-        # 確保範圍有效
-        if coarse_k_min >= coarse_k_max:
-            coarse_k_max = coarse_k_min + 10
-        
-        coarse_k = trial.suggest_int('coarse_k', coarse_k_min, coarse_k_max)
-        
-        # 精選比例（从粗選結果中選擇，降低范围）
-        fine_ratio = trial.suggest_float('fine_ratio', 0.35, 0.60)  # 从0.45-0.75降到0.35-0.60
-        fine_k = max(15, min(int(coarse_k * fine_ratio), coarse_k - 1))  # 从25降到15
-        
-        # 穩定性閾值
-        stability_threshold = trial.suggest_float(
-            'stability_threshold', 
-            0.40,  # 降低下限（允許更多特徵）
-            stability_threshold_cap
-        )
-        
-        # 相關性閾值
-        correlation_threshold = trial.suggest_float(
-            'correlation_threshold', 
-            0.92,  # 降低（允許更多多樣性）
-            0.97
-        )
-        
+            elif layer1_params.get('signal_quality', 0.6) < 0.45:
+                coarse_ratio_low, coarse_ratio_high = (0.45, 0.65)  # 從(0.25, 0.5)優化
+                stability_threshold_cap = 0.6
+
+        coarse_k_min = max(40, int(n_features * coarse_ratio_low))
+        coarse_k_max = min(max(coarse_k_min + 5, int(n_features * coarse_ratio_high)), n_features - 1)
+
+        coarse_k = trial.suggest_int('coarse_k', coarse_k_min, max(coarse_k_min + 5, coarse_k_max))
+
+        fine_ratio = trial.suggest_float('fine_ratio', 0.40, 0.70)
+        fine_k = max(20, min(int(coarse_k * fine_ratio), coarse_k - 1))
+
+        stability_threshold = trial.suggest_float('stability_threshold', 0.35, stability_threshold_cap)
+        correlation_threshold = trial.suggest_float('correlation_threshold', 0.93, 0.97)
+
         return {
             'coarse_k': coarse_k,
             'fine_k': fine_k,
@@ -1295,305 +1197,6 @@ class FeatureOptimizer:
             self.logger.error(f"數據加載失敗: {e}")
             raise  # 🚀 Fail-Fast: 關鍵錯誤直接拋出
 
-    # ============================================================
-    # 多時框趨勢對齊功能（方法2: reindex + ffill）
-    # ============================================================
-    
-    def _load_higher_timeframe_data(self, higher_timeframe: str = '1h') -> Optional[pd.DataFrame]:
-        """
-        載入更高時框的 OHLCV 數據（用於多時框趨勢對齊）
-        
-        Args:
-            higher_timeframe: 更高的時間框架（如 '1h', '4h'）
-            
-        Returns:
-            更高時框的 OHLCV DataFrame，如果載入失敗則返回 None
-        """
-        try:
-            # 1. 優先從 processed/cleaned 載入
-            processed_dir = self.data_path / "processed" / "cleaned" / f"{self.symbol}_{higher_timeframe}"
-            if processed_dir.exists():
-                candidates = list(processed_dir.glob("cleaned_ohlcv*.parquet")) + \
-                             list(processed_dir.glob("cleaned_ohlcv*.pkl"))
-                if candidates:
-                    latest = max(candidates, key=lambda p: p.stat().st_mtime)
-                    self.logger.info(f"🔍 載入 {higher_timeframe} 清洗數據: {latest.name}")
-                    return read_dataframe(latest)
-            
-            # 2. 回退到 raw 數據
-            raw_file = self.data_path / "raw" / self.symbol / f"{self.symbol}_{higher_timeframe}_ohlcv.parquet"
-            if raw_file.exists():
-                self.logger.info(f"🔍 載入 {higher_timeframe} 原始數據: {raw_file.name}")
-                return read_dataframe(raw_file)
-            
-            self.logger.warning(f"⚠️ 未找到 {higher_timeframe} 數據")
-            return None
-            
-        except Exception as e:
-            self.logger.warning(f"❌ 載入 {higher_timeframe} 數據失敗: {e}")
-            return None
-
-    def _calculate_higher_timeframe_trend(self, df_higher: pd.DataFrame) -> pd.Series:
-        """
-        計算更高時框的趨勢方向
-        
-        使用多個指標綜合判斷趨勢：
-        - EMA 20/50 交叉
-        - MACD 方向
-        
-        Args:
-            df_higher: 更高時框的 OHLCV DataFrame
-            
-        Returns:
-            趨勢信號 Series (1=買入趨勢, 0=中性, -1=賣出趨勢)
-        """
-        try:
-            # 計算 EMA
-            ema_20 = df_higher['close'].ewm(span=20, adjust=False).mean()
-            ema_50 = df_higher['close'].ewm(span=50, adjust=False).mean()
-            
-            # 計算 MACD
-            ema_12 = df_higher['close'].ewm(span=12, adjust=False).mean()
-            ema_26 = df_higher['close'].ewm(span=26, adjust=False).mean()
-            macd = ema_12 - ema_26
-            signal = macd.ewm(span=9, adjust=False).mean()
-            
-            # 初始化趨勢信號
-            trend = pd.Series(0, index=df_higher.index)
-            
-            # 買入趨勢條件：EMA20 > EMA50 AND MACD > Signal
-            buy_condition = (ema_20 > ema_50) & (macd > signal)
-            trend[buy_condition] = 1
-            
-            # 賣出趨勢條件：EMA20 < EMA50 AND MACD < Signal
-            sell_condition = (ema_20 < ema_50) & (macd < signal)
-            trend[sell_condition] = -1
-            
-            buy_pct = sum(trend == 1) / len(trend) * 100
-            neutral_pct = sum(trend == 0) / len(trend) * 100
-            sell_pct = sum(trend == -1) / len(trend) * 100
-            
-            self.logger.info(
-                f"✅ 趨勢分佈: 買入={buy_pct:.1f}%, 中性={neutral_pct:.1f}%, 賣出={sell_pct:.1f}%"
-            )
-            
-            return trend
-            
-        except Exception as e:
-            self.logger.warning(f"❌ 計算趨勢失敗: {e}")
-            return pd.Series(0, index=df_higher.index)
-
-    def _align_higher_timeframe_to_current(
-        self, 
-        current_index: pd.DatetimeIndex,
-        higher_tf_series: pd.Series
-    ) -> pd.Series:
-        """
-        🔧 P0修復：嚴格前向對齊，防止未完成bar的數據洩漏
-        
-        修復邏輯：
-        1. 先shift(1) higher_tf數據 → 只用已完成的大bar
-        2. 再reindex+ffill到當前時框
-        3. 禁用backward fill
-        
-        示例（15m使用1h數據，當前時間09:45）：
-        錯誤: 使用09:00-10:00的1h bar（未完成）❌
-        正確: 使用08:00-09:00的1h bar（已完成）✅
-        
-        Args:
-            current_index: 當前時框的時間索引（如 15m）
-            higher_tf_series: 更高時框的數據 Series（如 1h 趨勢）
-            
-        Returns:
-            對齊到當前時框的 Series
-        """
-        try:
-            # 🔧 關鍵修復：額外shift(1)確保只用已完成的bar
-            higher_tf_shifted = higher_tf_series.shift(1)
-            
-            # 使用 reindex + ffill 對齊
-            aligned = higher_tf_shifted.reindex(current_index, method='ffill')
-            
-            # 處理開頭的 NaN（用0填充，不用bfill避免反向洩漏）
-            aligned = aligned.fillna(0)
-            
-            self.logger.info(
-                f"✅ 嚴格前向對齊: {len(higher_tf_series)} → {len(aligned)} "
-                f"(已shift防洩漏)"
-            )
-            
-            return aligned
-            
-        except Exception as e:
-            self.logger.warning(f"❌ 時框對齊失敗: {e}")
-            return pd.Series(0, index=current_index)
-
-    def _build_reference_timeframe_features(
-        self, 
-        ohlcv_data: pd.DataFrame,
-        higher_tf: str = '1h'
-    ) -> pd.DataFrame:
-        """
-        🔧 P1新增：生成參考時框特徵（僅趨勢相關，不含細節技術指標）
-        
-        設計理念：
-        - 15m交易時，1h只作為"大環境參考"
-        - 只生成趨勢、均線、突破等宏觀信號
-        - 不生成RSI、MACD等細節指標
-        
-        Args:
-            ohlcv_data: 當前15m的OHLCV數據
-            higher_tf: 參考時框（默認1h）
-        
-        Returns:
-            DataFrame: 僅包含趨勢參考特徵（<10個）
-        """
-        features = pd.DataFrame(index=ohlcv_data.index)
-        
-        try:
-            # 1. 載入1h數據
-            df_higher = self._load_higher_timeframe_data(higher_tf)
-            if df_higher is None or df_higher.empty:
-                self.logger.warning(f"⏭️ {higher_tf}數據不可用，跳過參考特徵")
-                return features
-            
-            # 2. 只生成趨勢相關特徵（不是完整技術指標）
-            close_higher = df_higher['close']
-            high_higher = df_higher['high']
-            low_higher = df_higher['low']
-            
-            # 2.1 均線（趨勢判斷）
-            ema_20 = close_higher.ewm(span=20, adjust=False).mean()
-            ema_50 = close_higher.ewm(span=50, adjust=False).mean()
-            
-            # 2.2 趨勢方向（簡化版）
-            trend = pd.Series(0, index=df_higher.index)
-            trend[ema_20 > ema_50] = 1  # 上升趨勢
-            trend[ema_20 < ema_50] = -1  # 下降趨勢
-            
-            # 2.3 價格相對均線位置（判斷超買超賣）
-            price_ema20_ratio = close_higher / (ema_20 + 1e-9)
-            price_ema50_ratio = close_higher / (ema_50 + 1e-9)
-            
-            # 2.4 支撐阻力
-            resistance = high_higher.rolling(20).max()
-            support = low_higher.rolling(20).min()
-            
-            # 3. 對齊到15m（嚴格shift防洩漏）
-            features[f'{higher_tf}_trend'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, trend
-            )
-            features[f'{higher_tf}_ema20'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, ema_20
-            )
-            features[f'{higher_tf}_ema50'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, ema_50
-            )
-            features[f'{higher_tf}_price_ema20_ratio'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, price_ema20_ratio
-            )
-            features[f'{higher_tf}_price_ema50_ratio'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, price_ema50_ratio
-            )
-            features[f'{higher_tf}_resistance'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, resistance
-            )
-            features[f'{higher_tf}_support'] = self._align_higher_timeframe_to_current(
-                ohlcv_data.index, support
-            )
-            
-            self.logger.info(
-                f"✅ {higher_tf}參考特徵: {len(features.columns)}個 "
-                f"(僅趨勢相關，無細節指標)"
-            )
-            
-            return features
-            
-        except Exception as e:
-            self.logger.warning(f"❌ {higher_tf}參考特徵生成失敗: {e}")
-            return features
-
-    def _add_multi_timeframe_trend_features(
-        self, 
-        ohlcv_data: pd.DataFrame,
-        higher_timeframes: List[str] = None
-    ) -> pd.DataFrame:
-        """
-        添加多時框趨勢特徵到當前時框
-        
-        Args:
-            ohlcv_data: 當前時框的 OHLCV 數據
-            higher_timeframes: 要添加的更高時框列表（默認 ['1h', '4h']）
-            
-        Returns:
-            包含多時框趨勢特徵的 DataFrame
-        """
-        if higher_timeframes is None:
-            # 根據當前時框智能選擇
-            if self.timeframe in ['15m', '15']:
-                higher_timeframes = ['1h', '4h']
-            elif self.timeframe in ['1h', '1H']:
-                higher_timeframes = ['4h', '1d']
-            else:
-                higher_timeframes = ['1h']
-        
-        trend_features = pd.DataFrame(index=ohlcv_data.index)
-        
-        for htf in higher_timeframes:
-            try:
-                # 1. 載入更高時框數據
-                df_higher = self._load_higher_timeframe_data(htf)
-                if df_higher is None or df_higher.empty:
-                    self.logger.warning(f"⏭️ 跳過 {htf} 趨勢特徵（數據不可用）")
-                    continue
-                
-                # 2. 計算趨勢方向
-                trend = self._calculate_higher_timeframe_trend(df_higher)
-                
-                # 3. 對齊到當前時框（使用 reindex + ffill）
-                trend.name = f'trend_{htf}'
-                aligned_trend = self._align_higher_timeframe_to_current(
-                    ohlcv_data.index,
-                    trend
-                )
-                
-                # 4. 添加到特徵集
-                trend_features[f'trend_{htf}'] = aligned_trend
-                
-                # 5. 可選：添加更多高時框特徵（如 EMA 等）
-                try:
-                    ema_20 = df_higher['close'].ewm(span=20).mean()
-                    ema_50 = df_higher['close'].ewm(span=50).mean()
-                    
-                    trend_features[f'{htf}_ema_20'] = self._align_higher_timeframe_to_current(
-                        ohlcv_data.index, ema_20
-                    )
-                    trend_features[f'{htf}_ema_50'] = self._align_higher_timeframe_to_current(
-                        ohlcv_data.index, ema_50
-                    )
-                    
-                    self.logger.info(f"✅ 已添加 {htf} 額外特徵: EMA20, EMA50")
-                    
-                except Exception as e:
-                    self.logger.warning(f"⚠️ 添加 {htf} 額外特徵失敗: {e}")
-                
-                self.logger.info(f"🎯 成功添加 {htf} 趨勢特徵組")
-                
-            except Exception as e:
-                self.logger.warning(f"❌ 處理 {htf} 特徵失敗: {e}")
-                continue
-        
-        if not trend_features.empty:
-            self.logger.info(f"✅ 多時框趨勢特徵總計: {len(trend_features.columns)} 個")
-        else:
-            self.logger.warning("⚠️ 未能添加任何多時框趨勢特徵")
-        
-        return trend_features
-
-    # ============================================================
-    # 原有方法
-    # ============================================================
-
     def _generate_mock_data(self) -> pd.DataFrame:
         """生成模擬OHLCV數據"""
         np.random.seed(42)
@@ -1777,23 +1380,6 @@ class FeatureOptimizer:
             except Exception as e:
                 self.logger.warning(f"⚠️ Microstructure特徵生成失敗: {e}")
         
-        # 🎯 新增：多時框趨勢對齊特徵（實現多時框一致性交易邏輯）
-        try:
-            if self.flags.get('enable_mtf_trend', True):  # 默認啟用
-                mtf_trend_features = self._add_multi_timeframe_trend_features(ohlcv_data)
-                if not mtf_trend_features.empty:
-                    all_features_list.append(mtf_trend_features)
-                    self.logger.info(
-                        f"🎯 添加 {len(mtf_trend_features.columns)} 個多時框趨勢特徵 "
-                        f"(實現 1h+15m 趨勢一致性過濾)"
-                    )
-                else:
-                    self.logger.warning("⚠️ 多時框趨勢特徵生成為空")
-            else:
-                self.logger.info("⏭️ 多時框趨勢特徵已禁用（enable_mtf_trend=False）")
-        except Exception as e:
-            self.logger.warning(f"⚠️ 多時框趨勢特徵生成失敗: {e}")
-        
         # 合併所有特徵
         X = pd.concat([f for f in all_features_list if not f.empty], axis=1)
         
@@ -1882,26 +1468,14 @@ class FeatureOptimizer:
                 }
                 freq_str = str(freq).lower()
                 freq = freq_map.get(freq_str, freq)
-                
-                # 🔧 P1修復：區分當前時框（完整指標）vs 參考時框（僅趨勢）
-                if tf_key in ['1h', '4h']:
-                    # 高時框 = 參考用途（僅生成趨勢特徵）
-                    tf_features = self._build_reference_timeframe_features(ohlcv_data, tf_key)
-                    self.logger.info(f"🎯 {tf_key} 作為參考時框（僅趨勢特徵）")
-                else:
-                    # 當前時框 = 主要交易信號（生成完整技術指標）
-                    resampled = self._resample_ohlcv(ohlcv_data, freq)
-                    if resampled.empty:
-                        continue
-                    tf_override = rule if isinstance(rule, dict) else {}
-                    tf_features = self._calc_base_indicators(resampled, tf_key, flags_tech, base_index=None, tf_overrides_override=tf_override)
-                    # 🔧 P0修復：resampled已經通過_resample_ohlcv雙重shift，這裡不需要額外shift
-                    # tf_features = tf_features.shift(1).ffill()  # ❌ 刪除（避免第三重shift）
-                    tf_features = tf_features.reindex(ohlcv_data.index, method='ffill').fillna(0)
-                    self.logger.info(f"🎯 {tf_key} 作為主要時框（完整技術指標）")
-                
-                if tf_features.empty:
+                resampled = self._resample_ohlcv(ohlcv_data, freq)
+                if resampled.empty:
                     continue
+                tf_override = rule if isinstance(rule, dict) else {}
+                tf_features = self._calc_base_indicators(resampled, tf_key, flags_tech, base_index=None, tf_overrides_override=tf_override)
+                # align slow features strictly forward-only
+                tf_features = tf_features.shift(1).ffill()
+                tf_features = tf_features.reindex(ohlcv_data.index).ffill().fillna(0)
                 base_cols = list(tf_features.columns)
                 gating_signal = None
                 if base_cols:
@@ -2223,22 +1797,10 @@ class FeatureOptimizer:
         return features
 
     def _resample_ohlcv(self, ohlcv: pd.DataFrame, rule: str) -> pd.DataFrame:
-        """
-        重採樣 OHLCV 到更高時間框架（🔧 P0修復：雙重shift防止時間洩漏）
+        """重採樣 OHLCV 到更高時間框架（🔧 P0修復：添加 shift(1) 防止 Look-Ahead Bias）
         
-        🚨 關鍵修復：雙重shift策略
-        1. 第一重：原始數據shift(1) - 確保只用過去的價格
-        2. 第二重：重採樣後shift(1) - 確保只用已完成的大bar
-        
-        為什麼需要雙重shift？
-        - 單次shift不夠：技術指標（如RSI, MACD）在計算時已經"吸收"了當期數據
-        - 雙重shift：徹底防止任何形式的未來數據洩漏
-        
-        示例（15m使用1h數據）：
-        時間: 09:45
-        錯誤: 使用09:00-10:00的1h bar（包含09:45之後的數據）❌
-        單shift: 使用08:00-09:00的1h bar（但RSI等指標可能用了09:00的close）⚠️
-        雙shift: 使用07:00-08:00的1h bar（完全隔離未來）✅
+        重要：使用 shift(1) 確保只使用「已完成」的 bar，避免未來數據洩漏。
+        例如：15m 時間點只能看到上一個完成的 1h bar，而不是當前未完成的 1h bar。
         """
         agg = {
             'open': 'first',
@@ -2248,118 +1810,31 @@ class FeatureOptimizer:
             'volume': 'sum'
         }
         try:
-            # 🔧 第一重shift：原始數據向前偏移
-            ohlcv_shifted = ohlcv.shift(1)
+            resampled = ohlcv.resample(rule).agg(agg)
             
-            # 重採樣
-            resampled = ohlcv_shifted.resample(rule).agg(agg)
-            
-            # 🔧 第二重shift：重採樣結果再次向前偏移
-            resampled_double_shifted = resampled.shift(1)
+            # 🔧 P0修復：shift(1) 確保只使用已完成的 bar，防止 Look-Ahead Bias
+            # 未來數據洩漏示例：
+            #   錯誤：15m 09:45 使用 09:00-10:00 的 1h bar（未完成，包含未來數據）
+            #   正確：15m 09:45 使用 08:00-09:00 的 1h bar（已完成，無未來數據）
+            resampled_shifted = resampled.shift(1)
             
             # 記錄時間對齊信息（僅在調試模式）
-            if len(resampled_double_shifted) > 0 and self.flags.get('debug_resample', False):
+            if len(resampled_shifted) > 0 and self.flags.get('debug_resample', False):
                 self.logger.debug(
-                    f"Resample {rule}: 雙重shift防洩漏 - "
-                    f"原始={len(ohlcv)} → 單shift={len(ohlcv_shifted)} → "
-                    f"重採樣={len(resampled)} → 最終={len(resampled_double_shifted.dropna())}"
+                    f"Resample {rule}: 原始最後時間={ohlcv.index[-1]}, "
+                    f"重採樣最後時間={resampled_shifted.index[-1]}, "
+                    f"有效數據={len(resampled_shifted.dropna())} 行"
                 )
             
-            final_data = resampled_double_shifted.dropna()
-            
-            if len(final_data) > 0:
-                self.logger.info(
-                    f"✅ {rule} 重採樣完成（雙重shift）: "
-                    f"{len(final_data)} 個有效bar，嚴格防止時間洩漏"
-                )
-            
-            return final_data
+            return resampled_shifted.dropna()
             
         except Exception as e:
             self.logger.warning(f"⚠️ 重採樣失敗 rule={rule}: {e}")
             return pd.DataFrame(columns=ohlcv.columns)
 
-    def _get_purged_cv_splits(self, n_samples: int, n_splits: int = 5) -> List[Tuple]:
-        """
-        🔧 P0新增：帶Purge和Embargo的時間序列CV分割
-        
-        基於《Advances in Financial ML》(Lopez de Prado) 的Purged K-Fold CV
-        
-        為什麼需要Purge？
-        - 標籤依賴未來數據（如lag=17，樣本i的標籤依賴t+17）
-        - 訓練集最後的樣本可能與測試集開頭的樣本在時間上重疊
-        - 導致信息洩漏，過度樂觀的CV分數
-        
-        為什麼需要Embargo？
-        - 防止同一時期的市場信息在train和test中共享
-        - 特別是高頻交易中，相鄰時間點高度相關
-        
-        Args:
-            n_samples: 總樣本數
-            n_splits: CV折數
-        
-        Returns:
-            [(train_idx, test_idx), ...] 列表
-        """
-        if not self.enable_purged_cv:
-            # 如果未啟用，使用標準TimeSeriesSplit
-            from sklearn.model_selection import TimeSeriesSplit
-            tscv = TimeSeriesSplit(n_splits=n_splits)
-            return list(tscv.split(range(n_samples)))
-        
-        from sklearn.model_selection import TimeSeriesSplit
-        
-        # 基礎時間序列分割
-        tscv = TimeSeriesSplit(n_splits=n_splits)
-        splits = []
-        
-        # 獲取lag參數（從配置或使用默認值）
-        lag = getattr(self, '_current_lag', self.scaled_config.get('label_lag', 17))
-        # 🔧 FIX: Enhanced embargo = max(embargo_pct, lag×2)
-        # Reference: Lopez de Prado (2018), embargo should be at least 2×lag
-        embargo_from_pct = int(n_samples * self.embargo_pct)
-        embargo_from_lag = lag * 2  # At least 2× lag
-        embargo_samples = max(embargo_from_pct, embargo_from_lag, 1)
-        
-        for train_idx, test_idx in tscv.split(range(n_samples)):
-            # 1. Purge: 移除train末尾可能與test重疊的樣本
-            #    如果train的樣本i的標籤依賴t+lag，而t+lag落入test範圍
-            #    則應該從train中移除
-            purge_start = test_idx[0] - lag
-            purge_mask = train_idx < purge_start
-            train_idx_purged = train_idx[purge_mask]
-            
-            # 2. Embargo: 移除test開頭的部分樣本
-            #    防止訓練集信息通過相鄰時間點洩漏到測試集
-            test_idx_embargoed = test_idx[embargo_samples:]
-            
-            # 驗證分割有效性
-            if len(train_idx_purged) > 100 and len(test_idx_embargoed) > 20:
-                splits.append((train_idx_purged, test_idx_embargoed))
-                self.logger.debug(
-                    f"✅ Purged CV Split: "
-                    f"Train={len(train_idx_purged)} (purged {len(train_idx)-len(train_idx_purged)}), "
-                    f"Test={len(test_idx_embargoed)} (embargoed {embargo_samples})"
-                )
-            else:
-                self.logger.warning(
-                    f"⚠️ Split太小，跳過: Train={len(train_idx_purged)}, "
-                    f"Test={len(test_idx_embargoed)}"
-                )
-        
-        if len(splits) == 0:
-            self.logger.warning("⚠️ Purged CV無有效分割，回退到標準TimeSeriesSplit")
-            return list(tscv.split(range(n_samples)))
-        
-        self.logger.info(
-            f"🔒 Purged CV: {len(splits)} 個有效splits (lag={lag}, embargo={embargo_samples})"
-        )
-        
-        return splits
-
     def calculate_comprehensive_metrics(self, y_true, y_pred, y_pred_proba=None, returns=None):
         metrics = {}
-        metrics['f1_weighted'] = compute_f1_score(y_true, y_pred, average='weighted')
+        metrics['f1_weighted'] = f1_score(y_true, y_pred, average='weighted')
         metrics['accuracy'] = accuracy_score(y_true, y_pred)
         metrics['precision_weighted'] = precision_score(y_true, y_pred, average='weighted', zero_division=0)
         metrics['recall_weighted'] = recall_score(y_true, y_pred, average='weighted', zero_division=0)
@@ -2380,9 +1855,7 @@ class FeatureOptimizer:
 
         if returns is not None:
             positions = y_pred - 1  # Simplified
-            # 🔧 FIX: Remove shift(-1), use proper alignment
-            # Position taken at t based on signal, realized at t+1
-            strategy_returns = pd.Series(positions).shift(1) * returns
+            strategy_returns = positions * returns.shift(-1)
             metrics['strategy_return'] = np.sum(strategy_returns.dropna())
             std = np.std(strategy_returns.dropna())
             metrics['sharpe'] = np.mean(strategy_returns.dropna()) / std * np.sqrt(252) if std > 0 else 0
@@ -2403,12 +1876,11 @@ class FeatureOptimizer:
 
             # 計算交易收益 - 修復numpy數組索引問題
             positions = pd.Series((predictions - 1), index=y.index)  # 轉換為 {-1, 0, 1} Series
-            # 🔧 FIX: Remove shift(-1) - use current period returns
-            returns = prices.pct_change()  # 當期收益（已知）
+            returns = prices.pct_change().shift(-1)  # 下一期收益
 
-            # 對齊數據 - position在t時決定，在t+1時實現
+            # 對齊數據
             common_idx = positions.index.intersection(returns.index)
-            positions_aligned = positions.shift(1).reindex(common_idx)
+            positions_aligned = positions.reindex(common_idx)
             returns_aligned = returns.reindex(common_idx)
 
             # 計算策略收益
@@ -2669,9 +2141,7 @@ class FeatureOptimizer:
         """🚀 123.md建議：參數化標籤生成 + 性能約束的目標函數"""
         try:
             # Phase 4.1: 擴展空間
-            # 阶段D：扩展特征选择方法（从2种→5种）
-            selection_method = trial.suggest_categorical('feature_selection_method', 
-                ['stability', 'mutual_info', 'rfe', 'lasso', 'tree_based'])
+            selection_method = trial.suggest_categorical('feature_selection_method', ['stability', 'mutual_info'])
             noise_reduction = trial.suggest_categorical('noise_reduction', [True, False])
             feature_interaction = trial.suggest_categorical('feature_interaction', [False, True])
             # 🚀 Fail-Fast檢查預加載數據
@@ -2694,118 +2164,120 @@ class FeatureOptimizer:
             except Exception as e:
                 self.logger.warning(f"無法讀取Layer1結果: {e}")
 
-            # ========== 🚀 P0修復：強制使用Layer1標籤，確保分層優化一致性 ==========
-            # 
-            # 問題分析：
-            # - Layer1經過150 trials優化，找到最優標籤參數（分數1.0185，完美分佈25/50/25）
-            # - Layer2重新生成標籤導致分佈偏斜（9.7/37.2/53.1），破壞Layer1成果
-            # - 導致賣出信號召回率僅8.2%，系統無法有效對沖下跌風險
-            #
-            # 解決方案：
-            # - Layer2直接使用Layer1物化的標籤，不再重新生成
-            # - 確保標籤分佈保持Layer1優化的結果
-            # - lag參數從Layer1讀取，用於特徵對齊
-            # ========================================================================
-            
-            # 加載Layer1優化的標籤
-            labels_df = self.load_latest_labels()
-            if labels_df is None or 'label' not in labels_df.columns:
-                error_msg = (
-                    "❌ Layer2依賴Layer1標籤，但未找到標籤文件。\n"
-                    "請確保：\n"
-                    "  1. Layer1優化已完成\n"
-                    "  2. 標籤文件存在於 data/processed/labels/{symbol}_{timeframe}/\n"
-                    "  3. 或 configs/label_params_{timeframe}.json 包含 materialized_path"
-                )
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-            
-            labels = labels_df['label'].astype(int)
-            
-            # 從Layer1配置讀取lag參數（用於特徵對齊和性能計算）
-            try:
-                label_config = self.config_path / f"label_params_{self.timeframe}.json"
-                if not label_config.exists():
-                    label_config = self.config_path / "label_params.json"
-                
-                if not label_config.exists():
-                    raise FileNotFoundError(f"未找到Layer1配置: {label_config}")
-                
-                with open(label_config, 'r', encoding='utf-8') as f:
-                    layer1_result = json.load(f)
-                    layer1_best_params = layer1_result.get('best_params', {})
-                    lag = int(layer1_best_params.get('lag', 14))
-                    threshold_method = layer1_best_params.get('threshold_method', 'unknown')
-                    layer1_score = layer1_result.get('best_score', 0.0)
-                    
-                    self.logger.info("=" * 60)
-                    self.logger.info("🔗 Layer2使用Layer1優化結果:")
-                    self.logger.info(f"  Layer1分數: {layer1_score:.4f}")
-                    self.logger.info(f"  標籤方法: {threshold_method}")
-                    self.logger.info(f"  lag週期: {lag}")
-                    self.logger.info(f"  買入分位: {layer1_best_params.get('buy_quantile', 'N/A')}")
-                    self.logger.info(f"  賣出分位: {layer1_best_params.get('sell_quantile', 'N/A')}")
-                    if 'profit_multiplier' in layer1_best_params:
-                        self.logger.info(f"  止盈倍數: {layer1_best_params['profit_multiplier']:.2f}×ATR")
-                        self.logger.info(f"  止損倍數: {layer1_best_params['stop_multiplier']:.2f}×ATR")
-                        rr_ratio = layer1_best_params['profit_multiplier'] / layer1_best_params['stop_multiplier']
-                        self.logger.info(f"  風險回報比: {rr_ratio:.2f}:1")
-                    self.logger.info("=" * 60)
-                    
-            except Exception as e:
-                self.logger.error(f"❌ 無法讀取Layer1配置: {e}")
-                raise ValueError(f"Layer2需要Layer1配置文件: {e}")
-            
-            # 驗證標籤分佈（應該接近Layer1的優化結果）
-            dist = labels.value_counts(normalize=True).sort_index()
-            actual_dist = [dist.get(i, 0.0) for i in [0, 1, 2]]
-            
-            self.logger.info(
-                f"📊 Layer1標籤分佈: "
-                f"賣出={actual_dist[0]:.1%}, 持有={actual_dist[1]:.1%}, 買入={actual_dist[2]:.1%}"
+            base_lag_min, base_lag_max = self.scaler.get_base_lag_range(self.timeframe)
+            lag_meta_min, lag_meta_max = self.scaler.adjust_lag_range_with_meta(
+                self.timeframe,
+                (base_lag_min, base_lag_max),
+                self.scaled_config.get('meta_vol', 0.02)
             )
+
+            # 🚀 修復版：自適應參數範圍設置
+            total_features = len(self.features.columns)
+            data_size = len(self.close_prices)
             
-            # 標籤質量檢查（警告但不阻止）
-            target_dist = [0.25, 0.50, 0.25]
-            deviations = [abs(actual_dist[i] - target_dist[i]) for i in range(3)]
-            max_deviation = max(deviations)
-            
-            if max_deviation > 0.15:
-                self.logger.warning(
-                    f"⚠️ 標籤分佈偏差較大: {max_deviation:.1%} > 15%，"
-                    f"可能影響模型性能。建議檢查Layer1優化結果。"
-                )
-            elif max_deviation > 0.08:
-                self.logger.info(
-                    f"📊 標籤分佈偏差中等: {max_deviation:.1%}，"
-                    f"在可接受範圍內"
-                )
+            # 🚀 Layer1聯動：基於標籤質量動態調整特徵參數
+            feature_boost = 0
+            lookback_reduction = 0
+            if layer1_params:
+                # 分析Layer1標籤質量
+                buy_q = layer1_params.get('buy_quantile', 0.7)
+                sell_q = layer1_params.get('sell_quantile', 0.3)
+                
+                # 計算標籤熵估計（分位數差距越小，標籤分佈越均勻）
+                quantile_gap = buy_q - sell_q
+                estimated_entropy = 1.2 - (quantile_gap - 0.4) * 2  # 經驗公式
+                
+                # 標籤熵低於0.9時，增加特徵數量以提升區分能力
+                if estimated_entropy < 0.9:
+                    feature_boost = 20
+                    self.logger.info(f"🔧 標籤熵偏低({estimated_entropy:.3f})，增加特徵數量+{feature_boost}")
+                
+                # 標籤持有率偏高時，縮小lookback窗口以增加靈敏度
+                target_hold = layer1_params.get('target_hold_ratio', 0.5)
+                if target_hold > 0.6:
+                    lookback_reduction = 100
+                    self.logger.info(f"🔧 目標持有率偏高({target_hold:.1%})，縮短lookback窗口-{lookback_reduction}")
+
+            # 🚀 修复版：基于Layer1结果动态调整参数范围
+            if layer1_params:
+                layer1_range_mode = self.flags.get('layer1_range_mode', 'narrow')
+                l1_lag = layer1_params.get('lag', 12)
+                feature_lag_min_default = lag_meta_min
+                feature_lag_max_default = lag_meta_max
+                min_lag = max(feature_lag_min_default, int(l1_lag) - 4)
+                max_lag = min(feature_lag_max_default, int(l1_lag) + 4)
+                if min_lag > max_lag:
+                    max_lag = min_lag
+                self.logger.info(f"🔗 Layer1聯動lag鄰域: {l1_lag} ±4 → 搜索範圍[{min_lag}, {max_lag}]")
+                
+                l1_buy_q = layer1_params.get('buy_quantile', 0.75)
+                l1_sell_q = layer1_params.get('sell_quantile', 0.25)
+
+                if layer1_range_mode == 'wide':
+                    profit_quantile_min = max(0.72, l1_buy_q - 0.04)
+                    profit_quantile_max = min(0.78, l1_buy_q + 0.04)
+                    loss_quantile_min = max(0.05, min(0.28, l1_sell_q - 0.04))
+                    loss_quantile_max = min(0.45, max(0.06, l1_sell_q + 0.04))
+                else:
+                    profit_quantile_min = max(0.73, l1_buy_q - 0.02)
+                    profit_quantile_max = min(0.77, l1_buy_q + 0.02)
+                    loss_quantile_min = max(0.05, min(0.27, l1_sell_q - 0.02))
+                    loss_quantile_max = min(0.45, max(0.06, l1_sell_q + 0.02))
+
+                # 安全校正：避免低於高（Optuna 要求 low<=high）
+                if loss_quantile_min > loss_quantile_max:
+                    mid = float(l1_sell_q)
+                    span = 0.01
+                    loss_quantile_min, loss_quantile_max = max(0.03, mid - span), min(0.49, mid + span)
+                if self.timeframe == "15m":
+                    loss_quantile_max = min(loss_quantile_max, 0.20)
+                if profit_quantile_min > profit_quantile_max:
+                    mid = float(l1_buy_q)
+                    span = 0.01
+                    profit_quantile_min, profit_quantile_max = max(0.51, mid - span), min(0.97, mid + span)
+                
+                self.logger.info(f"🔗 Layer1聯動分位數: buy_q={l1_buy_q:.3f} → profit_q[{profit_quantile_min:.3f}, {profit_quantile_max:.3f}]")
+                self.logger.info(f"🔗 Layer1聯動分位數: sell_q={l1_sell_q:.3f} → loss_q[{loss_quantile_min:.3f}, {loss_quantile_max:.3f}]")
             else:
-                self.logger.info(
-                    f"✅ 標籤分佈良好，最大偏差僅 {max_deviation:.1%}"
-                )
-            
-            # 檢查是否有缺失類別
-            missing_classes = [i for i in [0, 1, 2] if dist.get(i, 0) == 0]
-            if missing_classes:
-                class_names = {0: '賣出', 1: '持有', 2: '買入'}
-                missing_names = [class_names[c] for c in missing_classes]
-                self.logger.error(
-                    f"❌ 標籤缺失類別: {missing_classes} ({missing_names})，"
-                    f"無法進行多分類訓練"
-                )
-                return 0.0
-            
-            # 統計總樣本數
-            total_samples = len(labels)
-            self.logger.info(f"📊 Layer1標籤總數: {total_samples:,}個")
-            
-            # 移除動態標籤再平衡（保持Layer1原始結果）
-            # ❌ 不再執行以下邏輯：
-            # if self.flags.get('enable_dynamic_label_balance', False):
-            #     labels = self._rebalance_labels(...)
-            
-            self.logger.info("✅ Layer1標籤加載完成，跳過重新生成，確保分層優化一致性")
+                min_lag = self.scaler.get_base_lag_range(self.timeframe)[0]
+                max_lag = lag_meta_max
+                profit_quantile_min, profit_quantile_max = (0.72, 0.78)
+                loss_quantile_min, loss_quantile_max = (0.22, 0.28)
+                self.logger.warning("⚠️ Layer1聯動失敗，使用縮窄後的參數搜索")
+                if min_lag > max_lag:
+                    max_lag = min_lag
+
+            lag = trial.suggest_int('lag', min_lag, max_lag)
+            # 最終防呆（再檢一次）
+            if loss_quantile_min > loss_quantile_max:
+                loss_quantile_min, loss_quantile_max = loss_quantile_max, loss_quantile_min
+            if profit_quantile_min > profit_quantile_max:
+                profit_quantile_min, profit_quantile_max = profit_quantile_max, profit_quantile_min
+
+            profit_quantile = trial.suggest_float('profit_quantile', float(profit_quantile_min), float(profit_quantile_max))
+            loss_quantile = trial.suggest_float('loss_quantile', float(loss_quantile_min), float(loss_quantile_max))
+
+            lookback_window = trial.suggest_int('lookback_window', 450, 550)
+
+            self.logger.info(f"📊 自適應參數: lag={lag}, lookback={lookback_window}, features={total_features}")
+
+            # 🚀 使用預緩存的價格序列生成標籤
+            labels = self._generate_labels(
+                self.close_prices,
+                lag=lag,
+                profit_quantile=profit_quantile,
+                loss_quantile=loss_quantile,
+                lookback_window=lookback_window
+            )
+
+            if self.flags.get('enable_dynamic_label_balance', False):
+                labels = self._rebalance_labels(
+                    labels,
+                lag=lag,
+                profit_quantile=profit_quantile,
+                loss_quantile=loss_quantile,
+                lookback_window=lookback_window
+            )
 
             # 🔧 數據對齊與清理
             common_idx = self.features.index.intersection(labels.index)
@@ -2827,11 +2299,9 @@ class FeatureOptimizer:
             fine_k = selection_cfg['fine_k']
             corr_threshold = selection_cfg['correlation_threshold']
 
-            self.logger.info(
-                f"🔧 特徵選擇參數: coarse_k={coarse_k} ({coarse_k/n_features:.1%}), "
-                f"fine_k={fine_k} ({fine_k/coarse_k:.1%}), "
-                f"相關性閾值={corr_threshold:.3f}"
-            )
+            boost_msg = f", 特徵增強+{feature_boost}" if feature_boost > 0 else ""
+            lookback_msg = f", 窗口縮短-{lookback_reduction}" if lookback_reduction > 0 else ""
+            self.logger.info(f"🔧 Layer1聯動特徵選擇: coarse_k={coarse_k} ({coarse_k/n_features:.1%}), fine_k={fine_k}{boost_msg}{lookback_msg}")
 
             # 統一順序：先去相關(對冗餘) → 再應用穩定性遮罩 → 再粗/精選
             # 注意：此處不再於全資料集層級直接裁切為 stable_cols，避免"先穩定再去相關"的反向效果
@@ -2849,10 +2319,8 @@ class FeatureOptimizer:
 
             current_splits = self.flags.get('cv_splits', 5)
 
-            # 🚀 P0修復：使用Purged CV（防止時間洩漏）
-            # 保存當前lag供purge使用
-            self._current_lag = lag
-            outer_cv = self._get_purged_cv_splits(n_samples=len(X), n_splits=current_splits)
+            # 🚀 使用自定義 CV 切分策略（多階段可調整 n_splits）
+            outer_cv = list(self._make_cv_splits(X, n_splits=current_splits))
             cv_scores = []
             # initialize feature aggregation to avoid NameError
             phase = 'full'
@@ -2932,113 +2400,18 @@ class FeatureOptimizer:
                             cv_scores.append(0.0)
                             continue
 
-                    # ========== 🔧 核心修复：15m特征优先选择（解决1h特征过多问题） ==========
-                    # 强制至少50%的粗选特征来自原生15m时间框架
-                    min_native_ratio = self.scaled_config.get('min_native_feature_ratio', 0.50)
-                    
-                    # 识别15m原生特征
-                    native_15m_features = [col for col in X_train_var.columns 
-                                         if col.startswith('15m_native_')]
-                    non_native_features = [col for col in X_train_var.columns 
-                                          if not col.startswith('15m_native_')]
-                    
-                    target_native_count = int(fold_coarse_k * min_native_ratio)
-                    target_native_count = min(target_native_count, len(native_15m_features))
-                    
-                    if len(native_15m_features) > 0 and target_native_count > 0:
-                        # 从15m特征中强制选择一部分
-                        from sklearn.feature_selection import SelectKBest, mutual_info_classif
-                        
-                        native_15m_k = min(target_native_count, len(native_15m_features))
-                        native_selector = SelectKBest(mutual_info_classif, k=native_15m_k)
-                        
-                        try:
-                            X_train_native = X_train_var[native_15m_features]
-                            native_selector.fit(X_train_native, y_train)
-                            forced_native_cols = X_train_native.columns[
-                                native_selector.get_support(indices=True)
-                            ].tolist()
-                            
-                            # 剩余配额从非15m特征中选择
-                            remaining_k = fold_coarse_k - len(forced_native_cols)
-                            
-                            if remaining_k > 0 and len(non_native_features) > 0:
-                                X_train_nonnative = X_train_var[non_native_features]
-                                nonnative_k = min(remaining_k, len(non_native_features))
-                                nonnative_selector = SelectKBest(mutual_info_classif, k=nonnative_k)
-                                nonnative_selector.fit(X_train_nonnative, y_train)
-                                selected_nonnative_cols = X_train_nonnative.columns[
-                                    nonnative_selector.get_support(indices=True)
-                                ].tolist()
-                                
-                                cols_coarse = forced_native_cols + selected_nonnative_cols
-                            else:
-                                cols_coarse = forced_native_cols
-                            
-                            native_ratio = len(forced_native_cols) / max(len(cols_coarse), 1)
-                            self.logger.info(
-                                f"  🎯 Fold {fold_idx+1}: 15m特征优先 - "
-                                f"15m={len(forced_native_cols)}/{len(cols_coarse)} "
-                                f"({native_ratio:.1%}), 目标≥{min_native_ratio:.0%}"
-                            )
-                        except Exception as e:
-                            self.logger.warning(f"  15m特征优先选择失败，回退到标准选择: {e}")
-                            # 回退到标准选择
-                            cols_coarse = None
+                    cols_var_tuple = tuple(cols_var)
+                    coarse_key = (current_splits, fold_idx, tuple(X_train_var.columns), fold_coarse_k)
+                    if coarse_key in coarse_cache:
+                        cols_coarse = coarse_cache[coarse_key]
                     else:
-                        cols_coarse = None
-                    
-                    # 如果15m优先选择失败，使用标准选择
-                    if cols_coarse is None:
-                        cols_var_tuple = tuple(cols_var)
-                        coarse_key = (current_splits, fold_idx, tuple(X_train_var.columns), fold_coarse_k)
-                        if coarse_key in coarse_cache:
-                            cols_coarse = coarse_cache[coarse_key]
-                        else:
-                            # 阶段D：根据selection_method选择不同的特征选择器
-                            if selection_method == 'stability':
-                                score_func = f_classif
-                            elif selection_method == 'mutual_info':
-                                score_func = mutual_info_classif
-                            elif selection_method == 'rfe':
-                                # RFE (Recursive Feature Elimination)
-                                from sklearn.feature_selection import RFE
-                                from sklearn.ensemble import GradientBoostingClassifier
-                                estimator = GradientBoostingClassifier(n_estimators=50, max_depth=3, random_state=42)
-                                rfe_selector = RFE(estimator=estimator, n_features_to_select=fold_coarse_k, step=0.1)
-                                rfe_selector.fit(X_train_var, y_train)
-                                cols_coarse = X_train_var.columns[rfe_selector.get_support(indices=True)].tolist()
-                                coarse_cache[coarse_key] = cols_coarse
-                                score_func = None  # RFE已处理，跳过SelectKBest
-                            elif selection_method == 'lasso':
-                                # LASSO-based selection
-                                from sklearn.feature_selection import SelectFromModel
-                                from sklearn.linear_model import LassoCV
-                                lasso = LassoCV(cv=3, random_state=42, max_iter=500)
-                                lasso_selector = SelectFromModel(lasso, max_features=fold_coarse_k, threshold=-np.inf)
-                                lasso_selector.fit(X_train_var, y_train)
-                                cols_coarse = X_train_var.columns[lasso_selector.get_support(indices=True)].tolist()
-                                coarse_cache[coarse_key] = cols_coarse
-                                score_func = None  # LASSO已处理
-                            elif selection_method == 'tree_based':
-                                # Tree-based feature importance
-                                from sklearn.ensemble import RandomForestClassifier
-                                rf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42, n_jobs=-1)
-                                rf.fit(X_train_var, y_train)
-                                importances = rf.feature_importances_
-                                top_indices = np.argsort(importances)[::-1][:fold_coarse_k]
-                                cols_coarse = X_train_var.columns[top_indices].tolist()
-                                coarse_cache[coarse_key] = cols_coarse
-                                score_func = None  # Tree-based已处理
-                            else:
-                                score_func = f_classif  # 默认
-                            
-                            # 如果使用SelectKBest（stability或mutual_info）
-                            if score_func is not None:
-                                coarse_selector = SelectKBest(score_func, k=fold_coarse_k)
-                                coarse_selector.fit(X_train_var, y_train)
-                                cols_coarse = X_train_var.columns[coarse_selector.get_support(indices=True)].tolist()
-                                coarse_cache[coarse_key] = cols_coarse
+                        coarse_selector = SelectKBest(
+                            f_classif if selection_method == 'stability' else mutual_info_classif,
+                            k=fold_coarse_k
+                        )
+                        coarse_selector.fit(X_train_var, y_train)
+                        cols_coarse = X_train_var.columns[coarse_selector.get_support(indices=True)].tolist()
+                        coarse_cache[coarse_key] = cols_coarse
 
                     if len(cols_coarse) == 0:
                         cv_scores.append(0.0)
@@ -3078,69 +2451,8 @@ class FeatureOptimizer:
 
                     # 最終不再重複去相關，避免"重複砍"造成不一致
                     selected_cols = list(X_train_fine_df.columns)
-                    
-                    # ========== 🚀 P6修復：多時框平衡約束（Task 3.1） ==========
-                    # 統計各時框特徵數量
-                    tf_counts = {'native_15m': 0, '1h': 0, '4h': 0, 'other': 0}
-                    for col in selected_cols:
-                        if col.startswith('15m_native_'):
-                            tf_counts['native_15m'] += 1
-                        elif col.startswith('1h_'):
-                            tf_counts['1h'] += 1
-                        elif col.startswith('4h_'):
-                            tf_counts['4h'] += 1
-                        else:
-                            tf_counts['other'] += 1
-                    
-                    total_selected = len(selected_cols)
-                    tf_ratios = {k: v/total_selected for k, v in tf_counts.items()} if total_selected > 0 else {}
-                    
-                    # 診斷日誌
-                    if fold_idx == 0 or tf_ratios.get('native_15m', 0) < 0.20:  # 第一折或異常時輸出
-                        self.logger.info(
-                            f"  時框分佈: "
-                            f"15m={tf_ratios.get('native_15m', 0):.1%}, "
-                            f"1h={tf_ratios.get('1h', 0):.1%}, "
-                            f"4h={tf_ratios.get('4h', 0):.1%}, "
-                            f"其他={tf_ratios.get('other', 0):.1%}"
-                        )
-                    
-                    # 檢查是否過度集中在單一時框
-                    max_tf_ratio = max(tf_ratios.values()) if tf_ratios else 1.0
-                    if max_tf_ratio > 0.75:
-                        dominant_tf = max(tf_ratios, key=tf_ratios.get) if tf_ratios else 'unknown'
-                        self.logger.warning(
-                            f"  ⚠️ Fold {fold_idx+1}: {dominant_tf}特徵佔比過高 "
-                            f"({max_tf_ratio:.1%} > 75%)，缺少多尺度視角"
-                        )
-                    
-                    # 如果原生15m特徵太少（<25%），嘗試補充
-                    native_ratio = tf_counts.get('native_15m', 0) / total_selected if total_selected > 0 else 0
-                    if native_ratio < 0.25 and total_selected > 0:
-                        # 從全特徵集中找15m特徵
-                        available_15m = [c for c in X_train_var.columns if c.startswith('15m_native_')]
-                        if available_15m:
-                            # 需要補充的數量
-                            target_15m_count = max(1, int(total_selected * 0.30))
-                            additional_needed = target_15m_count - tf_counts['native_15m']
-                            
-                            if additional_needed > 0:
-                                # 選擇變異度最高的15m特徵補充
-                                try:
-                                    variances = X_train_var[available_15m].var().sort_values(ascending=False)
-                                    add_15m = variances.head(min(additional_needed, len(available_15m))).index.tolist()
-                                    
-                                    # 合併到選擇列表
-                                    selected_cols = list(set(selected_cols + add_15m))
-                                    self.logger.info(
-                                        f"  🔧 補充{len(add_15m)}個15m特徵 "
-                                        f"(原{native_ratio:.1%} → 目標30%+)"
-                                    )
-                                except Exception as e:
-                                    self.logger.warning(f"  補充15m特徵失敗: {e}")
-                    
-                    df_train_final = X_train_fine_df[selected_cols] if all(c in X_train_fine_df.columns for c in selected_cols) else X_train_fine_df
-                    X_test_fine_df = X_test_fine_df[[c for c in selected_cols if c in X_test_fine_df.columns]]
+                    df_train_final = X_train_fine_df[selected_cols]
+                    X_test_fine_df = X_test_fine_df[selected_cols]
 
                     if df_train_final.shape[1] < 3:
                         cv_scores.append(0.0)
@@ -3218,26 +2530,16 @@ class FeatureOptimizer:
                     if y_pred is None:
                         y_pred = classifier.predict(X_test_final)
                     # 複合評分：提高 macro F1 權重以降低持有類主導
-                    f1_w = compute_f1_score(y_test, y_pred, average='weighted', zero_division=0)
-                    f1_m = compute_f1_score(y_test, y_pred, average='macro', zero_division=0)
+                    f1_w = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+                    f1_m = f1_score(y_test, y_pred, average='macro', zero_division=0)
                     fold_score = 0.5 * f1_m + 0.5 * f1_w
 
-                    # 擴充度量（✅ P0修復：確保CV指標正確計算）
-                    # ✅ BUG修复：显式导入避免作用域问题
-                    from sklearn.metrics import precision_score, recall_score, balanced_accuracy_score
+                    # 擴充度量
                     try:
                         prec_m = precision_score(y_test, y_pred, average='macro', zero_division=0)
                         rec_m = recall_score(y_test, y_pred, average='macro', zero_division=0)
                         bal_acc = balanced_accuracy_score(y_test, y_pred)
-                        
-                        # ✅ 調試日誌：確認指標被正確計算
-                        if prec_m == 0 or rec_m == 0 or bal_acc == 0:
-                            self.logger.warning(
-                                f"  ⚠️ Fold {fold_idx+1} CV指標異常: "
-                                f"prec={prec_m:.3f}, rec={rec_m:.3f}, bal_acc={bal_acc:.3f}"
-                            )
-                    except Exception as e:
-                        self.logger.error(f"  ❌ Fold {fold_idx+1} CV指標計算失敗: {e}")
+                    except Exception:
                         prec_m, rec_m, bal_acc = 0.0, 0.0, 0.0
 
                     auc_macro = None
@@ -3250,52 +2552,7 @@ class FeatureOptimizer:
 
                     try:
                         cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2])
-                        
-                        # 🚀 P2修復：計算並記錄各類召回率，用於動態權重調整
-                        class_recalls = {}
-                        cls_names = {0: '賣出', 1: '持有', 2: '買入'}
-                        
-                        for cls_idx in range(3):
-                            if cm[cls_idx].sum() > 0:
-                                recall = cm[cls_idx, cls_idx] / cm[cls_idx].sum()
-                                class_recalls[cls_idx] = float(recall)
-                        
-                        # 更新全局召回率歷史（指數移動平均）
-                        if not hasattr(self, '_class_recall_history'):
-                            self._class_recall_history = {}
-                        
-                        for cls_idx, recall in class_recalls.items():
-                            if cls_idx in self._class_recall_history:
-                                # EMA: alpha=0.3（新值權重30%）
-                                self._class_recall_history[cls_idx] = (
-                                    0.7 * self._class_recall_history[cls_idx] + 
-                                    0.3 * recall
-                                )
-                            else:
-                                self._class_recall_history[cls_idx] = recall
-                        
-                        # 診斷日誌（僅在召回率異常時輸出）
-                        for cls_idx in [0, 1, 2]:
-                            recall_val = class_recalls.get(cls_idx, 0.0)
-                            hist_val = self._class_recall_history.get(cls_idx, 0.0)
-                            
-                            # 狀態判斷
-                            if recall_val > 0.40:
-                                status = "✅"
-                            elif recall_val > 0.25:
-                                status = "📊"
-                            else:
-                                status = "⚠️"
-                            
-                            # 只記錄異常情況（召回率<35%）或優秀情況（>70%）
-                            if recall_val < 0.35 or recall_val > 0.70:
-                                self.logger.info(
-                                    f"  {status} {cls_names[cls_idx]}召回率: "
-                                    f"本fold={recall_val:.1%}, 歷史EMA={hist_val:.1%}"
-                                )
-                        
-                    except Exception as cm_error:
-                        self.logger.warning(f"  混淆矩陣計算失敗: {cm_error}")
+                    except Exception:
                         cm = None
 
                     if fold_score > 0.7:  # 较高分数时进行额外记录
@@ -3397,11 +2654,11 @@ class FeatureOptimizer:
                     y_holdout_proba = holdout_model.predict_proba(X_holdout) if hasattr(holdout_model, 'predict_proba') else None
                     
                     # 計算驗證集指標
-                    from sklearn.metrics import (f1_score as compute_f1_score_local, precision_score, recall_score, 
+                    from sklearn.metrics import (f1_score, precision_score, recall_score, 
                                                  balanced_accuracy_score, roc_auc_score)
                     
-                    holdout_f1_macro = float(compute_f1_score_local(y_holdout, y_holdout_pred, average='macro', zero_division=0))
-                    holdout_f1_weighted = float(compute_f1_score_local(y_holdout, y_holdout_pred, average='weighted', zero_division=0))
+                    holdout_f1_macro = float(f1_score(y_holdout, y_holdout_pred, average='macro', zero_division=0))
+                    holdout_f1_weighted = float(f1_score(y_holdout, y_holdout_pred, average='weighted', zero_division=0))
                     
                     holdout_metrics = {
                         'f1_macro': holdout_f1_macro,
@@ -3919,7 +3176,7 @@ class FeatureOptimizer:
             y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
-            scores.append(compute_f1_score(y_test, y_pred, average='weighted'))
+            scores.append(f1_score(y_test, y_pred, average='weighted'))
         return scores
 
     def materialize_best_features(self, data: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
@@ -4099,19 +3356,17 @@ class FeatureOptimizer:
                         )
 
                 except Exception as e:
-                    self.logger.error("Layer2 Trial %s 未處理的例外: %s", trial_idx, e)
-                    self.logger.debug("Trial %s stacktrace:\n%s", trial_idx, traceback.format_exc())
                     duration = time.perf_counter() - start_trial
                     trial_durations.append(duration)
                     failed_trials += 1
                     consecutive_failures += 1
+                    self.logger.warning(f"⚠️ Trial {trial_idx} 失败: {e}")
 
-                    if consecutive_failures >= self.scaled_config.get('l2_consecutive_fail_limit', 2):
-                        self.logger.error("❌ 連續 %s 次失敗，中止 Layer2 trials", consecutive_failures)
+                    if consecutive_failures >= 10:
+                        self.logger.error(f"❌ 连续{consecutive_failures}次失败，停止优化")
                         break
-                    fail_rate_limit = self.scaled_config.get('l2_fail_rate_limit', 0.3)
-                    if failed_trials > n_trials * fail_rate_limit:
-                        self.logger.error("❌ Layer2 Trial 失敗率過高（%s/%s），請檢查日誌排查根因", failed_trials, trial_idx + 1)
+                    if failed_trials > n_trials * 0.5:
+                        self.logger.error(f"❌ 失败率过高 ({failed_trials}/{trial_idx+1})，停止优化")
                         break
                     continue
 
@@ -4397,168 +3652,18 @@ class FeatureOptimizer:
         return labels
 
     def _compute_sample_weights(self, y: pd.Series) -> np.ndarray:
-        """🚀 P2修復：增強版樣本權重 - 動態加權 + 稀有類保護 + 召回率反饋
-        
-        改進點：
-        1. 基礎平衡權重（sklearn標準）
-        2. 稀有類加倍保護（<12%樣本）
-        3. 主導類權重抑制（>60%樣本）
-        4. 歷史召回率反饋（針對預測差的類別加強）
-        
-        預期效果：
-        - 賣出類召回率: 8.2% → 40-50%
-        - 類別平衡性: 大幅改善
-        - Precision-macro: 0.0 → 0.45+
-        """
+        """計算多類別平衡樣本權重，避免長尾類別被忽視。"""
         try:
             y_series = pd.Series(y)
             value_counts = y_series.value_counts().to_dict()
             classes = sorted(value_counts.keys())
             total = float(len(y_series))
             n_classes = float(len(classes))
-            
-            if total == 0 or n_classes == 0:
-                return np.ones(len(y), dtype=float)
-            
-            # ========== 第1層：基礎平衡權重（sklearn標準） ==========
-            base_weights = {
-                c: (total / (n_classes * float(value_counts.get(c, 1))))
-                for c in classes
-            }
-            
-            # ========== 第2層：稀有類加倍保護機制 ==========
-            enhanced_weights = base_weights.copy()
-            
-            for cls in classes:
-                cls_count = value_counts.get(cls, 0)
-                ratio = cls_count / total
-                
-                # 極稀有類（<12%）：權重×2.5，確保不被忽略
-                if ratio < 0.12:
-                    boost = 2.5
-                    enhanced_weights[cls] *= boost
-                    cls_name = {0: '賣出', 1: '持有', 2: '買入'}.get(cls, f'類{cls}')
-                    self.logger.info(
-                        f"⚖️ 極稀有類保護 - {cls_name}(class {cls}): "
-                        f"樣本={cls_count}({ratio:.1%}) → 權重×{boost:.1f}"
-                    )
-                
-                # 稀有類（12-20%）：權重×1.5
-                elif ratio < 0.20:
-                    boost = 1.5
-                    enhanced_weights[cls] *= boost
-                    cls_name = {0: '賣出', 1: '持有', 2: '買入'}.get(cls, f'類{cls}')
-                    self.logger.info(
-                        f"⚖️ 少數類增強 - {cls_name}(class {cls}): "
-                        f"樣本={cls_count}({ratio:.1%}) → 權重×{boost:.1f}"
-                    )
-                
-                # 主導類（>60%）：權重×0.75，防止過度預測
-                elif ratio > 0.60:
-                    suppress = 0.75
-                    enhanced_weights[cls] *= suppress
-                    cls_name = {0: '賣出', 1: '持有', 2: '買入'}.get(cls, f'類{cls}')
-                    self.logger.info(
-                        f"⚖️ 主導類抑制 - {cls_name}(class {cls}): "
-                        f"樣本={cls_count}({ratio:.1%}) → 權重×{suppress:.1f}"
-                    )
-            
-            # ========== 第3層：歷史召回率反饋機制 ==========
-            # 從之前fold的混淆矩陣學習，針對預測差的類別加強
-            if hasattr(self, '_class_recall_history') and self._class_recall_history:
-                for cls in classes:
-                    if cls not in self._class_recall_history:
-                        continue
-                    
-                    recall = self._class_recall_history[cls]
-                    cls_name = {0: '賣出', 1: '持有', 2: '買入'}.get(cls, f'類{cls}')
-                    
-                    # 召回率<20%的類別：額外×2.0權重（強力補償）
-                    if recall < 0.20:
-                        boost = 2.0
-                        enhanced_weights[cls] *= boost
-                        self.logger.info(
-                            f"⚖️ 低召回補償 - {cls_name}(class {cls}): "
-                            f"歷史召回={recall:.1%} → 權重×{boost:.1f}"
-                        )
-                    
-                    # 召回率20-35%的類別：×1.5權重（適度補償）
-                    elif recall < 0.35:
-                        boost = 1.5
-                        enhanced_weights[cls] *= boost
-                        self.logger.info(
-                            f"⚖️ 中召回增強 - {cls_name}(class {cls}): "
-                            f"歷史召回={recall:.1%} → 權重×{boost:.1f}"
-                        )
-                    
-                    # 召回率>80%的類別：×0.9權重（輕微抑制）
-                    elif recall > 0.80:
-                        suppress = 0.9
-                        enhanced_weights[cls] *= suppress
-                        self.logger.info(
-                            f"⚖️ 高召回抑制 - {cls_name}(class {cls}): "
-                            f"歷史召回={recall:.1%} → 權重×{suppress:.1f}"
-                        )
-            
-            # ========== 應用權重並統計 ==========
-            weights = y_series.map(enhanced_weights).astype(float).values
-            
-            # 權重統計報告
-            weight_by_class = {}
-            for cls in classes:
-                cls_mask = (y_series == cls)
-                if cls_mask.any():
-                    weight_by_class[cls] = float(weights[cls_mask].mean())
-            
-            self.logger.info("=" * 50)
-            self.logger.info("📊 最終樣本權重配置:")
-            for cls in classes:
-                cls_name = {0: '賣出', 1: '持有', 2: '買入'}.get(cls, f'類{cls}')
-                cls_count = value_counts.get(cls, 0)
-                cls_ratio = cls_count / total
-                cls_weight = weight_by_class.get(cls, 1.0)
-                
-                self.logger.info(
-                    f"  {cls_name}(class {cls}): "
-                    f"樣本={cls_count:>6}, 佔比={cls_ratio:>5.1%}, "
-                    f"平均權重={cls_weight:>5.2f}"
-                )
-            
-            self.logger.info(
-                f"📊 權重統計: "
-                f"min={weights.min():.2f}, "
-                f"max={weights.max():.2f}, "
-                f"mean={weights.mean():.2f}, "
-                f"std={weights.std():.2f}"
-            )
-            self.logger.info("=" * 50)
-            
-            return weights
-            
+            class_to_weight = {c: (total / (n_classes * float(value_counts.get(c, 1)))) for c in classes}
+            return y_series.map(class_to_weight).astype(float).values
         except Exception as e:
-            self.logger.error(f"❌ 樣本權重計算失敗: {e}")
-            import traceback
-            self.logger.error(traceback.format_exc())
-            
-            # 安全回退：基礎平衡權重
-            try:
-                y_series = pd.Series(y)
-                value_counts = y_series.value_counts().to_dict()
-                total = len(y_series)
-                n_classes = len(value_counts)
-                
-                if total > 0 and n_classes > 0:
-                    fallback_weights = y_series.map({
-                        c: total / (n_classes * count) 
-                        for c, count in value_counts.items()
-                    }).values
-                    self.logger.warning("⚠️ 使用基礎平衡權重（回退方案）")
-                    return fallback_weights
-                else:
-                    return np.ones(len(y), dtype=float)
-            except:
-                self.logger.error("❌ 回退方案也失敗，使用等權")
-                return np.ones(len(y), dtype=float)
+            self.logger.warning(f"樣本權重計算失敗，改為等權: {e}")
+            return np.ones(len(y), dtype=float)
 
     def _search_best_trade_threshold(self, y_true: pd.Series, y_proba: np.ndarray) -> tuple:
         """對多分類機率進行兩階段決策的閾值搜尋：先判斷是否交易，再在{sell,buy}中選最大。"""
@@ -4579,7 +3684,7 @@ class FeatureOptimizer:
             for tau in tau_grid:
                 do_trade = trade_strength >= tau
                 pred = np.where(do_trade, np.where(proba_sell >= proba_buy, 0, 2), 1)
-                f1_m = compute_f1_score(y_true_arr, pred, average='macro', zero_division=0)
+                f1_m = f1_score(y_true_arr, pred, average='macro', zero_division=0)
                 if f1_m > best_f1:
                     best_f1, best_tau, best_pred = f1_m, float(tau), pred
             # 細掃
@@ -4589,7 +3694,7 @@ class FeatureOptimizer:
             for tau in narrow_grid:
                 do_trade = trade_strength >= tau
                 pred = np.where(do_trade, np.where(proba_sell >= proba_buy, 0, 2), 1)
-                f1_m = compute_f1_score(y_true_arr, pred, average='macro', zero_division=0)
+                f1_m = f1_score(y_true_arr, pred, average='macro', zero_division=0)
                 if f1_m > best_f1:
                     best_f1, best_tau, best_pred = f1_m, float(tau), pred
             return best_tau, best_pred
@@ -4656,190 +3761,29 @@ class FeatureOptimizer:
         return selected_features if selected_features else list(X.columns)
 
     def _build_full_feature_matrix(self) -> pd.DataFrame:
-        """🚀 優化版：優先使用原生時間框架特徵，確保多尺度信號覆蓋"""
+        """構建一次性的完整特徵矩陣，含外部特徵、技術指標、多時框、TD、Wyckoff、Micro與衍生品。"""
         ohlcv = self.ohlcv_data
         X = pd.DataFrame(index=ohlcv.index)
-        
-        # 特徵統計（用於報告）
-        feature_stats = {
-            'native_15m': 0, 
-            'external': 0,
-            'multi_tf': 0, 
-            'strategy': 0, 
-            'derivatives': 0,
-            'total': 0
-        }
-        
-        # ========================================================================
-        # 🔧 P1文檔：特徵優先級層次（基於「15m交易，1h參考」設計理念）
-        # ========================================================================
-        # 優先級1：原生15m特徵（PRIMARY TRADING SIGNALS）
-        #   目標：80%+ 的最終選擇特徵
-        #   包含：RSI, MACD, BB, ATR, Volume, Stochastic, Momentum等
-        #   特點：最及時，無延遲，直接反應15m市場變化
-        #
-        # 優先級2：1h參考特徵（MACRO ENVIRONMENT REFERENCE）
-        #   目標：10-15% 的最終選擇特徵
-        #   包含：趨勢方向, EMAs, 支撐/阻力
-        #   特點：不含細節技術指標（無RSI/MACD等），僅提供大環境判斷
-        #   實現：通過_build_reference_timeframe_features生成
-        #
-        # 優先級3：4h超大趨勢（OPTIONAL SUPER-TREND）
-        #   目標：<5% 的最終選擇特徵
-        #   包含：趨勢方向
-        #   特點：可選，提供超長期視角
-        # ========================================================================
-        
-        # ========== 優先級1：原生15m特徵（最及時，無延遲） ==========
-        # 🔍 強制診斷日誌
-        self.logger.info(f"🔍 DEBUG: 開始生成原生{self.timeframe}特徵...")
-        self.logger.info(f"🔍 DEBUG: OHLCV shape={ohlcv.shape}, columns={list(ohlcv.columns)}")
-        
-        try:
-            native_features = self._build_native_timeframe_features(ohlcv)
-            
-            # 🔍 詳細診斷
-            self.logger.info(f"🔍 DEBUG: _build_native_timeframe_features 返回")
-            self.logger.info(f"🔍 DEBUG: 返回shape={native_features.shape}")
-            self.logger.info(f"🔍 DEBUG: 是否為空={native_features.empty}")
-            self.logger.info(f"🔍 DEBUG: 列數={len(native_features.columns)}")
-            
-            if not native_features.empty:
-                self.logger.info(f"🔍 DEBUG: 前5個特徵名: {list(native_features.columns[:5])}")
-                X = self._safe_merge(X, native_features, prefix='')
-                feature_stats['native_15m'] = len(native_features.columns)
-                self.logger.info(
-                    f"🎯 原生{self.timeframe}特徵: {feature_stats['native_15m']}個 "
-                    f"(RSI, MACD, BB, ATR, Stoch等)"
-                )
-            else:
-                self.logger.error(
-                    f"❌ 原生{self.timeframe}特徵生成為空！"
-                    f"檢查_build_native_timeframe_features方法實現"
-                )
-        except Exception as e:
-            self.logger.error(f"❌ 原生{self.timeframe}特徵生成失敗（異常）: {e}")
-            import traceback
-            self.logger.error(traceback.format_exc())
-        
-        # ========== 優先級2：外部特徵（如果有） ==========
+ 
         if isinstance(self.features, pd.DataFrame) and not self.features.empty:
-            before_count = X.shape[1]
             X = self._safe_merge(X, self.features, prefix='')
-            feature_stats['external'] = X.shape[1] - before_count
-            if feature_stats['external'] > 0:
-                self.logger.info(f"📦 外部特徵: {feature_stats['external']}個")
-        
-        # ========== 優先級3：多時框技術特徵（1h, 4h趨勢輔助） ==========
-        before_count = X.shape[1]
+ 
         tech = self.generate_technical_features(ohlcv, params={})
         X = self._safe_merge(X, tech, prefix='')
-        feature_stats['multi_tf'] = X.shape[1] - before_count
-        self.logger.info(f"📊 多時框特徵: {feature_stats['multi_tf']}個 (1h, 4h趨勢)")
-        
-        # ========== 優先級4：策略特徵（Wyckoff, TD, Micro） ==========
-        strategy_before = X.shape[1]
-        
+ 
         if self.flags.get('enable_td', True):
-            td_feat = self._generate_td_features(ohlcv)
-            if not td_feat.empty:
-                X = self._safe_merge(X, td_feat, prefix='')
-                self.logger.info(f"  ├─ TD Sequential: {len(td_feat.columns)}個")
-        
+            X = self._safe_merge(X, self._generate_td_features(ohlcv), prefix='')
         if self.flags.get('enable_wyckoff', True):
-            wyk_feat = self._generate_wyckoff_features(ohlcv)
-            if not wyk_feat.empty:
-                X = self._safe_merge(X, wyk_feat, prefix='')
-                self.logger.info(f"  ├─ Wyckoff: {len(wyk_feat.columns)}個")
-        
+            X = self._safe_merge(X, self._generate_wyckoff_features(ohlcv), prefix='')
         if self.flags.get('enable_micro', True):
-            micro_feat = self._generate_micro_features_from_ohlcv(ohlcv)
-            if not micro_feat.empty:
-                X = self._safe_merge(X, micro_feat, prefix='')
-                self.logger.info(f"  └─ Microstructure: {len(micro_feat.columns)}個")
-        
-        feature_stats['strategy'] = X.shape[1] - strategy_before
-        
-        # ========== 優先級5：衍生品特徵（可選） ==========
+            X = self._safe_merge(X, self._generate_micro_features_from_ohlcv(ohlcv), prefix='')
+ 
         deriv = self._load_derivatives_features(ohlcv.index)
         if not deriv.empty:
-            before_deriv = X.shape[1]
             X = self._safe_merge(X, deriv, prefix='')
-            feature_stats['derivatives'] = X.shape[1] - before_deriv
-            self.logger.info(f"📈 衍生品特徵: {feature_stats['derivatives']}個")
-        
-        # ========== 質量過濾 ==========
-        before_filter = X.shape[1]
+ 
         X = self._filter_low_quality_features(X)
         X = X.loc[:, ~X.columns.duplicated()]
-        filtered_count = before_filter - X.shape[1]
-        feature_stats['total'] = X.shape[1]
-        
-        # ========== 特徵組成診斷報告 ==========
-        self.logger.info("=" * 60)
-        self.logger.info("📊 完整特徵矩陣組成分析:")
-        
-        if feature_stats['total'] > 0:
-            native_pct = feature_stats['native_15m'] / feature_stats['total'] * 100
-            external_pct = feature_stats['external'] / feature_stats['total'] * 100
-            multi_tf_pct = feature_stats['multi_tf'] / feature_stats['total'] * 100
-            strategy_pct = feature_stats['strategy'] / feature_stats['total'] * 100
-            deriv_pct = feature_stats['derivatives'] / feature_stats['total'] * 100
-            
-            self.logger.info(
-                f"  原生{self.timeframe}:  {feature_stats['native_15m']:>4}個 "
-                f"({native_pct:>5.1f}%)"
-            )
-            if feature_stats['external'] > 0:
-                self.logger.info(
-                    f"  外部特徵:     {feature_stats['external']:>4}個 "
-                    f"({external_pct:>5.1f}%)"
-                )
-            self.logger.info(
-                f"  多時框:       {feature_stats['multi_tf']:>4}個 "
-                f"({multi_tf_pct:>5.1f}%)"
-            )
-            self.logger.info(
-                f"  策略特徵:     {feature_stats['strategy']:>4}個 "
-                f"({strategy_pct:>5.1f}%)"
-            )
-            if feature_stats['derivatives'] > 0:
-                self.logger.info(
-                    f"  衍生品:       {feature_stats['derivatives']:>4}個 "
-                    f"({deriv_pct:>5.1f}%)"
-                )
-            self.logger.info(f"  質量過濾:     移除{filtered_count}個低質量特徵")
-            self.logger.info(f"  最終總計:     {feature_stats['total']}個特徵")
-            
-            # 特徵多樣性診斷
-            if native_pct < 20:
-                self.logger.warning(
-                    f"⚠️ 原生{self.timeframe}特徵佔比過低: {native_pct:.1f}% < 20%，"
-                    f"建議檢查_build_native_timeframe_features實現"
-                )
-            elif native_pct < 30:
-                self.logger.info(
-                    f"📊 原生{self.timeframe}特徵佔比: {native_pct:.1f}% "
-                    f"(建議>30%以提升及時性)"
-                )
-            else:
-                self.logger.info(
-                    f"✅ 原生{self.timeframe}特徵佔比健康: {native_pct:.1f}%"
-                )
-            
-            # 檢查特徵時框多樣性
-            timeframe_diversity = sum([
-                1 if feature_stats['native_15m'] > 0 else 0,
-                1 if feature_stats['multi_tf'] > 0 else 0,
-                1 if feature_stats['strategy'] > 0 else 0
-            ])
-            self.logger.info(f"📊 特徵時框多樣性: {timeframe_diversity}/3個維度")
-            
-        else:
-            self.logger.error("❌ 特徵矩陣為空！")
-        
-        self.logger.info("=" * 60)
-        
         return X.astype('float32').fillna(0)
 
     def _build_native_timeframe_features(self, ohlcv: pd.DataFrame) -> pd.DataFrame:
@@ -4967,7 +3911,7 @@ class FeatureOptimizer:
             
             # 清理 NaN 和 Inf
             features = features.replace([np.inf, -np.inf], np.nan)
-            features = features.ffill().bfill().fillna(0)  # 修復：使用新版pandas語法
+            features = features.fillna(method='ffill').fillna(method='bfill').fillna(0)
             
             self.logger.info(f"✅ 生成 {len(features.columns)} 個原生 {self.timeframe} 特徵")
             
