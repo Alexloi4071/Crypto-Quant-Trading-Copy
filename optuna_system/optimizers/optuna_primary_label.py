@@ -637,12 +637,10 @@ class PrimaryLabelOptimizer:
             self.logger.warning("⚠️ Triple Barrier 返回空標籤")
             return pd.Series([], dtype=int)
         
-        # 🔧 步驟 2：計算未來收益（用於將「持有」分配方向）
-        lag = params.get('lag', 12)
-        future_prices = price_data.shift(-lag)
-        future_returns = (future_prices - price_data) / price_data
+        # 🔧 步驟 2：三分類 → 二分類轉換（✅ 修复数据泄漏）
+        # ❌ 旧逻辑：使用shift(-lag)会泄漏未来数据
+        # ✅ 新逻辑：使用历史动量和趋势分配"持有"信号
         
-        # 🔧 步驟 3：三分類 → 二分類轉換（保留原有邏輯）
         binary_signals = pd.Series(0, index=labels_3class.index, dtype=int)
         
         # 原「買入」(2) → 1
@@ -651,10 +649,14 @@ class PrimaryLabelOptimizer:
         # 原「賣出」(0) → -1
         binary_signals[labels_3class == 0] = -1
         
-        # 原「持有」(1) → 根據未來收益分配
+        # 原「持有」(1) → 根據歷史動量分配（✅ 不使用未來數據）
+        # 使用過去價格的短期動量來決定方向
+        lag = params.get('lag', 12)
+        short_momentum = price_data.pct_change(periods=min(5, lag))  # 短期动量（历史）
+        
         hold_mask = (labels_3class == 1)
-        binary_signals[hold_mask & (future_returns > 0)] = 1   # 未來上漲 → 買入
-        binary_signals[hold_mask & (future_returns <= 0)] = -1 # 未來下跌 → 賣出
+        binary_signals[hold_mask & (short_momentum > 0)] = 1   # 歷史上漲趨勢 → 買入
+        binary_signals[hold_mask & (short_momentum <= 0)] = -1 # 歷史下跌趨勢 → 賣出
         
         # 🔧 步驟 4：統計信號分佈
         buy_count = (binary_signals == 1).sum()
