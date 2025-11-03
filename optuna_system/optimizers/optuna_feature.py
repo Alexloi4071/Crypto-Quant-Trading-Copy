@@ -798,8 +798,9 @@ class FeatureOptimizer:
                     min_split_gain=trial.suggest_float('lgb_min_split_gain', 0.0, 0.05 if relax else 0.1),
                     min_child_samples=trial.suggest_int('lgb_min_child_samples', 2 if relax else 5, 60 if relax else 50),
                     min_child_weight=trial.suggest_float('lgb_min_child_weight', 1e-4 if relax else 1e-3, 5.0),
-                    reg_alpha=trial.suggest_float('lgb_reg_alpha', 0.0, 1.5 if relax else 2.0),
-                    reg_lambda=trial.suggest_float('lgb_reg_lambda', 0.0, 3.0 if relax else 4.0),
+                    # ✅ P1修復：增加正则化，减少过拟合（v67 gap=22.6%）
+                    reg_alpha=trial.suggest_float('lgb_reg_alpha', 0.5, 2.5 if relax else 3.5),  # 从0.0-2.0提高到0.5-3.5
+                    reg_lambda=trial.suggest_float('lgb_reg_lambda', 1.0, 5.0 if relax else 6.0),  # 从0.0-4.0提高到1.0-6.0
                     class_weight='balanced',
                     random_state=42,
                     n_jobs=-1,
@@ -1024,10 +1025,11 @@ class FeatureOptimizer:
                 stability_threshold_cap = 0.65
                 self.logger.debug(f"  低質量Layer1({signal_quality:.2f})，縮小特徵搜索空間")
         
-        # 計算實際K值
-        coarse_k_min = max(50, int(n_features * coarse_ratio_low))  # 提高最小值至50
+        # ✅ P1修復：降低特征数量，减少过拟合（v67 CV-Holdout gap=22.6%）
+        # 计算實際K值（降低30-40%以减少过拟合）
+        coarse_k_min = max(30, int(n_features * coarse_ratio_low * 0.7))  # 从50降到30，乘0.7
         coarse_k_max = min(
-            max(coarse_k_min + 10, int(n_features * coarse_ratio_high)), 
+            max(coarse_k_min + 10, int(n_features * coarse_ratio_high * 0.8)),  # 乘0.8降低上限
             n_features - 1
         )
         
@@ -1037,9 +1039,9 @@ class FeatureOptimizer:
         
         coarse_k = trial.suggest_int('coarse_k', coarse_k_min, coarse_k_max)
         
-        # 精選比例（從粗選結果中選擇）
-        fine_ratio = trial.suggest_float('fine_ratio', 0.45, 0.75)  # 擴大範圍
-        fine_k = max(25, min(int(coarse_k * fine_ratio), coarse_k - 1))  # 提高最小值至25
+        # 精選比例（从粗選結果中選擇，降低范围）
+        fine_ratio = trial.suggest_float('fine_ratio', 0.35, 0.60)  # 从0.45-0.75降到0.35-0.60
+        fine_k = max(15, min(int(coarse_k * fine_ratio), coarse_k - 1))  # 从25降到15
         
         # 穩定性閾值
         stability_threshold = trial.suggest_float(
@@ -3220,12 +3222,20 @@ class FeatureOptimizer:
                     f1_m = compute_f1_score(y_test, y_pred, average='macro', zero_division=0)
                     fold_score = 0.5 * f1_m + 0.5 * f1_w
 
-                    # 擴充度量
+                    # 擴充度量（✅ P0修復：確保CV指標正確計算）
                     try:
                         prec_m = precision_score(y_test, y_pred, average='macro', zero_division=0)
                         rec_m = recall_score(y_test, y_pred, average='macro', zero_division=0)
                         bal_acc = balanced_accuracy_score(y_test, y_pred)
-                    except Exception:
+                        
+                        # ✅ 調試日誌：確認指標被正確計算
+                        if prec_m == 0 or rec_m == 0 or bal_acc == 0:
+                            self.logger.warning(
+                                f"  ⚠️ Fold {fold_idx+1} CV指標異常: "
+                                f"prec={prec_m:.3f}, rec={rec_m:.3f}, bal_acc={bal_acc:.3f}"
+                            )
+                    except Exception as e:
+                        self.logger.error(f"  ❌ Fold {fold_idx+1} CV指標計算失敗: {e}")
                         prec_m, rec_m, bal_acc = 0.0, 0.0, 0.0
 
                     auc_macro = None
