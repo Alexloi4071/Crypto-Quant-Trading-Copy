@@ -98,6 +98,296 @@ class PrimaryLabelOptimizer:
             pass
         return 15.0  # 默認15分鐘
     
+    def calculate_trading_metrics(
+        self,
+        signals: pd.Series,
+        price_data: pd.Series,
+        params: Dict
+    ) -> Dict:
+        """
+        🎯 計算真正的交易質量指標（優化目標重構 - Phase 1）
+        
+        這是新增的核心函數，用於替代舊的Accuracy/Sharpe優化。
+        
+        計算內容：
+        - 整體胜率、盈利因子、盈亏比
+        - 做多/做空分別的胜率、盈利因子
+        - 平均盈利/亏损
+        - 最大连续盈利/亏损
+        
+        學術依據：
+        - Van Tharp (2008), "Trade Your Way to Financial Freedom"
+        - Connors & Alvarez (2009), "Short Term Trading Strategies That Work"
+        
+        Args:
+            signals: Primary信號序列（1=買入, -1=賣出）
+            price_data: 價格序列
+            params: Triple Barrier參數
+        
+        Returns:
+            Dict: 完整的交易質量指標
+        """
+        try:
+            # 提取參數
+            lag = params.get('lag', 12)
+            atr_period = params.get('atr_period', 14)
+            profit_multiplier = params.get('profit_multiplier', 2.0)
+            stop_multiplier = params.get('stop_multiplier', 1.5)
+            max_holding = params.get('max_holding', 20)
+            transaction_cost_bps = params.get('transaction_cost_bps', 10.0)
+            enable_trailing = params.get('enable_trailing_stop', True)
+            trail_activation = params.get('trailing_activation_ratio', 0.5)
+            trail_distance = params.get('trailing_distance_ratio', 0.7)
+            trail_lock_min = params.get('trailing_lock_min_profit', 0.3)
+            
+            # 計算ATR
+            atr = self.calculate_atr(
+                self.price_data['high'],
+                self.price_data['low'],
+                self.price_data['close'],
+                atr_period
+            )
+            atr = atr.reindex(price_data.index).fillna(method='ffill')
+            
+            # 處理NaN
+            if atr.isna().any():
+                first_valid_idx = atr.first_valid_index()
+                if first_valid_idx is not None:
+                    atr = atr.fillna(atr[first_valid_idx])
+                else:
+                    atr = atr.fillna(price_data.std() * 0.02)
+            
+            # 交易成本（雙向）
+            round_trip_cost = transaction_cost_bps / 10000.0
+            
+            # 轉換為numpy數組（性能優化）
+            price_values = price_data.values
+            atr_values = atr.values
+            signal_values = signals.values
+            
+            # 交易記錄
+            long_trades = []   # 做多交易
+            short_trades = []  # 做空交易
+            
+            # 逐個入場點模擬交易
+            for i in range(len(signals) - max_holding):
+                signal = signal_values[i]
+                if signal == 0:
+                    continue
+                
+                entry_price = price_values[i]
+                current_atr = atr_values[i]
+                
+                if np.isnan(current_atr) or current_atr <= 0:
+                    continue
+                
+                # 做多交易
+                if signal == 1:
+                    # 目標價格
+                    profit_target = entry_price * (1 + profit_multiplier * current_atr / entry_price)
+                    initial_stop = entry_price * (1 - stop_multiplier * current_atr / entry_price)
+                    
+                    # 考慮交易成本
+                    profit_target *= (1 + round_trip_cost)
+                    initial_stop *= (1 - round_trip_cost)
+                    
+                    # 移動止損變量
+                    current_stop = initial_stop
+                    highest_price = entry_price
+                    trailing_activated = False
+                    
+                    # 未來價格窗口
+                    future_window_end = min(i + max_holding + 1, len(price_data))
+                    
+                    # 逐K線檢查
+                    pnl = 0
+                    for j in range(i + 1, future_window_end):
+                        future_price = price_values[j]
+                        
+                        # 移動止損邏輯
+                        if enable_trailing:
+                            if future_price > highest_price:
+                                highest_price = future_price
+                            
+                            profit_progress = (future_price - entry_price) / (profit_target - entry_price)
+                            if profit_progress >= trail_activation and not trailing_activated:
+                                trailing_activated = True
+                            
+                            if trailing_activated:
+                                new_trail_stop = highest_price * (1 - trail_distance * current_atr / highest_price)
+                                min_lock_stop = entry_price * (1 + trail_lock_min * current_atr / entry_price)
+                                new_trail_stop = max(new_trail_stop, min_lock_stop)
+                                if new_trail_stop > current_stop:
+                                    current_stop = new_trail_stop
+                        
+                        # 觸發止盈
+                        if future_price >= profit_target:
+                            pnl = (profit_target - entry_price) / entry_price - round_trip_cost
+                            long_trades.append({'pnl': pnl, 'type': 'win'})
+                            break
+                        # 觸發止損
+                        elif future_price <= current_stop:
+                            pnl = (current_stop - entry_price) / entry_price - round_trip_cost
+                            long_trades.append({'pnl': pnl, 'type': 'loss' if pnl < 0 else 'win'})
+                            break
+                    else:
+                        # 超時退出
+                        exit_price = price_values[future_window_end - 1]
+                        pnl = (exit_price - entry_price) / entry_price - round_trip_cost
+                        long_trades.append({'pnl': pnl, 'type': 'win' if pnl > 0 else 'loss'})
+                
+                # 做空交易
+                elif signal == -1:
+                    # 目標價格（做空）
+                    profit_target = entry_price * (1 - profit_multiplier * current_atr / entry_price)
+                    initial_stop = entry_price * (1 + stop_multiplier * current_atr / entry_price)
+                    
+                    # 考慮交易成本
+                    profit_target *= (1 - round_trip_cost)
+                    initial_stop *= (1 + round_trip_cost)
+                    
+                    # 移動止損變量
+                    current_stop = initial_stop
+                    lowest_price = entry_price
+                    trailing_activated = False
+                    
+                    # 未來價格窗口
+                    future_window_end = min(i + max_holding + 1, len(price_data))
+                    
+                    # 逐K線檢查
+                    pnl = 0
+                    for j in range(i + 1, future_window_end):
+                        future_price = price_values[j]
+                        
+                        # 移動止損邏輯（做空）
+                        if enable_trailing:
+                            if future_price < lowest_price:
+                                lowest_price = future_price
+                            
+                            profit_progress = (entry_price - future_price) / (entry_price - profit_target)
+                            if profit_progress >= trail_activation and not trailing_activated:
+                                trailing_activated = True
+                            
+                            if trailing_activated:
+                                new_trail_stop = lowest_price * (1 + trail_distance * current_atr / lowest_price)
+                                min_lock_stop = entry_price * (1 - trail_lock_min * current_atr / entry_price)
+                                new_trail_stop = min(new_trail_stop, min_lock_stop)
+                                if new_trail_stop < current_stop:
+                                    current_stop = new_trail_stop
+                        
+                        # 觸發止盈（做空）
+                        if future_price <= profit_target:
+                            pnl = (entry_price - profit_target) / entry_price - round_trip_cost
+                            short_trades.append({'pnl': pnl, 'type': 'win'})
+                            break
+                        # 觸發止損（做空）
+                        elif future_price >= current_stop:
+                            pnl = (entry_price - current_stop) / entry_price - round_trip_cost
+                            short_trades.append({'pnl': pnl, 'type': 'loss' if pnl < 0 else 'win'})
+                            break
+                    else:
+                        # 超時退出
+                        exit_price = price_values[future_window_end - 1]
+                        pnl = (entry_price - exit_price) / entry_price - round_trip_cost
+                        short_trades.append({'pnl': pnl, 'type': 'win' if pnl > 0 else 'loss'})
+            
+            # 計算做多指標
+            long_wins = [t['pnl'] for t in long_trades if t['type'] == 'win']
+            long_losses = [t['pnl'] for t in long_trades if t['type'] == 'loss']
+            long_win_rate = len(long_wins) / len(long_trades) if long_trades else 0.0
+            long_avg_win = np.mean(long_wins) if long_wins else 0.0
+            long_avg_loss = abs(np.mean(long_losses)) if long_losses else 0.0
+            long_total_profit = sum(long_wins)
+            long_total_loss = abs(sum(long_losses))
+            long_profit_factor = (long_total_profit / long_total_loss) if long_total_loss > 0 else float('inf')
+            
+            # 計算做空指標
+            short_wins = [t['pnl'] for t in short_trades if t['type'] == 'win']
+            short_losses = [t['pnl'] for t in short_trades if t['type'] == 'loss']
+            short_win_rate = len(short_wins) / len(short_trades) if short_trades else 0.0
+            short_avg_win = np.mean(short_wins) if short_wins else 0.0
+            short_avg_loss = abs(np.mean(short_losses)) if short_losses else 0.0
+            short_total_profit = sum(short_wins)
+            short_total_loss = abs(sum(short_losses))
+            short_profit_factor = (short_total_profit / short_total_loss) if short_total_loss > 0 else float('inf')
+            
+            # 計算整體指標
+            all_trades = long_trades + short_trades
+            all_wins = long_wins + short_wins
+            all_losses = long_losses + short_losses
+            
+            overall_win_rate = len(all_wins) / len(all_trades) if all_trades else 0.0
+            overall_avg_win = np.mean(all_wins) if all_wins else 0.0
+            overall_avg_loss = abs(np.mean(all_losses)) if all_losses else 0.0
+            overall_total_profit = sum(all_wins)
+            overall_total_loss = abs(sum(all_losses))
+            overall_profit_factor = (overall_total_profit / overall_total_loss) if overall_total_loss > 0 else float('inf')
+            risk_reward_ratio = (overall_avg_win / overall_avg_loss) if overall_avg_loss > 0 else 0.0
+            
+            # 最大連續盈利/虧損
+            max_consecutive_wins = 0
+            max_consecutive_losses = 0
+            current_win_streak = 0
+            current_loss_streak = 0
+            
+            for trade in all_trades:
+                if trade['type'] == 'win':
+                    current_win_streak += 1
+                    current_loss_streak = 0
+                    max_consecutive_wins = max(max_consecutive_wins, current_win_streak)
+                else:
+                    current_loss_streak += 1
+                    current_win_streak = 0
+                    max_consecutive_losses = max(max_consecutive_losses, current_loss_streak)
+            
+            # 返回完整指標
+            return {
+                # 做多指標
+                'long_win_rate': float(long_win_rate),
+                'long_avg_win': float(long_avg_win),
+                'long_avg_loss': float(long_avg_loss),
+                'long_profit_factor': float(min(long_profit_factor, 10.0)),  # 上限10
+                'long_total_trades': len(long_trades),
+                
+                # 做空指標
+                'short_win_rate': float(short_win_rate),
+                'short_avg_win': float(short_avg_win),
+                'short_avg_loss': float(short_avg_loss),
+                'short_profit_factor': float(min(short_profit_factor, 10.0)),  # 上限10
+                'short_total_trades': len(short_trades),
+                
+                # 整體指標
+                'overall_win_rate': float(overall_win_rate),
+                'overall_profit_factor': float(min(overall_profit_factor, 10.0)),  # 上限10
+                'risk_reward_ratio': float(risk_reward_ratio),
+                'avg_win': float(overall_avg_win),
+                'avg_loss': float(overall_avg_loss),
+                'total_trades': len(all_trades),
+                'total_profit': float(overall_total_profit),
+                'total_loss': float(overall_total_loss),
+                'net_profit': float(overall_total_profit - overall_total_loss),
+                
+                # 連續指標
+                'max_consecutive_wins': max_consecutive_wins,
+                'max_consecutive_losses': max_consecutive_losses,
+            }
+        
+        except Exception as e:
+            self.logger.error(f"❌ 交易質量指標計算失敗: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            # 返回默認值
+            return {
+                'long_win_rate': 0.0, 'long_avg_win': 0.0, 'long_avg_loss': 0.0,
+                'long_profit_factor': 0.0, 'long_total_trades': 0,
+                'short_win_rate': 0.0, 'short_avg_win': 0.0, 'short_avg_loss': 0.0,
+                'short_profit_factor': 0.0, 'short_total_trades': 0,
+                'overall_win_rate': 0.0, 'overall_profit_factor': 0.0,
+                'risk_reward_ratio': 0.0, 'avg_win': 0.0, 'avg_loss': 0.0,
+                'total_trades': 0, 'total_profit': 0.0, 'total_loss': 0.0,
+                'net_profit': 0.0, 'max_consecutive_wins': 0, 'max_consecutive_losses': 0
+            }
+    
     def calculate_atr(self, high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
         """計算平均真實區間（ATR）"""
         try:
@@ -365,26 +655,57 @@ class PrimaryLabelOptimizer:
     
     def objective(self, trial: optuna.Trial) -> float:
         """
-        Optuna 目標函數（Primary Model 優化）
+        🎯 Optuna 目標函數（優化目標完整重構 - Phase 1）
         
-        優化目標：
-        1. 方向準確率（最重要）
-        2. Sharpe Ratio
-        3. 信號平衡性（接近 50/50）
+        ✅ 新優化目標（交易質量主導）：
+        1. Win Rate（胜率）20%
+        2. Profit Factor（盈利因子）30%
+        3. Risk:Reward Ratio（盈亏比）10%
+        4. Long/Short平衡（各10%）
+        5. 平均盈亏比（10%）
+        6. 交易頻率（10%）
+        
+        ❌ 已刪除的舊目標：
+        - Accuracy（分類准確率，不代表盈利能力）
+        - Sharpe Ratio（整體收益，不反映單筆質量）
+        
+        學術依據：
+        - Van Tharp (2008), "Trade Your Way to Financial Freedom"
+        - Connors & Alvarez (2009), "Short Term Trading Strategies That Work"
+        - López de Prado (2018), "Advances in Financial Machine Learning", Ch.3
         """
-        # 🔧 參數搜索空間（縮小範圍，聚焦方向預測）
+        # 🔧 參數搜索空間（優化目標重構 - 擴大盈虧比範圍）
         params = {
             'lag': trial.suggest_int('lag', 6, 24),
             'atr_period': trial.suggest_int('atr_period', 10, 20),
-            'profit_multiplier': trial.suggest_float('profit_multiplier', 1.5, 3.0),
-            'stop_multiplier': trial.suggest_float('stop_multiplier', 1.0, 2.0),
-            'max_holding': trial.suggest_int('max_holding', 10, 30),
-            'enable_trailing_stop': trial.suggest_categorical('enable_trailing_stop', [True, False]),
-            'trailing_activation_ratio': trial.suggest_float('trailing_activation_ratio', 0.3, 0.6),
-            'trailing_distance_ratio': trial.suggest_float('trailing_distance_ratio', 0.5, 0.9),
-            'trailing_lock_min_profit': trial.suggest_float('trailing_lock_min_profit', 0.2, 0.5),
-            'transaction_cost_bps': trial.suggest_float('transaction_cost_bps', 5.0, 15.0),
+            
+            # ✅ 修改：提高profit_multiplier（從1.5-3.0提高到2.0-4.0）
+            'profit_multiplier': trial.suggest_float('profit_multiplier', 2.0, 4.0),
+            
+            # ✅ 修改：降低stop_multiplier（從1.0-2.0降低到0.8-1.5）
+            'stop_multiplier': trial.suggest_float('stop_multiplier', 0.8, 1.5),
+            
+            # ✅ 修改：擴大max_holding（從10-30擴大到15-40）
+            'max_holding': trial.suggest_int('max_holding', 15, 40),
+            
+            # ✅ 修改：強制啟用移動止損（不再是可選參數）
+            'enable_trailing_stop': True,  # 從suggest_categorical改為固定True
+            
+            # ✅ 修改：優化移動止損參數範圍
+            'trailing_activation_ratio': trial.suggest_float('trailing_activation_ratio', 0.4, 0.7),  # 從0.3-0.6改為0.4-0.7
+            'trailing_distance_ratio': trial.suggest_float('trailing_distance_ratio', 0.6, 0.9),  # 從0.5-0.9改為0.6-0.9
+            'trailing_lock_min_profit': trial.suggest_float('trailing_lock_min_profit', 0.3, 0.6),  # 從0.2-0.5改為0.3-0.6
+            
+            # ✅ 修改：降低交易成本（從5.0-15.0降低到4.0-8.0，更接近實際）
+            'transaction_cost_bps': trial.suggest_float('transaction_cost_bps', 4.0, 8.0),
         }
+        
+        # ✅ 新增：盈亏比硬約束（確保 Risk:Reward >= 2:1）
+        risk_reward = params['profit_multiplier'] / params['stop_multiplier']
+        if risk_reward < 2.0:
+            # 調整profit_multiplier確保盈亏比>=2:1
+            params['profit_multiplier'] = max(params['profit_multiplier'], params['stop_multiplier'] * 2.0)
+            risk_reward = params['profit_multiplier'] / params['stop_multiplier']
         
         # 生成 Primary 信號
         try:
@@ -396,49 +717,64 @@ class PrimaryLabelOptimizer:
         if len(signals) < 100:
             return -999.0
         
-        # 🔧 P0修復：正確解釋Triple Barrier標籤系統
-        # 
-        # 重要理解：
-        # - Triple Barrier生成的是"訓練標籤"，不是"預測信號"
-        # - 這裡的"準確率"是"標籤系統質量"，不是"模型預測準確率"
-        # - 98%的準確率說明：Triple Barrier能正確標記市場方向
-        # - Meta Model會進一步過濾這些標籤，只執行高質量部分
-        # 
-        # 正確的Meta-Labeling架構：
-        # - Primary: 生成標籤（Triple Barrier，可以高準確率）
-        # - Meta: 過濾標籤（評估質量，執行率10-20%）
-        # - 最終策略: Meta過濾後的信號（真實準確率55-65%）
-        lag = params['lag']
+        # 🎯 新增：計算真正的交易質量指標（替代Accuracy/Sharpe）
+        metrics = self.calculate_trading_metrics(signals, self.price_data['close'], params)
         
-        # 計算未來收益（用於評估標籤質量）
-        future_returns = self.price_data['close'].pct_change(lag).shift(-lag)
-        future_returns = future_returns.loc[signals.index]
+        # ✅ 硬約束檢查（確保基本交易質量）
+        if metrics['total_trades'] < 50:
+            # 交易數太少，無法評估
+            return -999.0
         
-        # 🎯 指標 1：標籤系統準確率（評估Triple Barrier質量）
-        # 注意：這不是預測準確率，而是標籤生成系統的質量指標
-        correct_direction = (signals * future_returns > 0).sum()
-        total_signals = len(signals)
-        accuracy = correct_direction / total_signals if total_signals > 0 else 0
+        if metrics['overall_profit_factor'] < 1.3:
+            # 盈利因子<1.3，長期難以盈利
+            return -999.0
         
-        # 🎯 指標 2：Sharpe Ratio（標籤系統的風險調整收益）
-        signal_returns = signals.shift(1) * future_returns
-        sharpe = (signal_returns.mean() / (signal_returns.std() + 1e-6)) * np.sqrt(252)
+        if metrics['overall_win_rate'] < 0.45:
+            # 胜率<45%，配合盈亏比2:1也難以盈利
+            return -999.0
         
-        # 🎯 指標 3：信號平衡性（懲罰偏離 50/50）
-        buy_ratio = (signals == 1).sum() / len(signals)
-        balance_penalty = abs(buy_ratio - 0.5) * 0.5  # 偏離 50% 時懲罰
-        
-        # 綜合得分
+        # ✅ 新目標函數（交易質量主導，100%權重）
         score = (
-            accuracy * 0.5 +           # 方向準確率權重 50%
-            max(0, sharpe) * 0.3 +     # Sharpe 權重 30%
-            -balance_penalty * 0.2     # 平衡懲罰權重 20%
+            # 盈利能力（60%）- 核心指標
+            metrics['overall_profit_factor'] / 3.0 * 0.30 +  # 盈利因子（歸一化），30%
+            metrics['overall_win_rate'] * 0.20 +              # 整體胜率，20%
+            min(metrics['risk_reward_ratio'] / 3.0, 1.0) * 0.10 +  # 盈亏比（歸一化），10%
+            
+            # 做多/做空平衡（20%）- 確保雙向都有效
+            min(metrics['long_win_rate'], metrics['short_win_rate']) * 0.10 +  # 較弱側胜率，10%
+            min(metrics['long_profit_factor'], metrics['short_profit_factor']) / 3.0 * 0.10 +  # 較弱側盈利因子，10%
+            
+            # 輔助指標（20%）- 風險控制和頻率
+            min(metrics['avg_win'] / max(metrics['avg_loss'], 0.001) / 3.0, 1.0) * 0.10 +  # 平均盈亏比，10%
+            min(metrics['total_trades'] / 100.0, 1.0) * 0.10  # 交易頻率（歸一化），10%
         )
         
-        # 記錄
-        trial.set_user_attr("accuracy", accuracy)
-        trial.set_user_attr("sharpe", sharpe)
-        trial.set_user_attr("buy_ratio", buy_ratio)
+        # ✅ 記錄所有關鍵指標（用於分析）
+        # 整體指標
+        trial.set_user_attr("overall_win_rate", metrics['overall_win_rate'])
+        trial.set_user_attr("profit_factor", metrics['overall_profit_factor'])
+        trial.set_user_attr("risk_reward_ratio", metrics['risk_reward_ratio'])
+        trial.set_user_attr("avg_win", metrics['avg_win'])
+        trial.set_user_attr("avg_loss", metrics['avg_loss'])
+        trial.set_user_attr("total_trades", metrics['total_trades'])
+        trial.set_user_attr("net_profit", metrics['net_profit'])
+        
+        # 做多指標
+        trial.set_user_attr("long_win_rate", metrics['long_win_rate'])
+        trial.set_user_attr("long_profit_factor", metrics['long_profit_factor'])
+        trial.set_user_attr("long_total_trades", metrics['long_total_trades'])
+        
+        # 做空指標
+        trial.set_user_attr("short_win_rate", metrics['short_win_rate'])
+        trial.set_user_attr("short_profit_factor", metrics['short_profit_factor'])
+        trial.set_user_attr("short_total_trades", metrics['short_total_trades'])
+        
+        # 連續指標
+        trial.set_user_attr("max_consecutive_wins", metrics['max_consecutive_wins'])
+        trial.set_user_attr("max_consecutive_losses", metrics['max_consecutive_losses'])
+        
+        # 記錄參數約束結果
+        trial.set_user_attr("risk_reward_constraint_met", risk_reward >= 2.0)
         
         return score
     

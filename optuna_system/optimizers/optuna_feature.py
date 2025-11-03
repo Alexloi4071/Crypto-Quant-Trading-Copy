@@ -96,43 +96,61 @@ class FeatureOptimizer:
                 return int(default)
 
         # KPI 約束門檻（可依時框差異調整）
+        # ✅ KPI約束（優化目標重構 - Phase 3）
+        # ✅ 修改：放宽Sharpe/Calmar，严格化Win Rate/Profit Factor，新增Risk:Reward
         self.kpi_constraints = {
-            'min_sharpe': _env_float('L2_MIN_SHARPE', 1.0 if self.timeframe.lower() in ('15m', '15') else 1.2),
-            'min_sortino': _env_float('L2_MIN_SORTINO', 1.2 if self.timeframe.lower() in ('1h', '4h') else 1.0),
-            'min_calmar': _env_float('L2_MIN_CALMAR', 0.75 if self.timeframe.lower() in ('15m', '15') else 1.2),
-            'min_win_rate': _env_float('L2_MIN_WINRATE', 0.6),
-            'min_profit_factor': _env_float('L2_MIN_PROFIT_FACTOR', 1.3 if self.timeframe.lower() in ('15m', '15') else 1.5),
+            # 風險調整收益（放宽）
+            'min_sharpe': _env_float('L2_MIN_SHARPE', 0.8),  # ✅ 從1.0/1.2降低到0.8（更現實）
+            'min_sortino': 0.0,  # ✅ 刪除約束（從1.0/1.2降低到0）
+            'min_calmar': _env_float('L2_MIN_CALMAR', 0.6),  # ✅ 從0.75/1.2降低到0.6（放宽）
+            
+            # 交易質量指標（嚴格化）
+            'min_win_rate': _env_float('L2_MIN_WINRATE', 0.50),  # ✅ 從0.6降低到0.50（更現實）
+            'min_profit_factor': _env_float('L2_MIN_PROFIT_FACTOR', 1.5),  # ✅ 統一提高到1.5（從1.3/1.5）
+            
+            # ✅ 新增：最小盈虧比約束（與Primary Model一致）
+            'min_risk_reward': _env_float('L2_MIN_RISK_REWARD', 2.0),
+            
+            # 回撤與收益（保持）
             'max_drawdown': _env_float('L2_MAX_DRAWDOWN', 0.2 if self.timeframe.lower() in ('15m', '15') else 0.15),
             'min_total_return': _env_float('L2_MIN_TOTAL_RETURN', 0.02),
-            'min_annual_return': _env_float('L2_MIN_ANNUAL_RETURN', 0.15)
+            'min_annual_return': 0.0  # ✅ 刪除約束（太嚴格）
         }
         self.logger.info(f"🔒 Layer2 KPI Constraints: {self.kpi_constraints}")
 
-        # 多目標加權（單目標模式使用）
+        # ✅ 多目標加權（優化目標重構 - Phase 3）
+        # ✅ 修改：交易指標從10%提高到55%，ML指標從40%降低到15%
         self.obj_weights = {
-            'f1_macro': _env_float('L2_WEIGHT_F1_MACRO', 0.2),
-            'f1_weighted': _env_float('L2_WEIGHT_F1_WEIGHTED', 0.2),
-            'sharpe': _env_float('L2_WEIGHT_SHARPE', 0.2),
-            'sortino': _env_float('L2_WEIGHT_SORTINO', 0.1),
-            'calmar': _env_float('L2_WEIGHT_CALMAR', 0.1),
-            'profit_factor': _env_float('L2_WEIGHT_PROFIT_FACTOR', 0.1),
-            'win_rate': _env_float('L2_WEIGHT_WIN_RATE', 0.05),
-            'total_return': _env_float('L2_WEIGHT_TOTAL_RETURN', 0.025),
-            'annual_return': _env_float('L2_WEIGHT_ANNUAL_RETURN', 0.025)
+            # ML指標（15% - 從40%降低）
+            'f1_macro': _env_float('L2_WEIGHT_F1_MACRO', 0.10),     # ✅ 從0.2降低到0.10
+            'f1_weighted': _env_float('L2_WEIGHT_F1_WEIGHTED', 0.05),  # ✅ 從0.2降低到0.05
+            
+            # 交易質量指標（55% - 從10%提高）
+            'profit_factor': _env_float('L2_WEIGHT_PROFIT_FACTOR', 0.30),  # ✅ 從0.1提高到0.30 (+200%)
+            'win_rate': _env_float('L2_WEIGHT_WIN_RATE', 0.25),           # ✅ 從0.05提高到0.25 (+400%)
+            
+            # 風險調整收益指標（30%）
+            'sharpe': _env_float('L2_WEIGHT_SHARPE', 0.20),           # ✅ 從0.2保持0.20
+            'calmar': _env_float('L2_WEIGHT_CALMAR', 0.10),           # ✅ 從0.1保持0.10
+            
+            # 輔助指標（刪除sortino, total_return, annual_return）
+            'sortino': 0.0,  # ✅ 刪除（從0.1降低到0）
+            'total_return': 0.0,  # ✅ 刪除（從0.025降低到0）
+            'annual_return': 0.0   # ✅ 刪除（從0.025降低到0）
         }
         weight_sum = sum(self.obj_weights.values())
         if weight_sum <= 0:
-            # fallback weights
+            # ✅ fallback weights（同樣調整）
             self.obj_weights = {
-                'f1_macro': 0.25,
-                'f1_weighted': 0.25,
-                'sharpe': 0.2,
-                'sortino': 0.1,
-                'calmar': 0.05,
-                'profit_factor': 0.05,
-                'win_rate': 0.05,
-                'total_return': 0.03,
-                'annual_return': 0.02
+                'f1_macro': 0.10,
+                'f1_weighted': 0.05,
+                'profit_factor': 0.30,
+                'win_rate': 0.25,
+                'sharpe': 0.20,
+                'calmar': 0.10,
+                'sortino': 0.0,
+                'total_return': 0.0,
+                'annual_return': 0.0
             }
         else:
             for k in self.obj_weights:
