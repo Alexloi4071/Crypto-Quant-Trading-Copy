@@ -301,6 +301,122 @@ class MetaQualityOptimizer:
         
         return meta_labels
     
+    def calculate_filtered_trading_metrics(
+        self,
+        quality_predictions: pd.Series,
+        primary_signals: pd.Series,
+        price_data: pd.DataFrame,
+        params: Dict
+    ) -> Dict:
+        """
+        🎯 計算Meta過濾後的交易質量指標（優化目標重構 - Phase 2）
+        
+        這是新增的核心函數，用於計算Meta Model過濾後的交易效果。
+        
+        Args:
+            quality_predictions: Meta模型預測的質量（1=高質量執行，0=低質量跳過）
+            primary_signals: Primary模型的原始信號（1=買入，-1=賣出）
+            price_data: 價格數據（包含OHLCV）
+            params: 參數
+        
+        Returns:
+            Dict: 過濾後的交易質量指標
+        """
+        try:
+            # 應用Meta過濾
+            filtered_signals = primary_signals.copy()
+            filtered_signals[quality_predictions == 0] = 0  # 低質量信號設為0（不執行）
+            
+            # 提取參數
+            lag = params.get('lag', 12)
+            
+            # 計算執行率
+            total_primary = (primary_signals != 0).sum()
+            total_executed = (filtered_signals != 0).sum()
+            execution_ratio = total_executed / total_primary if total_primary > 0 else 0.0
+            
+            # 如果過濾後交易太少，返回默認值
+            if total_executed < 30:
+                return {
+                    'win_rate': 0.0,
+                    'profit_factor': 0.0,
+                    'avg_win': 0.0,
+                    'avg_loss': 0.0,
+                    'total_trades': 0,
+                    'execution_ratio': execution_ratio,
+                    'sharpe': 0.0
+                }
+            
+            # 計算未來收益（用於評估）
+            future_returns = price_data['close'].pct_change(lag).shift(-lag)
+            future_returns = future_returns.loc[filtered_signals.index]
+            
+            # 計算交易收益
+            trade_returns = []
+            for idx in filtered_signals.index:
+                if filtered_signals[idx] != 0:
+                    signal = filtered_signals[idx]
+                    ret = future_returns.loc[idx]
+                    if not np.isnan(ret):
+                        trade_return = signal * ret
+                        trade_returns.append(trade_return)
+            
+            if len(trade_returns) == 0:
+                return {
+                    'win_rate': 0.0,
+                    'profit_factor': 0.0,
+                    'avg_win': 0.0,
+                    'avg_loss': 0.0,
+                    'total_trades': 0,
+                    'execution_ratio': execution_ratio,
+                    'sharpe': 0.0
+                }
+            
+            trade_returns = pd.Series(trade_returns)
+            
+            # 計算勝率
+            wins = trade_returns[trade_returns > 0]
+            losses = trade_returns[trade_returns <= 0]
+            win_rate = len(wins) / len(trade_returns) if len(trade_returns) > 0 else 0.0
+            
+            # 計算盈利因子
+            total_wins = wins.sum() if len(wins) > 0 else 0.0
+            total_losses = abs(losses.sum()) if len(losses) > 0 else 0.0
+            profit_factor = (total_wins / total_losses) if total_losses > 0 else float('inf')
+            profit_factor = min(profit_factor, 10.0)  # 上限10
+            
+            # 計算平均盈虧
+            avg_win = wins.mean() if len(wins) > 0 else 0.0
+            avg_loss = abs(losses.mean()) if len(losses) > 0 else 0.0
+            
+            # 計算Sharpe
+            sharpe = (trade_returns.mean() / (trade_returns.std() + 1e-6)) * np.sqrt(252)
+            sharpe = max(min(sharpe, 10.0), -10.0)  # 限制在[-10, 10]
+            
+            return {
+                'win_rate': float(win_rate),
+                'profit_factor': float(profit_factor),
+                'avg_win': float(avg_win),
+                'avg_loss': float(avg_loss),
+                'total_trades': len(trade_returns),
+                'execution_ratio': float(execution_ratio),
+                'sharpe': float(sharpe)
+            }
+        
+        except Exception as e:
+            self.logger.error(f"❌ 過濾後交易質量計算失敗: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            return {
+                'win_rate': 0.0,
+                'profit_factor': 0.0,
+                'avg_win': 0.0,
+                'avg_loss': 0.0,
+                'total_trades': 0,
+                'execution_ratio': 0.0,
+                'sharpe': 0.0
+            }
+    
     def evaluate_quality(
         self,
         meta_features: pd.DataFrame,
@@ -340,11 +456,18 @@ class MetaQualityOptimizer:
     
     def objective(self, trial: optuna.Trial) -> Tuple[float, float]:
         """
-        多目標優化目標函數（NSGA-II）
+        🎯 多目標優化目標函數（優化目標重構 - Phase 2）
         
-        優化目標：
-        1. 最大化：模型性能（F1 + Sharpe）
+        ✅ 新優化目標：
+        1. 最大化：過濾後的交易質量（Win Rate 35% + Profit Factor 30% + Execution Ratio 20% + F1 10% + Sharpe 5%）
         2. 最小化：標籤分布偏差
+        
+        ❌ 已修改的舊目標：
+        - F1從50%降低到10%（保留但不是主要目標）
+        - Sharpe從5%保持5%（但使用過濾後的Sharpe）
+        - 新增Win Rate 35%
+        - 新增Profit Factor 30%
+        - 新增Execution Ratio 20%
         
         Returns:
             Tuple[float, float]: (性能得分, 標籤偏差)
@@ -353,13 +476,14 @@ class MetaQualityOptimizer:
             self.logger.error("❌ 必須先設定 Primary 信號和價格數據")
             return -999.0, 999.0
         
-        # 🔧 參數搜索空間（收窄質量閾值範圍）
+        # 🔧 參數搜索空間（優化目標重構 - Phase 2）
         params = {
             'lag': 12,  # 從 Primary Model 繼承
             'atr_period': 14,
             'profit_multiplier': 2.0,
             'stop_multiplier': 1.5,
-            'transaction_cost_bps': trial.suggest_float('transaction_cost_bps', 5.0, 15.0),
+            # ✅ 修改：降低交易成本範圍（從5.0-15.0降低到3.0-6.0）
+            'transaction_cost_bps': trial.suggest_float('transaction_cost_bps', 3.0, 6.0),
             
             # Meta Model 特定參數
             'strength_weight': trial.suggest_float('strength_weight', 0.1, 0.5),
@@ -400,7 +524,16 @@ class MetaQualityOptimizer:
                 self.logger.warning(f"⚠️ 樣本數過少: {len(predicted_quality)} < 50")
                 return -999.0, 999.0
             
-            # 🎯 目標 1：模型性能（F1 + Sharpe）
+            # 🎯 目標 1：過濾後的交易質量（優化目標重構 - Phase 2）
+            # ✅ 新增：計算Meta過濾後的交易質量指標
+            filtered_metrics = self.calculate_filtered_trading_metrics(
+                predicted_quality,
+                self.primary_signals,
+                self.price_data,
+                params
+            )
+            
+            # ✅ 保留F1計算（用於監控，但權重降低）
             tp = ((predicted_quality == 1) & (meta_labels == 1)).sum()
             fp = ((predicted_quality == 1) & (meta_labels == 0)).sum()
             fn = ((predicted_quality == 0) & (meta_labels == 1)).sum()
@@ -409,22 +542,37 @@ class MetaQualityOptimizer:
             recall = tp / (tp + fn) if (tp + fn) > 0 else 0
             f1 = 2 * precision * recall / (precision + recall + 1e-6)
             
-            # Sharpe 計算
-            filtered_signals = self.primary_signals.copy()
-            filtered_signals[predicted_quality == 0] = 0
+            # ✅ 硬約束檢查（過濾後交易太少）
+            if filtered_metrics['total_trades'] < 30:
+                self.logger.warning(f"⚠️ 過濾後交易數過少: {filtered_metrics['total_trades']} < 30")
+                return -999.0, 999.0
             
-            lag = params['lag']
-            future_returns = self.price_data['close'].pct_change(lag).shift(-lag)
-            future_returns = future_returns.loc[filtered_signals.index]
+            if filtered_metrics['execution_ratio'] < 0.15:
+                self.logger.warning(f"⚠️ 執行率過低: {filtered_metrics['execution_ratio']:.1%} < 15%")
+                return -999.0, 999.0
             
-            returns = filtered_signals.shift(1) * future_returns
-            sharpe = (returns.mean() / (returns.std() + 1e-6)) * np.sqrt(252)
-            
-            # 綜合性能得分（初始）
+            # ✅ 新性能得分（交易質量主導）
+            # 權重配置：交易質量65% + 執行率20% + ML指標10% + Sharpe 5%
             performance_score_base = (
-                f1 * 0.5 +
-                max(0, min(sharpe, 10)) * 0.05  # Sharpe 貢獻降低，上限10
+                # 過濾後的交易質量（65%）
+                filtered_metrics['win_rate'] * 0.35 +                      # 過濾後勝率 35%
+                (filtered_metrics['profit_factor'] / 3.0) * 0.30 +         # 過濾後盈利因子 30%（歸一化）
+                
+                # 執行率（20%）- 確保不會過度過濾
+                filtered_metrics['execution_ratio'] * 0.20 +
+                
+                # ML指標（10%）- 保留但降低權重
+                f1 * 0.10 +
+                
+                # Sharpe（5%）- 輔助指標
+                max(0, min(filtered_metrics['sharpe'], 10)) / 10 * 0.05  # 歸一化到0-1
             )
+            
+            # ✅ 記錄過濾後的交易質量指標
+            trial.set_user_attr("filtered_win_rate", filtered_metrics['win_rate'])
+            trial.set_user_attr("filtered_profit_factor", filtered_metrics['profit_factor'])
+            trial.set_user_attr("filtered_total_trades", filtered_metrics['total_trades'])
+            trial.set_user_attr("filtered_sharpe", filtered_metrics['sharpe'])
             
             # 🎯 目標 2：標籤分布偏差（需要最小化）
             execution_ratio = (predicted_quality == 1).sum() / len(predicted_quality)
