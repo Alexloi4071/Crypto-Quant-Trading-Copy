@@ -31,6 +31,15 @@ def ensure_utf8_console() -> None:
 
 ensure_utf8_console()
 
+# 🚀 启用Layer 2多目标优化模式（方式4：NSGA-II）
+os.environ['L2_OBJECTIVE_MODE'] = 'multi'
+print("🎯 已启用Layer 2多目标优化模式（NSGA-II）")
+print("   - 方式1: AdaptiveParameterOptimizer（基础指标参数优化）")
+print("   - 方式2: 内置自适应优化（高级模块动态参数）")
+print("   - 方式3: Optuna优化（特征选择策略）")
+print("   - 方式4: NSGA-II多目标优化（Pareto最优特征组合）✅")
+print()
+
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_PATH = PROJECT_ROOT / "data"
 
@@ -52,7 +61,7 @@ DATA_PATH = PROJECT_ROOT / "data"
 #   3. 完整优化: L1=600, L2=250 (2-4小时，生产环境)
 # 
 # 🔧 当前配置: BUG检查模式（v67修复验证）
-TEST_MODE = "BUG_CHECK"  # "BUG_CHECK" | "STANDARD" | False
+TEST_MODE = "Flase"  # "BUG_CHECK" | "STANDARD" | False
 if TEST_MODE == "BUG_CHECK":
     # 🐛 BUG检查模式：快速验证v67修复
     DEFAULT_L1_TRIALS = 5    # 快速验证Primary数据泄漏修复

@@ -35,11 +35,28 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import PolynomialFeatures
 
 from config.timeframe_scaler import TimeFrameScaler
+from config.adaptive_parameter_optimizer import AdaptiveParameterOptimizer
 from optuna_system.utils.io_utils import write_dataframe, read_dataframe
 from optuna_system.utils.time_integrity import (
     EnhancedPurgedKFold, 
     TimeLeakageDetector, 
     validate_lag_alignment
+)
+from optuna_system.optimizers.multi_objective_feature_selector import MultiObjectiveFeatureSelector
+from optuna_system.optimizers.indicators import (
+    TDSequential,
+    WyckoffAnalysis,
+    MarketStructure,
+    CandlestickPatterns,
+    CompositeIndicators,
+    AdvancedTrend,
+    VolumeAnalysis,
+    HarmonicPatterns,
+    ElliottWaveAnalyzer,
+    GannTheory,
+    AdvancedVolatility,
+    TimeSeriesDecomposition,
+    OrderFlowProxy
 )
 
 warnings.filterwarnings('ignore')
@@ -177,6 +194,62 @@ class FeatureOptimizer:
         self.flags = self._validate_flags(self._load_feature_flags())
         self.phase_config: Dict[str, Any] = {}
         self.selection_params: Dict[str, Any] = {}
+        
+        # 🚀 初始化所有高级指标计算器
+        self.logger.info("🔧 初始化高级指标计算器...")
+        self.td_sequential = TDSequential()
+        self.wyckoff_analysis = WyckoffAnalysis()
+        self.market_structure = MarketStructure()
+        self.candlestick_patterns = CandlestickPatterns()
+        self.composite_indicators = CompositeIndicators()
+        self.advanced_trend = AdvancedTrend()
+        self.volume_analysis = VolumeAnalysis()
+        self.harmonic_patterns = HarmonicPatterns()
+        self.elliott_wave = ElliottWaveAnalyzer()
+        self.gann_theory = GannTheory()
+        self.advanced_volatility = AdvancedVolatility()
+        self.time_series_decomposition = TimeSeriesDecomposition()
+        self.order_flow_proxy = OrderFlowProxy()
+        self.logger.info("✅ 高级指标计算器初始化完成")
+        
+        # 🚀 初始化自适应参数优化器
+        self.logger.info("🔧 初始化自适应参数优化器...")
+        enable_adaptive_params = self.flags.get('enable_adaptive_params', True)
+        if enable_adaptive_params:
+            self.adaptive_param_optimizer = AdaptiveParameterOptimizer(
+                cache_dir=str(self.config_path),
+                logger=self.logger
+            )
+            self.logger.info("✅ 自适应参数优化器已启用")
+        else:
+            self.adaptive_param_optimizer = None
+            self.logger.info("⚠️ 自适应参数优化器已禁用（使用默认参数）")
+        
+        # 🚀 初始化多目标特征选择器
+        self.logger.info("🔧 初始化多目标特征选择器...")
+        enable_multi_objective = self.flags.get('enable_multi_objective_selector', True)
+        if enable_multi_objective and self.multi_objective_mode:
+            try:
+                # 构建约束文件路径
+                constraint_file = Path(self.config_path) / "feature_group_constraints.json"
+                
+                self.multi_objective_selector = MultiObjectiveFeatureSelector(
+                    objectives=['maximize_f1_macro', 'minimize_feature_count', 'maximize_diversity'],
+                    constraints_path=str(constraint_file),
+                    logger=self.logger
+                )
+                self.logger.info("✅ 多目标特征选择器已启用")
+            except Exception as e:
+                self.logger.warning(f"⚠️ 多目标特征选择器初始化失败: {e}，将使用单目标选择")
+                import traceback
+                self.logger.debug(traceback.format_exc())
+                self.multi_objective_selector = None
+        else:
+            self.multi_objective_selector = None
+            if not enable_multi_objective:
+                self.logger.info("⚠️ 多目标特征选择器已禁用（配置关闭）")
+            else:
+                self.logger.info("⚠️ 多目标特征选择器未启用（单目标模式）")
         
         # 🔧 Purged CV配置（防止時間洩漏）
         self.enable_purged_cv = self.scaled_config.get('enable_purged_cv', True)
@@ -920,6 +993,58 @@ class FeatureOptimizer:
                 resolved.append(rc)
         return resolved
 
+    def _apply_multi_objective_selection(self, X: pd.DataFrame, y: pd.Series, 
+                                         max_features: int = 60) -> Tuple[List[str], Dict]:
+        """
+        应用多目标特征选择（如果启用）
+        
+        Args:
+            X: 特征矩阵
+            y: 标签
+            max_features: 最大特征数（用于验证）
+            
+        Returns:
+            (selected_features, metrics): 选中的特征列表和评估指标
+        """
+        if self.multi_objective_selector is None:
+            return [], {}
+        
+        try:
+            self.logger.info("🎯 开始多目标特征选择...")
+            
+            # 调用多目标选择器
+            n_trials = int(self.flags.get('multi_obj_n_trials', 50))
+            cv_folds = int(self.flags.get('multi_obj_cv_folds', 3))
+            
+            selected_features, metrics = self.multi_objective_selector.select_features(
+                X=X,
+                y=y,
+                timeframe=self.timeframe,
+                n_trials=n_trials,
+                cv_folds=cv_folds
+            )
+            
+            self.logger.info(
+                f"✅ 多目标特征选择完成: {len(selected_features)}/{X.shape[1]} 特征"
+            )
+            self.logger.info(f"   指标: F1={metrics.get('f1_macro', 0):.4f}, "
+                           f"多样性={metrics.get('diversity', 0):.4f}")
+            
+            # 验证特征数量是否合理
+            if len(selected_features) > max_features:
+                self.logger.warning(
+                    f"⚠️ 多目标选择返回特征数({len(selected_features)})超过限制({max_features})，截取前{max_features}个"
+                )
+                selected_features = selected_features[:max_features]
+            
+            return selected_features, metrics
+            
+        except Exception as e:
+            self.logger.error(f"❌ 多目标特征选择失败: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+            return [], {}
+    
     def _filter_by_target_correlation(self, X: pd.DataFrame, y: pd.Series, keep_ratio: float = 0.8, min_score: float = 0.0) -> List[str]:
         """以目標關聯度（mutual information）做初步過濾，保留前述比例的高關聯特徵."""
         if X.empty:
@@ -3568,37 +3693,73 @@ class FeatureOptimizer:
             # finalize selected_features to avoid NameError
             selected_features: List[str]
             stability_report: Dict[str, Any] = {}
-            if selection_counts:
-                max_count = selection_counts.most_common(1)[0][1]
-                threshold = max(1, int(0.6 * max_count))
-                selected_features = [f for f, c in selection_counts.items() if c >= threshold]
-                stability_report = {
-                    'counts': dict(selection_counts),
-                    'max_count': int(max_count),
-                    'threshold': int(threshold),
-                    'selected_count': len(selected_features)
-                }
-            elif selected_union:
-                selected_features = sorted(list(selected_union))
-                stability_report = {
-                    'counts': {},
-                    'selected_count': len(selected_features)
-                }
-            elif best_fold_cols:
-                selected_features = list(best_fold_cols)
-                stability_report = {
-                    'counts': {},
-                    'selected_count': len(selected_features)
-                }
-            else:
-                # robust fallback: top-variance features if none selected
-                top_k = min(30, X.shape[1]) if X.shape[1] > 0 else 0
-                selected_features = X.var().sort_values(ascending=False).head(top_k).index.tolist() if top_k > 0 else []
-                stability_report = {
-                    'counts': {},
-                    'selected_count': len(selected_features),
-                    'fallback': 'top_variance'
-                }
+            multi_obj_used = False
+            
+            # 🚀 P0: 尝试使用多目标特征选择器（如果启用）
+            if self.multi_objective_selector is not None and self.multi_objective_mode:
+                try:
+                    self.logger.info("🎯 尝试使用多目标特征选择器进行最终特征优化...")
+                    
+                    # 使用全部数据进行多目标选择
+                    multi_obj_features, multi_obj_metrics = self._apply_multi_objective_selection(
+                        X=X, 
+                        y=y, 
+                        max_features=fine_k
+                    )
+                    
+                    if multi_obj_features and len(multi_obj_features) >= 10:
+                        selected_features = multi_obj_features
+                        multi_obj_used = True
+                        stability_report = {
+                            'method': 'multi_objective',
+                            'selected_count': len(selected_features),
+                            'multi_obj_metrics': multi_obj_metrics
+                        }
+                        self.logger.info(f"✅ 多目标特征选择成功: {len(selected_features)}个特征")
+                    else:
+                        self.logger.warning(f"⚠️ 多目标选择返回特征数不足({len(multi_obj_features)})，使用传统方法")
+                        multi_obj_used = False
+                except Exception as e:
+                    self.logger.warning(f"⚠️ 多目标特征选择失败，回退到传统方法: {e}")
+                    multi_obj_used = False
+            
+            # 如果多目标选择未使用或失败，使用传统的基于稳定性的方法
+            if not multi_obj_used:
+                if selection_counts:
+                    max_count = selection_counts.most_common(1)[0][1]
+                    threshold = max(1, int(0.6 * max_count))
+                    selected_features = [f for f, c in selection_counts.items() if c >= threshold]
+                    stability_report = {
+                        'method': 'stability_based',
+                        'counts': dict(selection_counts),
+                        'max_count': int(max_count),
+                        'threshold': int(threshold),
+                        'selected_count': len(selected_features)
+                    }
+                elif selected_union:
+                    selected_features = sorted(list(selected_union))
+                    stability_report = {
+                        'method': 'union',
+                        'counts': {},
+                        'selected_count': len(selected_features)
+                    }
+                elif best_fold_cols:
+                    selected_features = list(best_fold_cols)
+                    stability_report = {
+                        'method': 'best_fold',
+                        'counts': {},
+                        'selected_count': len(selected_features)
+                    }
+                else:
+                    # robust fallback: top-variance features if none selected
+                    top_k = min(30, X.shape[1]) if X.shape[1] > 0 else 0
+                    selected_features = X.var().sort_values(ascending=False).head(top_k).index.tolist() if top_k > 0 else []
+                    stability_report = {
+                        'method': 'top_variance',
+                        'counts': {},
+                        'selected_count': len(selected_features),
+                        'fallback': 'top_variance'
+                    }
 
             trial.set_user_attr('selected_features', selected_features)
             trial.set_user_attr('feature_phase', phase)
@@ -4843,16 +5004,31 @@ class FeatureOptimizer:
         return X.astype('float32').fillna(0)
 
     def _build_native_timeframe_features(self, ohlcv: pd.DataFrame) -> pd.DataFrame:
-        """🔧 P1修復：生成原生時間框架的技術指標特徵（無時序滯後）
+        """🔧 P1修復+350+高级特征：生成原生時間框架的技術指標特徵（無時序滯後）
         
         這些特徵使用當前時間框架的原生數據，不需要重採樣，避免信號滯後。
         例如：15m 交易使用 15m 級別的技術指標，反應更及時。
+        
+        新增350+高级特征模块：
+        - TD Sequential (25+)
+        - Wyckoff Analysis (25+)
+        - Market Structure (20+)
+        - Candlestick Patterns (50+)
+        - Composite Indicators (15+)
+        - Advanced Trend (25+)
+        - Volume Analysis (25+)
+        - Harmonic Patterns (8+)
+        - Elliott Wave (10+)
+        - Gann Theory (10+)
+        - Advanced Volatility (6+)
+        - Time Series Decomposition (5+)
+        - Order Flow Proxy (10+)
         
         Args:
             ohlcv: 原始 OHLCV 數據
             
         Returns:
-            原生特徵 DataFrame
+            原生特徵 DataFrame (包含原有+350+新特征)
         """
         features = pd.DataFrame(index=ohlcv.index)
         close = ohlcv['close']
@@ -4863,14 +5039,70 @@ class FeatureOptimizer:
         
         prefix = f"{self.timeframe}_native_"
         
+        # 🚀 自适应参数优化（如果启用）
+        optimized_params = {}
+        if self.adaptive_param_optimizer is not None:
+            try:
+                self.logger.info("🔧 开始自适应参数优化...")
+                optimized_params = self.adaptive_param_optimizer.load_or_optimize(
+                    timeframe=self.timeframe,
+                    ohlcv=ohlcv,
+                    force_reoptimize=False  # 使用缓存以提高性能
+                )
+                self.logger.info(f"✅ 自适应参数优化完成，获得 {len(optimized_params)} 组优化参数")
+            except Exception as e:
+                self.logger.warning(f"⚠️ 自适应参数优化失败，使用默认参数: {e}")
+                optimized_params = {}
+        
         try:
-            # 1. 價格動量特徵
-            for period in [5, 10, 20, 50]:
+            # ====== 原有基础特征 ======
+            # 使用优化参数或默认参数
+            # ROC使用MA periods（动量指标通常使用类似的周期）
+            roc_periods = optimized_params.get('ma_periods', [3, 5, 8, 10, 13, 20, 34, 50, 89])[:9]  # 取前9个
+            sma_periods = optimized_params.get('ma_periods', [5, 8, 10, 13, 20, 21, 34, 50, 55, 100, 144, 200])
+            atr_periods = optimized_params.get('atr_periods', [5, 7, 10, 14, 20, 30, 50])
+            rsi_periods = optimized_params.get('rsi_periods', [5, 7, 9, 14, 21, 28, 42])
+            
+            # MACD配置从字典或使用默认值
+            macd_param = optimized_params.get('macd', {})
+            if isinstance(macd_param, dict):
+                # 如果是字典，构建多个MACD配置
+                fast = macd_param.get('fast', 12)
+                slow = macd_param.get('slow', 26)
+                signal = macd_param.get('signal', 9)
+                # 创建多个变体
+                macd_configs = [
+                    (fast, slow, signal),
+                    (8, 17, 9),
+                    (5, 35, 5),
+                    (fast-4, slow-7, signal),  # 快速变体
+                    (fast+1, slow+8, signal-1)  # 慢速变体
+                ]
+            else:
+                macd_configs = [(8, 17, 9), (12, 26, 9), (5, 35, 5), (19, 39, 9), (13, 34, 8)]
+            
+            bb_periods = optimized_params.get('bb_periods', [10, 15, 20, 30, 50])
+            bb_std_mults = [1.5, 2.0, 2.5]  # 标准差倍数不需要优化
+            vol_periods = optimized_params.get('volume_ma_periods', [5, 10, 15, 20, 30, 50])
+            
+            # Stochastic参数
+            stoch_param = optimized_params.get('stoch', {})
+            if isinstance(stoch_param, dict):
+                stoch_k = stoch_param.get('k', 14)
+                stoch_periods = [stoch_k, 9, 14, 21, 28]  # 包含优化值和其他常用值
+            else:
+                stoch_periods = [9, 14, 21, 28]
+            
+            wr_periods = rsi_periods  # Williams %R使用类似RSI的周期
+            cci_periods = optimized_params.get('cci_periods', [14, 20, 30, 40])
+            
+            # 1. 價格動量特徵（扩展周期）
+            for period in roc_periods:
                 features[f'{prefix}roc_{period}'] = close.pct_change(period)
                 features[f'{prefix}momentum_{period}'] = close - close.shift(period)
             
-            # 2. 移動平均特徵
-            for period in [5, 10, 20, 50, 100, 200]:
+            # 2. 移動平均特徵（扩展周期）
+            for period in sma_periods:
                 sma = close.rolling(period).mean()
                 features[f'{prefix}sma_{period}'] = sma
                 features[f'{prefix}price_sma_ratio_{period}'] = close / (sma + 1e-9)
@@ -4879,8 +5111,8 @@ class FeatureOptimizer:
                 features[f'{prefix}ema_{period}'] = ema
                 features[f'{prefix}price_ema_ratio_{period}'] = close / (ema + 1e-9)
             
-            # 3. 波動率特徵（ATR）
-            for period in [5, 10, 20, 50]:
+            # 3. 波動率特徵（ATR）（扩展周期）
+            for period in atr_periods:
                 returns = close.pct_change()
                 features[f'{prefix}volatility_{period}'] = returns.rolling(period).std()
                 
@@ -4891,16 +5123,15 @@ class FeatureOptimizer:
                 tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
                 features[f'{prefix}atr_{period}'] = tr.rolling(period).mean()
             
-            # 4. RSI 家族
-            for period in [7, 14, 21, 28]:
+            # 4. RSI 家族（扩展周期）
+            for period in rsi_periods:
                 delta = close.diff()
                 gain = delta.where(delta > 0, 0).rolling(period).mean()
                 loss = -delta.where(delta < 0, 0).rolling(period).mean()
                 rs = gain / (loss + 1e-9)
                 features[f'{prefix}rsi_{period}'] = 100 - (100 / (1 + rs))
             
-            # 5. MACD 家族
-            macd_configs = [(12, 26, 9), (5, 35, 5), (19, 39, 9)]
+            # 5. MACD 家族（扩展配置）
             for fast, slow, signal in macd_configs:
                 ema_fast = close.ewm(span=fast).mean()
                 ema_slow = close.ewm(span=slow).mean()
@@ -4912,22 +5143,23 @@ class FeatureOptimizer:
                 features[f'{prefix}macd_signal_{fast}_{slow}_{signal}'] = signal_line
                 features[f'{prefix}macd_hist_{fast}_{slow}_{signal}'] = histogram
             
-            # 6. 布林帶特徵
-            for period in [10, 20, 50]:
-                bb_middle = close.rolling(period).mean()
-                bb_std = close.rolling(period).std()
-                bb_upper = bb_middle + (2 * bb_std)
-                bb_lower = bb_middle - (2 * bb_std)
-                
-                features[f'{prefix}bb_position_{period}'] = (
-                    (close - bb_lower) / (bb_upper - bb_lower + 1e-9)
-                )
-                features[f'{prefix}bb_width_{period}'] = (
-                    (bb_upper - bb_lower) / (bb_middle + 1e-9)
-                )
+            # 6. 布林帶特徵（扩展周期和标准差）
+            for period in bb_periods:
+                for std_mult in bb_std_mults:
+                    bb_middle = close.rolling(period).mean()
+                    bb_std = close.rolling(period).std()
+                    bb_upper = bb_middle + (std_mult * bb_std)
+                    bb_lower = bb_middle - (std_mult * bb_std)
+                    
+                    features[f'{prefix}bb_position_{period}_{std_mult}'] = (
+                        (close - bb_lower) / (bb_upper - bb_lower + 1e-9)
+                    )
+                    features[f'{prefix}bb_width_{period}_{std_mult}'] = (
+                        (bb_upper - bb_lower) / (bb_middle + 1e-9)
+                    )
             
-            # 7. 成交量特徵
-            for period in [5, 10, 20, 50]:
+            # 7. 成交量特徵（扩展）
+            for period in vol_periods:
                 vol_sma = volume.rolling(period).mean()
                 features[f'{prefix}volume_ratio_{period}'] = volume / (vol_sma + 1e-9)
                 features[f'{prefix}volume_std_{period}'] = volume.rolling(period).std()
@@ -4935,44 +5167,220 @@ class FeatureOptimizer:
             # 8. OBV (On-Balance Volume)
             obv = (np.sign(close.diff()) * volume).cumsum()
             features[f'{prefix}obv'] = obv
-            features[f'{prefix}obv_ema_20'] = obv.ewm(span=20).mean()
+            obv_ema_period = 20  # 固定使用20周期EMA
+            features[f'{prefix}obv_ema_20'] = obv.ewm(span=obv_ema_period).mean()
             
             # 9. 價格模式特徵
             features[f'{prefix}high_low_ratio'] = high / (low + 1e-9)
             features[f'{prefix}close_open_ratio'] = close / (open_ + 1e-9)
             features[f'{prefix}body_ratio'] = abs(close - open_) / (high - low + 1e-9)
             
-            # 10. Stochastic Oscillator
-            for period in [14, 21]:
+            # 10. Stochastic Oscillator（扩展周期）
+            # 从优化参数中获取D周期
+            stoch_d_period = 3
+            if isinstance(stoch_param, dict):
+                stoch_d_period = stoch_param.get('d', 3)
+            
+            for period in stoch_periods:
                 lowest_low = low.rolling(period).min()
                 highest_high = high.rolling(period).max()
                 k = 100 * (close - lowest_low) / (highest_high - lowest_low + 1e-9)
-                d = k.rolling(3).mean()
+                d = k.rolling(stoch_d_period).mean()
                 features[f'{prefix}stoch_k_{period}'] = k
                 features[f'{prefix}stoch_d_{period}'] = d
             
-            # 11. Williams %R
-            for period in [14, 21]:
+            # 11. Williams %R（扩展周期）
+            for period in wr_periods:
                 highest_high = high.rolling(period).max()
                 lowest_low = low.rolling(period).min()
                 wr = -100 * (highest_high - close) / (highest_high - lowest_low + 1e-9)
                 features[f'{prefix}williams_r_{period}'] = wr
             
-            # 12. CCI (Commodity Channel Index)
-            for period in [14, 20]:
+            # 12. CCI (Commodity Channel Index)（扩展周期）
+            cci_constant = 0.015  # CCI标准常数
+            for period in cci_periods:
                 tp = (high + low + close) / 3
                 sma_tp = tp.rolling(period).mean()
                 mad = (tp - sma_tp).abs().rolling(period).mean()
-                features[f'{prefix}cci_{period}'] = (tp - sma_tp) / (0.015 * mad + 1e-9)
+                features[f'{prefix}cci_{period}'] = (tp - sma_tp) / (cci_constant * mad + 1e-9)
+            
+            self.logger.info(f"✅ 生成 {len(features.columns)} 個基础原生特徵")
+            
+            # ====== 新增350+高级特征 ======
+            all_advanced_features = []
+            
+            # 13. TD Sequential (25+ features)
+            if self.flags.get('enable_td', True):
+                try:
+                    self.logger.info("🔧 生成TD Sequential特征...")
+                    td_features = self.td_sequential.calculate_all(ohlcv)
+                    if not td_features.empty:
+                        td_features = td_features.add_prefix(prefix)
+                        all_advanced_features.append(td_features)
+                        self.logger.info(f"  ✅ TD Sequential: {len(td_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ TD Sequential失败: {e}")
+            
+            # 14. Wyckoff Analysis (25+ features)
+            if self.flags.get('enable_wyckoff', True):
+                try:
+                    self.logger.info("🔧 生成Wyckoff特征...")
+                    wyk_features = self.wyckoff_analysis.calculate_all(ohlcv)
+                    if not wyk_features.empty:
+                        wyk_features = wyk_features.add_prefix(prefix)
+                        all_advanced_features.append(wyk_features)
+                        self.logger.info(f"  ✅ Wyckoff: {len(wyk_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Wyckoff失败: {e}")
+            
+            # 15. Market Structure (20+ features)
+            if self.flags.get('enable_market_structure', True):
+                try:
+                    self.logger.info("🔧 生成Market Structure特征...")
+                    ms_features = self.market_structure.calculate_all(ohlcv)
+                    if not ms_features.empty:
+                        ms_features = ms_features.add_prefix(prefix)
+                        all_advanced_features.append(ms_features)
+                        self.logger.info(f"  ✅ Market Structure: {len(ms_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Market Structure失败: {e}")
+            
+            # 16. Candlestick Patterns (50+ features)
+            if self.flags.get('enable_candlestick', True):
+                try:
+                    self.logger.info("🔧 生成Candlestick Pattern特征...")
+                    cs_features = self.candlestick_patterns.calculate_all(ohlcv)
+                    if not cs_features.empty:
+                        cs_features = cs_features.add_prefix(prefix)
+                        all_advanced_features.append(cs_features)
+                        self.logger.info(f"  ✅ Candlestick Patterns: {len(cs_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Candlestick Patterns失败: {e}")
+            
+            # 17. Composite Indicators (15+ features)
+            if self.flags.get('enable_composite', True):
+                try:
+                    self.logger.info("🔧 生成Composite Indicator特征...")
+                    comp_features = self.composite_indicators.calculate_all(ohlcv)
+                    if not comp_features.empty:
+                        comp_features = comp_features.add_prefix(prefix)
+                        all_advanced_features.append(comp_features)
+                        self.logger.info(f"  ✅ Composite Indicators: {len(comp_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Composite Indicators失败: {e}")
+            
+            # 18. Advanced Trend (25+ features)
+            if self.flags.get('enable_advanced_trend', True):
+                try:
+                    self.logger.info("🔧 生成Advanced Trend特征...")
+                    trend_features = self.advanced_trend.calculate_all(ohlcv)
+                    if not trend_features.empty:
+                        trend_features = trend_features.add_prefix(prefix)
+                        all_advanced_features.append(trend_features)
+                        self.logger.info(f"  ✅ Advanced Trend: {len(trend_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Advanced Trend失败: {e}")
+            
+            # 19. Volume Analysis (25+ features)
+            if self.flags.get('enable_volume_analysis', True):
+                try:
+                    self.logger.info("🔧 生成Volume Analysis特征...")
+                    vol_features = self.volume_analysis.calculate_all(ohlcv)
+                    if not vol_features.empty:
+                        vol_features = vol_features.add_prefix(prefix)
+                        all_advanced_features.append(vol_features)
+                        self.logger.info(f"  ✅ Volume Analysis: {len(vol_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Volume Analysis失败: {e}")
+            
+            # 20. Harmonic Patterns (8+ features)
+            if self.flags.get('enable_harmonic', True):
+                try:
+                    self.logger.info("🔧 生成Harmonic Pattern特征...")
+                    harm_features = self.harmonic_patterns.calculate_all(ohlcv)
+                    if not harm_features.empty:
+                        harm_features = harm_features.add_prefix(prefix)
+                        all_advanced_features.append(harm_features)
+                        self.logger.info(f"  ✅ Harmonic Patterns: {len(harm_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Harmonic Patterns失败: {e}")
+            
+            # 21. Elliott Wave (10+ features)
+            if self.flags.get('enable_elliott', True):
+                try:
+                    self.logger.info("🔧 生成Elliott Wave特征...")
+                    ew_features = self.elliott_wave.analyze(ohlcv)
+                    if not ew_features.empty:
+                        ew_features = ew_features.add_prefix(prefix)
+                        all_advanced_features.append(ew_features)
+                        self.logger.info(f"  ✅ Elliott Wave: {len(ew_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Elliott Wave失败: {e}")
+            
+            # 22. Gann Theory (10+ features)
+            if self.flags.get('enable_gann', True):
+                try:
+                    self.logger.info("🔧 生成Gann Theory特征...")
+                    gann_features = self.gann_theory.calculate_all(ohlcv)
+                    if not gann_features.empty:
+                        gann_features = gann_features.add_prefix(prefix)
+                        all_advanced_features.append(gann_features)
+                        self.logger.info(f"  ✅ Gann Theory: {len(gann_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Gann Theory失败: {e}")
+            
+            # 23. Advanced Volatility (6+ features)
+            if self.flags.get('enable_advanced_vol', True):
+                try:
+                    self.logger.info("🔧 生成Advanced Volatility特征...")
+                    vol_features = self.advanced_volatility.calculate_all(ohlcv)
+                    if not vol_features.empty:
+                        vol_features = vol_features.add_prefix(prefix)
+                        all_advanced_features.append(vol_features)
+                        self.logger.info(f"  ✅ Advanced Volatility: {len(vol_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Advanced Volatility失败: {e}")
+            
+            # 24. Time Series Decomposition (5+ features)
+            if self.flags.get('enable_ts_decomp', True):
+                try:
+                    self.logger.info("🔧 生成Time Series Decomposition特征...")
+                    ts_features = self.time_series_decomposition.decompose(ohlcv)
+                    if not ts_features.empty:
+                        ts_features = ts_features.add_prefix(prefix)
+                        all_advanced_features.append(ts_features)
+                        self.logger.info(f"  ✅ Time Series Decomposition: {len(ts_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Time Series Decomposition失败: {e}")
+            
+            # 25. Order Flow Proxy (10+ features)
+            if self.flags.get('enable_order_flow', True):
+                try:
+                    self.logger.info("🔧 生成Order Flow Proxy特征...")
+                    of_features = self.order_flow_proxy.calculate_proxy(ohlcv)
+                    if not of_features.empty:
+                        of_features = of_features.add_prefix(prefix)
+                        all_advanced_features.append(of_features)
+                        self.logger.info(f"  ✅ Order Flow Proxy: {len(of_features.columns)}个特征")
+                except Exception as e:
+                    self.logger.warning(f"  ⚠️ Order Flow Proxy失败: {e}")
+            
+            # 合并所有高级特征
+            if all_advanced_features:
+                advanced_features_df = pd.concat(all_advanced_features, axis=1)
+                features = pd.concat([features, advanced_features_df], axis=1)
+                self.logger.info(f"✅ 新增 {len(advanced_features_df.columns)} 个高级特征")
             
             # 清理 NaN 和 Inf
             features = features.replace([np.inf, -np.inf], np.nan)
             features = features.ffill().bfill().fillna(0)  # 修復：使用新版pandas語法
             
-            self.logger.info(f"✅ 生成 {len(features.columns)} 個原生 {self.timeframe} 特徵")
+            self.logger.info(f"🎉 总共生成 {len(features.columns)} 个原生 {self.timeframe} 特徵（基础+高级）")
             
         except Exception as e:
             self.logger.error(f"❌ 原生特徵生成失敗: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
             features = pd.DataFrame(index=ohlcv.index)
         
         return features
